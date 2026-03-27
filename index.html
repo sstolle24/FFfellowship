@@ -1001,7 +1001,7 @@ function renderLogTable() {
     var d=new Date(e.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"});
     return "<tr><td class='log-day-num'>#"+e.num+"</td><td>"+d+"</td><td>"+(e.loc||"")+"</td>"
       +"<td style='max-width:180px;word-break:break-word;'>"+(e.notes||"&mdash;")+"</td>"
-      +"<td><button onclick='deleteLog("+e.id+")' style='background:none;border:none;color:rgba(138,155,181,.3);cursor:pointer;font-size:.85rem;' onmouseover='this.style.color="rgb(192,57,43)"' onmouseout='this.style.color="rgba(138,155,181,.3)"'>&#10005;</button></td></tr>";
+      +"<td><button onclick='deleteLog("+e.id+")' style='background:none;border:none;color:rgba(138,155,181,.3);cursor:pointer;font-size:.85rem;' >&#10005;</button></td></tr>";
   }).join("");
 }
 function exportLog() {
