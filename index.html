@@ -327,7 +327,7 @@ footer{border-top:1px solid rgba(201,151,58,.12);padding:2.8rem 1.5rem;text-alig
 
         <!-- Stats -->
         <div style="flex:1;min-width:200px;">
-          <div id="sobNameDisplay" style="font-family:'Cinzel',serif;font-size:1.1rem;color:var(--white);margin-bottom:.2rem;"></div>
+          <div id="sobNameDisplay" style="font-family:Cinzel,serif;font-size:1.1rem;color:var(--white);margin-bottom:.2rem;"></div>
           <div id="sobWhyDisplay" style="font-size:.78rem;color:var(--gray);font-style:italic;margin-bottom:1.2rem;"></div>
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.2rem;">
             <div class="d21-stat"><div class="d21-stat-val" id="sobDaysStat">0</div><div class="d21-stat-label">Days</div></div>
@@ -336,7 +336,7 @@ footer{border-top:1px solid rgba(201,151,58,.12);padding:2.8rem 1.5rem;text-alig
           </div>
           <div style="font-size:.7rem;color:var(--gray);font-style:italic;margin-bottom:1rem;">
             Started: <span id="sobStartDisplay"></span>
-            <span id="sobMilestoneDisplay" style="margin-left:.8rem;color:var(--gold);font-style:normal;font-family:'Cinzel',serif;font-size:.6rem;"></span>
+            <span id="sobMilestoneDisplay" style="margin-left:.8rem;color:var(--gold);font-style:normal;font-family:Cinzel,serif;font-size:.6rem;"></span>
           </div>
           <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
             <button class="btn btn-outline btn-sm" onclick="openRelapseModal()">&#128997; Record Relapse</button>
@@ -349,13 +349,13 @@ footer{border-top:1px solid rgba(201,151,58,.12);padding:2.8rem 1.5rem;text-alig
 
     <!-- Milestones -->
     <div style="background:var(--card);border:1px solid rgba(201,151,58,.18);border-radius:6px;padding:1.5rem;margin-bottom:1.5rem;">
-      <div style="font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;">Milestones</div>
+      <div style="font-family:Cinzel,serif;font-size:.75rem;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;">Milestones</div>
       <div id="sobMilestones" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem;"></div>
     </div>
 
     <!-- Relapse history -->
     <div id="sobRelapseHistoryWrap" style="display:none;background:var(--card);border:1px solid rgba(201,151,58,.18);border-radius:6px;padding:1.5rem;">
-      <div style="font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;">Relapse Journal</div>
+      <div style="font-family:Cinzel,serif;font-size:.75rem;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;">Relapse Journal</div>
       <p style="font-size:.74rem;color:var(--gray);font-style:italic;margin-bottom:.8rem;">Every stumble is a lesson. You got back up.</p>
       <div id="sobRelapseList"></div>
     </div>
@@ -417,7 +417,7 @@ footer{border-top:1px solid rgba(201,151,58,.12);padding:2.8rem 1.5rem;text-alig
         <button class="btn btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="exportLog()">Export as Text</button>
       </div>
       <div>
-        <div id="logCount" style="font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem;">0 of 90 logged</div>
+        <div id="logCount" style="font-family:Cinzel,serif;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem;">0 of 90 logged</div>
         <div class="log-table-wrap"><table class="log-table">
           <thead><tr><th>#</th><th>Date</th><th>Location</th><th>Notes</th><th></th></tr></thead>
           <tbody id="logTableBody"></tbody>
@@ -467,8 +467,8 @@ footer{border-top:1px solid rgba(201,151,58,.12);padding:2.8rem 1.5rem;text-alig
     </div>
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
-        <span id="journalCount" style="font-family:'Cinzel',serif;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);">0 entries</span>
-        <select id="jFilter" onchange="renderJournal()" style="background:rgba(255,255,255,.05);border:1px solid rgba(201,151,58,.25);border-radius:3px;padding:.3rem .65rem;color:var(--text);font-family:'Lora',serif;font-size:.77rem;outline:none;">
+        <span id="journalCount" style="font-family:Cinzel,serif;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);">0 entries</span>
+        <select id="jFilter" onchange="renderJournal()" style="background:rgba(255,255,255,.05);border:1px solid rgba(201,151,58,.25);border-radius:3px;padding:.3rem .65rem;color:var(--text);font-family:Lora,serif;font-size:.77rem;outline:none;">
           <option value="all">All meetings</option>
           <option>Campfire 3 Share (Sunday)</option><option>Conquerors Reloaded (Monday)</option>
           <option>Topic Tuesday Theatre (Tuesday)</option><option>Battle Plan for Purity (Wednesday)</option>
@@ -1307,7 +1307,7 @@ function renderSobriety() {
       +'border-radius:5px;padding:.7rem .5rem;text-align:center;'
       +(achieved?"":"opacity:.45;")+'transition:all .3s;">'
       +'<div style="font-size:1.4rem;margin-bottom:.2rem;">'+m.icon+'</div>'
-      +'<div style="font-family:'Cinzel',serif;font-size:.58rem;color:'+(achieved?"var(--gold-lt)":"var(--gray)")+';letter-spacing:.08em;">'+m.label+'</div>'
+      +'<div style="font-family:Cinzel,serif;font-size:.58rem;color:'+(achieved?"var(--gold-lt)":"var(--gray)")+';letter-spacing:.08em;">'+m.label+'</div>'
       +(achieved?'<div style="font-size:.55rem;color:var(--green);margin-top:.2rem;">&#10003; Achieved</div>':'<div style="font-size:.55rem;color:var(--gray);margin-top:.2rem;">'+m.days+' days</div>')
       +'</div>';
   }).join("");
@@ -1317,7 +1317,7 @@ function renderSobriety() {
     document.getElementById("sobRelapseHistoryWrap").style.display = "block";
     document.getElementById("sobRelapseList").innerHTML = sobRelapses.slice().reverse().map(function(r, i) {
       return '<div style="border-left:3px solid rgba(201,151,58,.3);padding:.6rem 1rem;margin-bottom:.6rem;background:rgba(255,255,255,.02);border-radius:0 4px 4px 0;">'
-        +'<div style="font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold);margin-bottom:.2rem;">'
+        +'<div style="font-family:Cinzel,serif;font-size:.7rem;color:var(--gold);margin-bottom:.2rem;">'
         + new Date(r.date+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
         +'</div>'
         +(r.note?'<div style="font-size:.76rem;color:var(--gray);font-style:italic;">'+r.note+'</div>':'')
