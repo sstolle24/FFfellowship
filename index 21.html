@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Finally Free Fellowship</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#060d1a;--deep:#0a1628;--mid:#0d2244;--blue:#1a3a6b;
+  --gold:#c9973a;--gold-lt:#e8b85a;--gold-pale:#f5dfa0;
+  --white:#fff;--gray:#8a9bb5;--text:#ddd6c8;
+  --card:rgba(13,34,68,.92);--green:#27ae60;--red:#c0392b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:"Lora",Georgia,serif;background:var(--navy);color:var(--text);overflow-x:hidden;}
+body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:radial-gradient(ellipse at 15% 40%,rgba(26,58,107,.35) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 15%,rgba(201,151,58,.07) 0%,transparent 40%),
+             linear-gradient(180deg,#030912 0%,#060d1a 50%,#0a1628 100%);}
+nav{position:fixed;top:0;left:0;right:0;z-index:300;background:rgba(3,9,18,.96);backdrop-filter:blur(14px);border-bottom:1px solid rgba(201,151,58,.22);display:flex;align-items:center;justify-content:space-between;padding:0 1.8rem;height:58px;}
+.nav-brand{font-family:"Cinzel",serif;font-size:.9rem;font-weight:700;color:var(--gold-lt);letter-spacing:.08em;text-decoration:none;}
+.nav-links{display:flex;gap:1.5rem;list-style:none;}
+.nav-links a{font-family:"Cinzel",serif;font-size:.54rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gray);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--gold-lt);}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:5rem 1.5rem 3rem;}
+.hero-flame{font-size:4rem;animation:glow 3s ease-in-out infinite;margin-bottom:1rem;}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 18px rgba(201,151,58,.4));}50%{filter:drop-shadow(0 0 50px rgba(201,151,58,.9));}}
+.hero-eyebrow{font-family:"Cinzel",serif;font-size:.58rem;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;}
+.hero-title{font-family:"Cinzel Decorative",serif;font-size:clamp(2.8rem,7vw,5rem);font-weight:700;color:var(--white);line-height:1.1;margin-bottom:.4rem;text-shadow:0 0 80px rgba(201,151,58,.25);}
+.hero-title em{color:var(--gold-lt);font-style:normal;display:block;}
+.hero-sub{font-family:"Cinzel",serif;font-size:.76rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:1.4rem;}
+.hero-verse{font-style:italic;font-size:.98rem;color:rgba(221,214,200,.65);max-width:500px;line-height:1.9;margin-bottom:.5rem;}
+.hero-verse cite{display:block;font-style:normal;font-family:"Cinzel",serif;font-size:.56rem;letter-spacing:.2em;color:var(--gold);margin-top:.4rem;}
+.hero-mission{font-size:.84rem;color:rgba(221,214,200,.52);max-width:580px;line-height:1.85;margin:1rem 0 2.5rem;font-style:italic;}
+.hero-ctas{display:flex;gap:.7rem;flex-wrap:wrap;justify-content:center;}
+.btn{font-family:"Cinzel",serif;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;padding:.78rem 1.6rem;border-radius:2px;cursor:pointer;transition:all .25s;text-decoration:none;display:inline-block;border:none;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:var(--navy);box-shadow:0 4px 20px rgba(201,151,58,.3);}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(201,151,58,.5);}
+.btn-outline{background:transparent;color:var(--gold-lt);border:1px solid rgba(201,151,58,.45);}
+.btn-outline:hover{background:rgba(201,151,58,.1);transform:translateY(-2px);}
+.btn-green{background:linear-gradient(135deg,#1e8449,#27ae60);color:var(--white);}
+.btn-green:hover{transform:translateY(-2px);opacity:.95;}
+.btn-sm{padding:.46rem 1.1rem;font-size:.54rem;}
+.divider{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:4rem auto;}
+.section{max-width:1120px;margin:0 auto;padding:4rem 1.5rem;}
+.section-eyebrow{font-family:"Cinzel",serif;font-size:.54rem;letter-spacing:.38em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;}
+.section-title{font-family:"Cinzel",serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:600;color:var(--white);margin-bottom:.5rem;}
+.section-desc{font-size:.87rem;color:var(--gray);line-height:1.8;max-width:620px;margin-bottom:2rem;}
+.tabs{display:flex;border:1px solid rgba(201,151,58,.2);border-radius:4px;overflow:hidden;margin-bottom:2rem;flex-wrap:wrap;}
+.tab{flex:1;min-width:90px;font-family:"Cinzel",serif;font-size:.56rem;letter-spacing:.12em;padding:.68rem .5rem;text-align:center;background:transparent;color:var(--gray);border:none;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+.tab.active{background:rgba(201,151,58,.15);color:var(--gold-lt);}
+.tab:hover:not(.active){background:rgba(201,151,58,.06);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.card{background:var(--card);border:1px solid rgba(201,151,58,.18);border-radius:6px;padding:1.8rem;}
+.card-title{font-family:"Cinzel",serif;font-size:.95rem;color:var(--white);margin-bottom:.9rem;}
+.form-group{margin-bottom:1rem;}
+.form-group label{display:block;font-family:"Cinzel",serif;font-size:.54rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.32rem;}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(201,151,58,.25);border-radius:3px;padding:.6rem .95rem;color:var(--text);font-family:"Lora",serif;font-size:.87rem;outline:none;transition:border-color .2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);}
+.form-group textarea{resize:vertical;min-height:72px;}
+.form-group select option{background:var(--mid);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+#detox-section{background:rgba(3,9,18,.45);border-top:1px solid rgba(201,151,58,.1);border-bottom:1px solid rgba(201,151,58,.1);}
+.d21-enroll{background:var(--card);border:1px solid rgba(201,151,58,.22);border-radius:6px;padding:2rem;max-width:500px;}
+.d21-header{background:var(--card);border:1px solid rgba(201,151,58,.2);border-radius:6px;padding:1.6rem 2rem;margin-bottom:1.5rem;}
+.d21-header-row{display:flex;align-items:center;gap:2rem;flex-wrap:wrap;}
+.d21-meta{flex:1;min-width:180px;}
+.d21-name{font-family:"Cinzel",serif;font-size:1.05rem;color:var(--white);margin-bottom:.2rem;}
+.d21-started{font-size:.72rem;color:var(--gray);margin-bottom:.9rem;}
+.d21-stat-row{display:flex;gap:1rem;flex-wrap:wrap;}
+.d21-stat{text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(201,151,58,.12);border-radius:4px;padding:.7rem 1.1rem;min-width:70px;}
+.d21-stat-val{font-family:"Cinzel",serif;font-size:1.3rem;color:var(--gold-lt);}
+.d21-stat-label{font-size:.56rem;color:var(--gray);text-transform:uppercase;font-family:"Cinzel",serif;letter-spacing:.1em;}
+.d21-prog-bar{height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-top:1rem;}
+.d21-prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-lt));border-radius:3px;transition:width .6s ease;}
+.d21-list{display:flex;flex-direction:column;gap:.7rem;}
+.d21-item{background:var(--card);border:1px solid rgba(201,151,58,.12);border-radius:5px;padding:1.1rem 1.3rem;transition:all .25s;}
+.d21-item.completed{border-color:rgba(39,174,96,.35);background:rgba(39,174,96,.05);}
+.d21-item-row{display:flex;align-items:flex-start;gap:.9rem;}
+.d21-check{width:22px;height:22px;border:2px solid rgba(201,151,58,.4);border-radius:3px;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:2px;font-size:.8rem;font-weight:700;color:white;}
+.d21-check.done{background:var(--green);border-color:var(--green);}
+.d21-num{font-family:"Cinzel",serif;font-size:.68rem;color:var(--gold);flex-shrink:0;min-width:2rem;padding-top:3px;}
+.d21-body{flex:1;}
+.d21-title{font-family:"Cinzel",serif;font-size:.83rem;color:var(--white);margin-bottom:.3rem;}
+.d21-desc{font-size:.76rem;color:var(--gray);line-height:1.68;}
+.d21-badges{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.45rem;}
+.badge{font-family:"Cinzel",serif;font-size:.5rem;letter-spacing:.1em;padding:.16rem .48rem;border-radius:2px;text-transform:uppercase;}
+.badge-gold{background:rgba(201,151,58,.14);border:1px solid rgba(201,151,58,.3);color:var(--gold);}
+.badge-green{background:rgba(39,174,96,.1);border:1px solid rgba(39,174,96,.28);color:#2ecc71;}
+.d21-notes-btn{font-family:"Cinzel",serif;font-size:.5rem;letter-spacing:.1em;color:var(--gold);background:none;border:none;cursor:pointer;margin-top:.5rem;transition:color .2s;display:block;}
+.d21-notes-btn:hover{color:var(--gold-lt);}
+.d21-notes-wrap{display:none;margin-top:.5rem;}
+.d21-item.expanded .d21-notes-wrap{display:block;}
+.d21-notes-input{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(201,151,58,.2);border-radius:3px;padding:.5rem .8rem;color:var(--text);font-family:"Lora",serif;font-size:.8rem;outline:none;resize:vertical;min-height:55px;}
+.d21-notes-input:focus{border-color:var(--gold);}
+.zoom-rooms{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.8rem;}
+.zoom-room{flex:1;min-width:240px;background:rgba(26,58,107,.22);border:1px solid rgba(201,151,58,.22);border-radius:5px;padding:1.1rem 1.3rem;}
+.zoom-room h4{font-family:"Cinzel",serif;font-size:.7rem;color:var(--gold-lt);margin-bottom:.4rem;}
+.zoom-room p{font-size:.77rem;color:var(--gray);line-height:1.7;}
+.zoom-room a{color:var(--gold-lt);}
+.tz-banner{background:rgba(201,151,58,.07);border:1px solid rgba(201,151,58,.2);border-radius:3px;padding:.72rem 1.1rem;display:flex;align-items:center;gap:.65rem;margin-bottom:1.4rem;}
+.tz-banner p{font-size:.77rem;color:var(--gray);}
+.tz-banner a{color:var(--gold-lt);}
+.day-filters{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:1.5rem;}
+.day-btn{font-family:"Cinzel",serif;font-size:.54rem;letter-spacing:.1em;padding:.35rem .8rem;border-radius:2px;border:1px solid rgba(201,151,58,.25);background:transparent;color:var(--gray);cursor:pointer;transition:all .2s;}
+.day-btn:hover,.day-btn.active{background:rgba(201,151,58,.14);border-color:var(--gold);color:var(--gold-lt);}
+.meetings-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem;margin-bottom:1.4rem;}
+.meetings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:1.1rem;}
+.m-card{background:var(--card);border:1px solid rgba(201,151,58,.15);border-radius:6px;overflow:hidden;transition:all .28s;position:relative;}
+.m-card::before{content:"";position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--gold),var(--gold-lt));z-index:1;}
+.m-card:hover{transform:translateY(-4px);border-color:rgba(201,151,58,.45);box-shadow:0 18px 55px rgba(0,0,0,.5);}
+.m-art-wrap{overflow:hidden;position:relative;}
+.m-art{width:100%;height:165px;object-fit:cover;object-position:top center;display:block;transition:transform .4s;}
+.m-card:hover .m-art{transform:scale(1.03);}
+.m-art-overlay{position:absolute;bottom:0;left:0;right:0;height:55px;background:linear-gradient(transparent,rgba(6,13,26,.9));}
+.m-body{padding:1.2rem 1.2rem 1.2rem 1.6rem;}
+.m-day{font-family:"Cinzel",serif;font-size:.54rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:.25rem;}
+.m-name{font-family:"Cinzel",serif;font-size:.92rem;font-weight:600;color:var(--white);margin-bottom:.55rem;line-height:1.3;}
+.m-tagline{font-size:.74rem;color:var(--gray);font-style:italic;margin-bottom:.8rem;line-height:1.6;}
+.m-detail{font-size:.72rem;color:var(--gray);display:flex;gap:.38rem;align-items:flex-start;margin-bottom:.26rem;line-height:1.5;}
+.m-detail span:first-child{flex-shrink:0;width:1rem;}
+.m-actions{display:flex;gap:.4rem;margin-top:.9rem;flex-wrap:wrap;}
+.join-btn{font-family:"Cinzel",serif;font-size:.54rem;letter-spacing:.1em;padding:.45rem .9rem;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:var(--navy);border:none;border-radius:2px;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block;}
+.join-btn:hover{opacity:.9;transform:translateY(-1px);}
+.copy-btn{font-family:"Cinzel",serif;font-size:.54rem;letter-spacing:.1em;padding:.45rem .8rem;background:transparent;color:var(--gold);border:1px solid rgba(201,151,58,.4);border-radius:2px;cursor:pointer;transition:all .2s;}
+.copy-btn:hover{background:rgba(201,151,58,.1);}
+#ninety-section{background:rgba(3,9,18,.45);border-top:1px solid rgba(201,151,58,.1);border-bottom:1px solid rgba(201,151,58,.1);}
+.n90-enroll-card{background:var(--card);border:1px solid rgba(201,151,58,.2);border-radius:6px;padding:2rem;max-width:500px;}
+.progress-board{background:var(--card);border:1px solid rgba(201,151,58,.2);border-radius:6px;padding:2rem;}
+.pb-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;}
+.pb-title{font-family:"Cinzel",serif;font-size:.95rem;color:var(--white);}
+.progress-ring-row{display:flex;align-items:center;gap:2rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.progress-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;flex:1;min-width:180px;}
+.stat-box{background:rgba(255,255,255,.04);border:1px solid rgba(201,151,58,.12);border-radius:4px;padding:.9rem;text-align:center;}
+.stat-val{font-family:"Cinzel",serif;font-size:1.4rem;color:var(--gold-lt);}
+.stat-label{font-size:.6rem;color:var(--gray);letter-spacing:.1em;text-transform:uppercase;font-family:"Cinzel",serif;}
+.log-table-wrap{overflow-x:auto;margin-top:1.2rem;}
+table.log-table{width:100%;border-collapse:collapse;font-size:.8rem;}
+table.log-table th{font-family:"Cinzel",serif;font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);padding:.58rem .75rem;border-bottom:1px solid rgba(201,151,58,.25);text-align:left;white-space:nowrap;}
+table.log-table td{padding:.52rem .75rem;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;color:var(--text);}
+table.log-table tr:hover td{background:rgba(255,255,255,.02);}
+.log-day-num{font-family:"Cinzel",serif;color:var(--gold);font-size:.7rem;}
+.lb-row{display:flex;align-items:center;gap:1rem;background:rgba(255,255,255,.04);border:1px solid rgba(201,151,58,.1);border-radius:4px;padding:.62rem 1rem;margin-bottom:.45rem;}
+.lb-rank{font-family:"Cinzel",serif;font-size:.78rem;color:var(--gold);min-width:2.5rem;text-align:center;}
+.lb-name{flex:1;font-size:.82rem;color:var(--white);}
+.lb-bar-wrap{width:90px;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
+.lb-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-lt));border-radius:3px;transition:width .5s;}
+.lb-count{font-family:"Cinzel",serif;font-size:.65rem;color:var(--gold-lt);min-width:3.5rem;text-align:right;}
+.journal-layout{display:grid;grid-template-columns:300px 1fr;gap:1.5rem;align-items:start;}
+.journal-form-card{background:var(--card);border:1px solid rgba(201,151,58,.2);border-radius:6px;padding:1.5rem;position:sticky;top:70px;}
+.j-entry{background:var(--card);border:1px solid rgba(201,151,58,.15);border-radius:6px;padding:1.3rem;margin-bottom:.8rem;transition:border-color .2s;}
+.j-entry:hover{border-color:rgba(201,151,58,.35);}
+.j-entry-header{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;margin-bottom:.5rem;}
+.j-meeting-name{font-family:"Cinzel",serif;font-size:.78rem;color:var(--gold-lt);margin-bottom:.15rem;}
+.j-entry-date{font-size:.65rem;color:var(--gray);}
+.j-entry-text{font-size:.81rem;color:var(--text);line-height:1.75;}
+.j-entry-insight{margin-top:.5rem;font-size:.74rem;color:var(--gray);font-style:italic;}
+.j-entry-insight span{color:var(--gold);font-style:normal;}
+.j-delete{background:none;border:none;color:rgba(138,155,181,.3);cursor:pointer;font-size:.8rem;padding:.15rem;transition:color .2s;flex-shrink:0;}
+.j-delete:hover{color:var(--red);}
+.j-empty{font-size:.83rem;color:var(--gray);font-style:italic;text-align:center;padding:2.5rem 1rem;}
+.other-wrap{display:none;margin-top:.5rem;}
+.other-wrap.show{display:block;}
+#map-section{background:rgba(3,9,18,.45);border-top:1px solid rgba(201,151,58,.1);border-bottom:1px solid rgba(201,151,58,.1);}
+.map-wrap{background:rgba(6,13,26,.9);border:1px solid rgba(201,151,58,.2);border-radius:6px;overflow:hidden;height:440px;position:relative;}
+#world-map{width:100%;height:100%;}
+.country{fill:#0e1e3a;stroke:#162d56;stroke-width:.4;transition:fill .2s;}
+.country:hover{fill:#162d56;}
+.member-dot{cursor:pointer;}
+.map-tooltip{position:absolute;z-index:50;display:none;pointer-events:none;background:var(--mid);border:1px solid rgba(201,151,58,.45);border-radius:5px;padding:.9rem 1.1rem;min-width:165px;box-shadow:0 8px 30px rgba(0,0,0,.6);}
+.tt-name{font-family:"Cinzel",serif;font-size:.82rem;color:var(--white);margin-bottom:.22rem;}
+.tt-loc{font-size:.72rem;color:var(--gold);margin-bottom:.18rem;}
+.tt-contact{font-size:.7rem;color:var(--gray);}
+@keyframes ping{0%{transform:scale(1);opacity:.8;}100%{transform:scale(3);opacity:0;}}
+.map-controls{display:flex;gap:.8rem;align-items:center;margin-bottom:1.3rem;flex-wrap:wrap;}
+.member-count-badge{font-family:"Cinzel",serif;font-size:.6rem;letter-spacing:.1em;color:var(--gray);background:rgba(201,151,58,.1);border:1px solid rgba(201,151,58,.2);border-radius:2px;padding:.3rem .75rem;}
+.members-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:.55rem;margin-top:1.3rem;}
+.member-pill{background:rgba(255,255,255,.04);border:1px solid rgba(201,151,58,.15);border-radius:3px;padding:.6rem .9rem;}
+.mp-name{font-size:.78rem;color:var(--white);margin-bottom:.1rem;}
+.mp-loc{font-size:.66rem;color:var(--gold);}
+.mp-contact{font-size:.63rem;color:var(--gray);}
+.nm-banner{background:linear-gradient(135deg,rgba(26,58,107,.45),rgba(13,34,68,.75));border:1px solid rgba(201,151,58,.28);border-radius:6px;padding:1.4rem 1.8rem;display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;}
+.nm-banner h3{font-family:"Cinzel",serif;font-size:.92rem;color:var(--white);margin-bottom:.25rem;}
+.nm-banner p{font-size:.78rem;color:var(--gray);line-height:1.6;}
+.giving-card{background:var(--card);border:1px solid rgba(201,151,58,.25);border-radius:8px;padding:2.2rem;max-width:660px;margin:0 auto;text-align:center;}
+.giving-title{font-family:"Cinzel Decorative",serif;font-size:1.65rem;color:var(--gold-lt);margin-bottom:.3rem;}
+.giving-verse{font-style:italic;font-size:.86rem;color:var(--gray);margin-bottom:1.5rem;}
+.giving-art{width:100%;max-width:360px;border-radius:6px;margin:0 auto 1.5rem;display:block;border:1px solid rgba(201,151,58,.2);}
+.giving-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:1.2rem;}
+.giving-method{background:rgba(255,255,255,.04);border:1px solid rgba(201,151,58,.2);border-radius:5px;padding:1rem .8rem;}
+.gm-icon{font-size:1.4rem;margin-bottom:.28rem;}
+.gm-label{font-family:"Cinzel",serif;font-size:.56rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.22rem;}
+.gm-val{font-size:.8rem;color:var(--white);}
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.9rem;}
+.contact-card{background:var(--card);border:1px solid rgba(201,151,58,.15);border-radius:5px;padding:1.3rem;text-align:center;}
+.cc-name{font-family:"Cinzel",serif;font-size:.88rem;color:var(--white);margin-bottom:.28rem;}
+.cc-role{font-size:.6rem;color:var(--gold);font-family:"Cinzel",serif;letter-spacing:.1em;margin-bottom:.45rem;}
+.contact-card a{font-size:.77rem;color:var(--gray);text-decoration:none;display:block;margin:.1rem 0;}
+.contact-card a:hover{color:var(--gold-lt);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.84);backdrop-filter:blur(5px);z-index:500;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--mid);border:1px solid rgba(201,151,58,.35);border-radius:8px;padding:2rem;width:92%;max-width:440px;max-height:90vh;overflow-y:auto;position:relative;}
+.modal-title{font-family:"Cinzel",serif;font-size:1.05rem;color:var(--white);margin-bottom:.2rem;}
+.modal-sub{font-size:.75rem;color:var(--gray);margin-bottom:1.5rem;font-style:italic;}
+.modal-close{position:absolute;top:.8rem;right:.9rem;background:none;border:none;color:var(--gray);font-size:1.4rem;cursor:pointer;line-height:1;transition:color .2s;}
+.modal-close:hover{color:var(--gold);}
+.coord-hint{font-size:.67rem;color:var(--gray);font-style:italic;margin-bottom:.9rem;}
+.coord-hint a{color:var(--gold-lt);}
+footer{border-top:1px solid rgba(201,151,58,.12);padding:2.8rem 1.5rem;text-align:center;}
+.footer-brand{font-family:"Cinzel Decorative",serif;font-size:1.05rem;color:var(--gold-lt);margin-bottom:.35rem;}
+.footer-verse{font-style:italic;font-size:.78rem;color:var(--gray);margin-bottom:1.3rem;}
+.footer-links{display:flex;gap:1.6rem;justify-content:center;list-style:none;flex-wrap:wrap;}
+.footer-links a{font-family:"Cinzel",serif;font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);text-decoration:none;transition:color .2s;}
+.footer-links a:hover{color:var(--gold);}
+.footer-copy{margin-top:1.3rem;font-size:.62rem;color:rgba(138,155,181,.28);font-style:italic;}
+.toast{position:fixed;bottom:1.8rem;right:1.8rem;background:var(--mid);border:1px solid var(--gold);border-radius:4px;padding:.75rem 1.2rem;font-family:"Cinzel",serif;font-size:.66rem;letter-spacing:.1em;color:var(--gold-lt);z-index:999;transform:translateY(100px);opacity:0;transition:all .35s;white-space:nowrap;}
+.toast.show{transform:translateY(0);opacity:1;}
+@media(max-width:720px){
+  .nav-links{display:none;}
+  .form-row{grid-template-columns:1fr;}
+  .giving-methods{grid-template-columns:1fr;}
+  .journal-layout{grid-template-columns:1fr;}
+  .journal-form-card{position:static;}
+  .progress-ring-row{flex-direction:column;align-items:flex-start;}
+  .d21-header-row{flex-direction:column;}
+  .log-table-wrap table{font-size:.7rem;}
+}
+
+.del-btn:hover{color:#c0392b!important;}
+
+.panic-btn{background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff;font-family:Cinzel,serif;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;border:none;border-radius:4px;padding:.9rem 2rem;cursor:pointer;box-shadow:0 4px 20px rgba(192,57,43,.5);transition:all .3s;display:flex;align-items:center;gap:.6rem;}
+.panic-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(192,57,43,.7);}
+.panic-btn .panic-icon{font-size:1.3rem;animation:pulse-red 1.5s ease-in-out infinite;}
+@keyframes pulse-red{0%,100%{opacity:1;}50%{opacity:.5;}}
+.panic-enrolled{background:var(--card);border:1px solid rgba(192,57,43,.3);border-radius:6px;padding:1.5rem;}
+
+
+/* Collapsible meeting list */
+.meetings-view-toggle{display:flex;gap:.35rem;margin-left:auto;}
+.view-btn{font-family:Cinzel,serif;font-size:.5rem;letter-spacing:.1em;padding:.3rem .65rem;border-radius:2px;border:1px solid rgba(201,151,58,.25);background:transparent;color:var(--gray);cursor:pointer;transition:all .2s;}
+.view-btn.active{background:rgba(201,151,58,.14);border-color:var(--gold);color:var(--gold-lt);}
+/* List view */
+.m-list-item{border:1px solid rgba(201,151,58,.12);border-radius:5px;margin-bottom:.4rem;overflow:hidden;transition:border-color .2s;background:var(--card);}
+.m-list-item:hover{border-color:rgba(201,151,58,.35);}
+.m-list-header{display:flex;align-items:center;gap:.8rem;padding:.75rem 1rem;cursor:pointer;user-select:none;}
+.m-list-day-badge{font-family:Cinzel,serif;font-size:.5rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:rgba(201,151,58,.1);border:1px solid rgba(201,151,58,.2);border-radius:2px;padding:.15rem .45rem;flex-shrink:0;min-width:2.8rem;text-align:center;}
+.m-list-name{font-family:Cinzel,serif;font-size:.82rem;color:var(--white);flex:1;}
+.m-list-time{font-size:.66rem;color:var(--gray);flex-shrink:0;}
+.m-list-chevron{font-size:.7rem;color:var(--gold);transition:transform .25s;flex-shrink:0;}
+.m-list-item.open .m-list-chevron{transform:rotate(90deg);}
+.m-list-body{display:none;padding:0 1rem 1rem 1rem;border-top:1px solid rgba(201,151,58,.1);}
+.m-list-item.open .m-list-body{display:block;}
+.m-list-tagline{font-size:.76rem;color:var(--gray);font-style:italic;margin:.6rem 0 .5rem;line-height:1.6;}
+.m-list-details{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin-bottom:.7rem;}
+.m-list-detail{font-size:.7rem;color:var(--gray);display:flex;gap:.3rem;align-items:center;}
+.m-list-actions{display:flex;gap:.4rem;flex-wrap:wrap;}
+
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-brand" href="#"><img src="https://i.ibb.co/6cC7ykM1/33-FB26-A3-661-F-4572-B749-1994-DCDBE3-CD.png" alt="FF" style="height:28px;width:28px;object-fit:contain;vertical-align:middle;margin-right:.4rem;">Finally Free</a>
+  <ul class="nav-links">
+    <li><a href="#panic-section" style="color:#e74c3c;">&#128997; Help</a></li>
+    <li><a href="#meetings">Meetings</a></li>
+    <li><a href="#sobriety-section">Sobriety</a></li>
+    <li><a href="#ninety-section">90 in 90</a></li>
+    <li><a href="#journal-section">Journal</a></li>
+    <li><a href="#detox-section">Detox-21</a></li>
+    <li><a href="#map-section">Map</a></li>
+    <li><a href="#giving-section">Give</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <img id="ff-logo" src="https://i.ibb.co/6cC7ykM1/33-FB26-A3-661-F-4572-B749-1994-DCDBE3-CD.png" alt="Finally Free" style="width:130px;height:130px;object-fit:contain;margin-bottom:1rem;filter:drop-shadow(0 0 30px rgba(201,151,58,.5));animation:glow 3s ease-in-out infinite;">
+  <p class="hero-eyebrow">A Band of Brothers &middot; Finally Free Fellowship</p>
+  <h1 class="hero-title">Finally<em>Free</em></h1>
+  <p class="hero-sub">Men&#8217;s Recovery &amp; Accountability</p>
+  <blockquote class="hero-verse">&#8220;So if the Son sets you free, you will be free indeed.&#8221;<cite>&#8212; John 8:36</cite></blockquote>
+  <p class="hero-mission">Achieving freedom from sex and porn addiction is possible &#8212; and we&#8217;ve done it. Join our <strong style="color:var(--gold-lt)">FREE</strong> support group.</p>
+  <div class="hero-ctas">
+    <a href="#ninety-section" class="btn btn-gold">90 in 90</a>
+    <a href="#detox-section" class="btn btn-outline">Detox-21</a>
+    <a href="#journal-section" class="btn btn-outline">Journal</a>
+    <a href="#map-section" class="btn btn-outline">Fellowship Map</a>
+  </div>
+  <div style="margin-top:2.5rem;width:100%;max-width:960px;">
+    <p class="section-eyebrow" style="margin-bottom:.8rem;">Join a Meeting</p>
+    <div class="tz-banner" style="margin-bottom:1rem;text-align:left;"><span>&#127760;</span><p>All times UTC. <a href="https://www.thetimezoneconverter.com/" target="_blank">Convert to your timezone &#8594;</a></p></div>
+    <div class="meetings-header" style="margin-bottom:1rem;">
+      <div class="day-filters">
+        <button class="day-btn active" onclick="filterDay('all',this)">All</button>
+        <button class="day-btn" onclick="filterDay('Sunday',this)">Sun</button>
+        <button class="day-btn" onclick="filterDay('Monday',this)">Mon</button>
+        <button class="day-btn" onclick="filterDay('Tuesday',this)">Tue</button>
+        <button class="day-btn" onclick="filterDay('Wednesday',this)">Wed</button>
+        <button class="day-btn" onclick="filterDay('Thursday',this)">Thu</button>
+        <button class="day-btn" onclick="filterDay('Friday',this)">Fri</button>
+        <button class="day-btn" onclick="filterDay('Saturday',this)">Sat</button>
+      </div>
+      <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;">
+        <div class="meetings-view-toggle">
+          <button class="view-btn" id="viewGrid" onclick="setMeetingView('grid')" title="Grid view">&#9783;</button>
+          <button class="view-btn active" id="viewList" onclick="setMeetingView('list')" title="List view">&#9776;</button>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="openAddMeetingModal()" style="white-space:nowrap;">&#10133; Add Meeting</button>
+      </div>
+    </div>
+    <div id="meetingsGrid" class="meetings-grid"></div>
+    <div class="nm-banner" style="margin-top:2rem;">
+      <div style="font-size:2rem;flex-shrink:0;">&#128197;</div>
+      <div><h3>Need a Meeting NOW?</h3><p>The NextMeeting app shows ALL SA meetings happening around the world &#8212; automatically converted to your local timezone.</p></div>
+      <a href="https://nextmeeting.org/275EE30A-220F-4FF2-A950-0ED2B5E4C257.html" target="_blank" class="btn btn-gold">Open NextMeeting &#8594;</a>
+    </div>
+  </div>
+</section>
+<div class="divider"></div>
+<section id="sobriety-section"><div class="section">
+  <p class="section-eyebrow">My Recovery</p>
+  <h2 class="section-title">My Sobriety Journey</h2>
+  <p class="section-desc">Track your days of freedom. Every day matters. Every streak is a victory.</p>
+
+  <!-- ENROLLED STATE: hidden until enrolled -->
+  <div id="sobEnrollWrap"><div class="d21-enroll" style="max-width:460px;">
+    <div class="card-title">Start Your Sobriety Clock</div>
+    <div class="form-group"><label>Your Name</label><input type="text" id="sobName" placeholder="Brother John"></div>
+    <div class="form-group"><label>Sobriety Start Date</label><input type="date" id="sobDate"></div>
+    <div class="form-group"><label>Your Why (optional)</label><textarea id="sobWhy" rows="2" placeholder="Why do you want freedom?"></textarea></div>
+    <button class="btn btn-gold" style="width:100%;margin-top:.4rem;" onclick="startSobriety()">Start My Clock</button>
+    <p style="font-size:.7rem;color:var(--gray);margin-top:.7rem;font-style:italic;">Saved locally on this device.</p>
+  </div></div>
+
+  <!-- ACTIVE STATE -->
+  <div id="sobMainWrap" style="display:none;">
+
+    <!-- Big counter card -->
+    <div style="background:var(--card);border:1px solid rgba(201,151,58,.25);border-radius:8px;padding:2rem;margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+
+        <!-- Ring -->
+        <div style="flex-shrink:0;position:relative;">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="68" fill="none" stroke="rgba(201,151,58,.12)" stroke-width="10"/>
+            <circle id="sobRing" cx="80" cy="80" r="68" fill="none" stroke="url(#sobGrad)"
+              stroke-width="10" stroke-linecap="round" stroke-dasharray="427.3"
+              stroke-dashoffset="427.3" transform="rotate(-90 80 80)"
+              style="transition:stroke-dashoffset 1s ease;"/>
+            <defs><linearGradient id="sobGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#c9973a"/><stop offset="100%" stop-color="#e8b85a"/>
+            </linearGradient></defs>
+            <text id="sobDaysNum" x="80" y="72" text-anchor="middle" fill="#e8b85a"
+              font-family="Cinzel,serif" font-size="36" font-weight="700">0</text>
+            <text x="80" y="94" text-anchor="middle" fill="#8a9bb5"
+              font-family="Cinzel,serif" font-size="11">DAYS</text>
+            <text x="80" y="112" text-anchor="middle" fill="#c9973a"
+              font-family="Lora,serif" font-size="10" font-style="italic">FREE</text>
+          </svg>
+        </div>
+
+        <!-- Stats -->
+        <div style="flex:1;min-width:200px;">
+          <div id="sobNameDisplay" style="font-family:Cinzel,serif;font-size:1.1rem;color:var(--white);margin-bottom:.2rem;"></div>
+          <div id="sobWhyDisplay" style="font-size:.78rem;color:var(--gray);font-style:italic;margin-bottom:1.2rem;"></div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.2rem;">
+            <div class="d21-stat"><div class="d21-stat-val" id="sobDaysStat">0</div><div class="d21-stat-label">Days</div></div>
+            <div class="d21-stat"><div class="d21-stat-val" id="sobWeeksStat">0</div><div class="d21-stat-label">Weeks</div></div>
+            <div class="d21-stat"><div class="d21-stat-val" id="sobMonthsStat">0</div><div class="d21-stat-label">Months</div></div>
+          </div>
+          <div style="font-size:.7rem;color:var(--gray);font-style:italic;margin-bottom:1rem;">
+            Started: <span id="sobStartDisplay"></span>
+            <span id="sobMilestoneDisplay" style="margin-left:.8rem;color:var(--gold);font-style:normal;font-family:Cinzel,serif;font-size:.6rem;"></span>
+          </div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+            <button class="btn btn-outline btn-sm" onclick="openRelapseModal()">&#128997; Record Relapse</button>
+            <button class="btn btn-outline btn-sm" onclick="exportSobriety()">Export</button>
+            <button class="btn btn-outline btn-sm" onclick="resetSobriety()" style="color:rgba(138,155,181,.5);border-color:rgba(138,155,181,.2);">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Milestones -->
+    <div style="background:var(--card);border:1px solid rgba(201,151,58,.18);border-radius:6px;padding:1.5rem;margin-bottom:1.5rem;">
+      <div style="font-family:Cinzel,serif;font-size:.75rem;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;">Milestones</div>
+      <div id="sobMilestones" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.6rem;"></div>
+    </div>
+
+    <!-- Relapse history -->
+    <div id="sobRelapseHistoryWrap" style="display:none;background:var(--card);border:1px solid rgba(201,151,58,.18);border-radius:6px;padding:1.5rem;">
+      <div style="font-family:Cinzel,serif;font-size:.75rem;color:var(--gold);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1rem;">Relapse Journal</div>
+      <p style="font-size:.74rem;color:var(--gray);font-style:italic;margin-bottom:.8rem;">Every stumble is a lesson. You got back up.</p>
+      <div id="sobRelapseList"></div>
+    </div>
+
+  </div>
+</div></section>
+<div class="divider"></div>
+
+<section id="panic-section" style="background:linear-gradient(180deg,rgba(80,0,0,.15),rgba(3,9,18,.6));border-top:1px solid rgba(192,57,43,.2);border-bottom:1px solid rgba(192,57,43,.2);">
+<div class="section" style="padding:2rem 1.5rem;">
+  <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;justify-content:space-between;">
+    <div>
+      <p class="section-eyebrow" style="color:#e74c3c;">Emergency</p>
+      <h2 style="font-family:Cinzel,serif;font-size:1.3rem;color:var(--white);margin-bottom:.3rem;">Panic Button</h2>
+      <p style="font-size:.8rem;color:var(--gray);max-width:500px;line-height:1.7;">
+        Struggling right now? Hit the button. Your name and number broadcast to the fellowship — brothers will reach out. <em style="color:var(--gold);">You are not alone.</em>
+      </p>
+    </div>
+    <div id="panicButtonWrap">
+      <button class="panic-btn" onclick="openPanicEnroll()">
+        <span class="panic-icon">&#128997;</span> I Need Help Now
+      </button>
+    </div>
+  </div>
+  <div id="panicActiveWrap" style="display:none;margin-top:1.2rem;">
+    <div class="panic-enrolled">
+      <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.8rem;flex-wrap:wrap;">
+        <span style="font-size:1.5rem;">&#128997;</span>
+        <div>
+          <div style="font-family:Cinzel,serif;font-size:.8rem;color:#e74c3c;">Alert Active</div>
+          <div id="panicStatusText" style="font-size:.72rem;color:var(--gray);"></div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="clearPanicAlert()" style="margin-left:auto;color:var(--gray);">I&#8217;m OK &#10003;</button>
+      </div>
+      <div style="font-size:.74rem;color:var(--gray);font-style:italic;background:rgba(192,57,43,.08);border-radius:4px;padding:.6rem .9rem;border-left:3px solid rgba(192,57,43,.4);">
+        &#8220;What are you NOT doing in your program right now that you should be?&#8221;
+      </div>
+    </div>
+  </div>
+  <div id="panicAlertList" style="margin-top:1rem;"></div>
+</div></section>
+<div class="divider"></div>
+<section id="ninety-section"><div class="section">
+  <p class="section-eyebrow">The Challenge</p>
+  <h2 class="section-title">90 Meetings in 90 Days</h2>
+  <p class="section-desc">Only SA and Conquerors/FF meetings count. Log each with date, location, and notes.</p>
+  <div class="tabs" id="n90Tabs">
+    <button class="tab active" onclick="switchN90('progress',this)">My Progress</button>
+    <button class="tab" onclick="switchN90('log',this)">Meeting Log</button>
+    <button class="tab" onclick="switchN90('leaderboard',this)">Fellowship Board</button>
+  </div>
+  <div class="tab-panel active" id="n90-progress">
+    <div id="enrollFormWrap"><div class="n90-enroll-card">
+      <div class="card-title">Enroll in the 90-in-90</div>
+      <div class="form-group"><label>Your Name</label><input type="text" id="e90Name" placeholder="Brother John"></div>
+      <div class="form-group"><label>Start Date</label><input type="date" id="e90Start"></div>
+      <button class="btn btn-gold" style="width:100%;" onclick="enroll90()">Begin the Challenge</button>
+    </div></div>
+    <div id="progressWrap" style="display:none;"><div class="progress-board">
+      <div class="pb-header">
+        <div class="pb-title"><span id="pb-name"></span>&#8217;s Journey</div>
+        <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" onclick="switchN90('log',document.querySelectorAll('#n90Tabs .tab')[1])">+ Log a Meeting</button>
+          <button class="btn btn-green btn-sm" onclick="exportLog()">Export</button>
+          <button class="btn btn-outline btn-sm" onclick="resetN90()">Reset</button>
+        </div>
+      </div>
+      <div class="progress-ring-row">
+        <svg width="110" height="110" viewBox="0 0 110 110" style="flex-shrink:0;">
+          <circle cx="55" cy="55" r="48" fill="none" stroke="rgba(201,151,58,.15)" stroke-width="8"/>
+          <circle id="progressCircle" cx="55" cy="55" r="48" fill="none" stroke="url(#goldGrad)" stroke-width="8" stroke-dasharray="301.6" stroke-dashoffset="301.6" stroke-linecap="round" transform="rotate(-90 55 55)" style="transition:stroke-dashoffset .6s ease;"/>
+          <defs><linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#c9973a"/><stop offset="100%" stop-color="#e8b85a"/></linearGradient></defs>
+          <text x="55" y="50" text-anchor="middle" fill="#e8b85a" font-family="Cinzel,serif" font-size="18" font-weight="700" id="pct-text">0%</text>
+          <text x="55" y="66" text-anchor="middle" fill="#8a9bb5" font-family="Lora,serif" font-size="9">complete</text>
+        </svg>
+        <div class="progress-stats">
+          <div class="stat-box"><div class="stat-val" id="stat-done">0</div><div class="stat-label">Done</div></div>
+          <div class="stat-box"><div class="stat-val" id="stat-left">90</div><div class="stat-label">Left</div></div>
+          <div class="stat-box"><div class="stat-val" id="stat-streak">0</div><div class="stat-label">Streak</div></div>
+        </div>
+      </div>
+      <p style="font-size:.7rem;color:var(--gray);font-style:italic;">Started: <span id="pb-start"></span> &middot; Target: <span id="pb-target"></span></p>
+    </div></div>
+  </div>
+  <div class="tab-panel" id="n90-log">
+    <div style="display:grid;grid-template-columns:290px 1fr;gap:1.5rem;align-items:start;">
+      <div class="card" style="position:sticky;top:70px;">
+        <div class="card-title" style="margin-bottom:.9rem;">Log a Meeting</div>
+        <div class="form-group"><label>Meeting #</label><input type="number" id="logNum" min="1" max="90" value="1"></div>
+        <div class="form-group"><label>Date</label><input type="date" id="logDate"></div>
+        <div class="form-group"><label>Location / Meeting Name</label><input type="text" id="logLoc" placeholder="Finally Free, SA Online..."></div>
+        <div class="form-group"><label>Notes</label><textarea id="logNotes" rows="3" placeholder="What stood out?"></textarea></div>
+        <button class="btn btn-gold" style="width:100%;" onclick="addLogEntry()">Save Entry</button>
+        <button class="btn btn-outline btn-sm" style="width:100%;margin-top:.5rem;" onclick="exportLog()">Export as Text</button>
+      </div>
+      <div>
+        <div id="logCount" style="font-family:Cinzel,serif;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem;">0 of 90 logged</div>
+        <div class="log-table-wrap"><table class="log-table">
+          <thead><tr><th>#</th><th>Date</th><th>Location</th><th>Notes</th><th></th></tr></thead>
+          <tbody id="logTableBody"></tbody>
+        </table></div>
+        <p id="logEmpty" style="font-size:.82rem;color:var(--gray);font-style:italic;margin-top:1rem;">No meetings logged yet.</p>
+      </div>
+    </div>
+  </div>
+  <div class="tab-panel" id="n90-leaderboard"><div class="progress-board">
+    <div class="pb-header"><div class="pb-title">Fellowship Board</div><span style="font-size:.7rem;color:var(--gray);font-style:italic;">Shared across all members</span></div>
+    <div id="leaderboardList"><p style="font-size:.8rem;color:var(--gray);font-style:italic;">Loading...</p></div>
+  </div></div>
+</div></section>
+<div class="divider"></div>
+<section id="journal-section"><div class="section">
+  <p class="section-eyebrow">Personal Record</p>
+  <h2 class="section-title">Meeting Journal</h2>
+  <p class="section-desc">Document your insights from every meeting.</p>
+  <div class="journal-layout">
+    <div class="journal-form-card">
+      <div class="card-title" style="margin-bottom:.9rem;">Log a Meeting</div>
+      <div class="form-group"><label>Meeting</label>
+        <select id="jMeeting" onchange="handleMeetingSelect()">
+          <option value="">Select a meeting...</option>
+          <optgroup label="Finally Free">
+            <option>Campfire 3 Share (Sunday)</option><option>Conquerors Reloaded (Monday)</option>
+            <option>Topic Tuesday Theatre (Tuesday)</option><option>Battle Plan for Purity (Wednesday)</option>
+            <option>Singapore Cartel (Thursday)</option><option>Thursday Night Conquerors (Thursday)</option>
+            <option>Thursday Night Warpath (Thursday)</option><option>The Space Capsule (Friday)</option>
+            <option>The Healing Room (Saturday)</option>
+          </optgroup>
+          <optgroup label="Other"><option value="__other__">Other Meeting...</option></optgroup>
+        </select>
+        <div class="other-wrap" id="otherMeetingWrap"><input type="text" id="otherMeeting" placeholder="e.g. SA Nashville..."></div>
+      </div>
+      <div class="form-group"><label>Date</label><input type="date" id="jDate"></div>
+      <div class="form-group"><label>How did you feel?</label>
+        <select id="jMood">
+          <option value="Strong">Strong / Empowered</option><option value="Grateful">Grateful / Peaceful</option>
+          <option value="Fired Up">Fired Up / Motivated</option><option value="Challenged">Challenged / Struggled</option>
+          <option value="Hopeful">Hopeful / Healing</option><option value="Heavy">Heavy / Processing</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Notes / Takeaways</label><textarea id="jNotes" rows="4" placeholder="What stood out?"></textarea></div>
+      <div class="form-group"><label>Key Insight (optional)</label><input type="text" id="jInsight" placeholder="One sentence that hit home..."></div>
+      <button class="btn btn-gold" style="width:100%;" onclick="addJournalEntry()">Save Entry</button>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem;">
+        <span id="journalCount" style="font-family:Cinzel,serif;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);">0 entries</span>
+        <select id="jFilter" onchange="renderJournal()" style="background:rgba(255,255,255,.05);border:1px solid rgba(201,151,58,.25);border-radius:3px;padding:.3rem .65rem;color:var(--text);font-family:Lora,serif;font-size:.77rem;outline:none;">
+          <option value="all">All meetings</option>
+          <option>Campfire 3 Share (Sunday)</option><option>Conquerors Reloaded (Monday)</option>
+          <option>Topic Tuesday Theatre (Tuesday)</option><option>Battle Plan for Purity (Wednesday)</option>
+          <option>Singapore Cartel (Thursday)</option><option>Thursday Night Conquerors (Thursday)</option>
+          <option>Thursday Night Warpath (Thursday)</option><option>The Space Capsule (Friday)</option>
+          <option>The Healing Room (Saturday)</option><option value="__other__">Other Meetings</option>
+        </select>
+      </div>
+      <div id="journalEntries"><p class="j-empty">No entries yet.</p></div>
+    </div>
+  </div>
+</div></section>
+<div class="divider"></div>
+<section id="detox-section"><div class="section">
+  <p class="section-eyebrow">F.F. Detox Group</p>
+  <h2 class="section-title">Detox-21 Checklist</h2>
+  <p class="section-desc">21 sobriety exercises before beginning Conquerors. Items marked <span style="color:var(--gold)">Turn In</span> go to your FF Leader.</p>
+  <div id="d21EnrollWrap"><div class="d21-enroll">
+    <div class="card-title">Enroll in Detox-21</div>
+    <div class="form-group"><label>Your Name</label><input type="text" id="d21Name" placeholder="Brother John"></div>
+    <div class="form-group"><label>Start Date</label><input type="date" id="d21StartDate"></div>
+    <div class="form-group"><label>Accountability Partner</label><input type="text" id="d21APName" placeholder="AP name (can add later)"></div>
+    <button class="btn btn-gold" style="width:100%;margin-top:.4rem;" onclick="enrollD21()">&#9876; Start Detox</button>
+    <p style="font-size:.7rem;color:var(--gray);margin-top:.7rem;font-style:italic;">Progress saved locally on this device.</p>
+  </div></div>
+  <div id="d21MainWrap" style="display:none;">
+    <div class="d21-header"><div class="d21-header-row">
+      <div style="flex-shrink:0;"><svg width="100" height="100" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(201,151,58,.15)" stroke-width="8"/>
+        <circle id="d21Circle" cx="50" cy="50" r="42" fill="none" stroke="url(#d21Grad)" stroke-width="8" stroke-dasharray="263.9" stroke-dashoffset="263.9" stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .6s ease;"/>
+        <defs><linearGradient id="d21Grad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#c9973a"/><stop offset="100%" stop-color="#e8b85a"/></linearGradient></defs>
+        <text x="50" y="46" text-anchor="middle" fill="#e8b85a" font-family="Cinzel,serif" font-size="16" font-weight="700" id="d21PctText">0%</text>
+        <text x="50" y="60" text-anchor="middle" fill="#8a9bb5" font-family="Lora,serif" font-size="8">complete</text>
+      </svg></div>
+      <div class="d21-meta">
+        <div class="d21-name">&#9876; <span id="d21NameDisplay"></span></div>
+        <div class="d21-started">AP: <span id="d21APDisplay"></span> &middot; Started: <span id="d21StartDisplay"></span></div>
+        <div class="d21-stat-row">
+          <div class="d21-stat"><div class="d21-stat-val" id="d21StatDone">0</div><div class="d21-stat-label">Done</div></div>
+          <div class="d21-stat"><div class="d21-stat-val" id="d21StatLeft">21</div><div class="d21-stat-label">Left</div></div>
+          <div class="d21-stat"><div class="d21-stat-val" id="d21StatPct">0%</div><div class="d21-stat-label">Progress</div></div>
+        </div>
+        <div class="d21-prog-bar"><div class="d21-prog-fill" id="d21ProgFill" style="width:0%"></div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.45rem;flex-shrink:0;">
+        <button class="btn btn-green btn-sm" onclick="exportD21()">Export Progress</button>
+        <button class="btn btn-outline btn-sm" onclick="resetD21()">Reset</button>
+      </div>
+    </div></div>
+    <div class="d21-list" id="d21List"></div>
+  </div>
+</div></section>
+<div class="divider"></div>
+<section id="map-section"><div class="section">
+  <p class="section-eyebrow">Global Fellowship</p>
+  <h2 class="section-title">Fellowship Worldwide</h2>
+  <p class="section-desc">Add your pin and find men near you. Pins shared across all members.</p>
+  <div class="map-controls"><button class="btn btn-gold" onclick="openMapModal()">Add My Location</button><span class="member-count-badge" id="memberCountBadge">Loading...</span></div>
+  <div class="map-wrap">
+  <svg id="world-map" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="500" fill="#060f1e"/>
+  <g stroke="#0d2040" stroke-width="0.5" fill="none">
+    <line x1="0" y1="166" x2="1000" y2="166"/><line x1="0" y1="250" x2="1000" y2="250" stroke-width="0.9"/>
+    <line x1="0" y1="334" x2="1000" y2="334"/><line x1="250" y1="0" x2="250" y2="500"/>
+    <line x1="500" y1="0" x2="500" y2="500" stroke-width="0.9"/><line x1="750" y1="0" x2="750" y2="500"/>
+  </g>
+  <path class="country" d="M68,52 L95,44 L126,43 L158,52 L182,68 L192,90 L184,114 L168,134 L148,148 L128,156 L112,168 L104,184 L104,200 L112,214 L128,224 L148,228 L168,220 L182,206 L188,188 L184,170 L172,156 L156,148 L140,148 L126,158 L120,172 L122,188 L132,200 L148,206 L164,200 L172,186 L168,172 L156,164 L142,166 L136,178 L142,190 L156,194 L168,188 L170,174 L160,164 L146,164 L138,176 L144,188 L158,192 L170,184 Z"/>
+  <path class="country" d="M30,50 L50,44 L68,46 L78,56 L76,70 L62,78 L44,76 L32,66 Z"/>
+  <path class="country" d="M226,18 L256,12 L280,14 L296,26 L298,44 L282,58 L256,64 L230,58 L214,42 Z"/>
+  <path class="country" d="M108,222 L126,216 L148,218 L164,230 L164,250 L150,264 L130,270 L110,262 L100,246 L100,230 Z"/>
+  <path class="country" d="M152,248 L174,244 L186,252 L184,264 L168,268 L154,260 Z"/>
+  <path class="country" d="M155,274 L176,264 L200,260 L222,268 L238,284 L242,306 L234,330 L218,352 L198,370 L176,382 L155,384 L136,374 L122,356 L118,334 L122,310 L134,290 Z"/>
+  <path class="country" d="M426,132 L448,122 L466,124 L474,136 L470,152 L454,160 L434,158 Z"/>
+  <path class="country" d="M458,108 L482,100 L504,102 L516,114 L514,130 L500,142 L480,146 L462,138 Z"/>
+  <path class="country" d="M430,82 L450,76 L464,82 L466,98 L452,108 L434,108 L424,96 Z"/>
+  <path class="country" d="M416,88 L428,84 L434,94 L426,102 L416,98 Z"/>
+  <path class="country" d="M466,44 L486,36 L506,38 L520,50 L520,68 L508,82 L490,88 L470,84 Z"/>
+  <path class="country" d="M488,96 L516,90 L540,96 L548,112 L540,130 L518,140 L494,138 L480,124 Z"/>
+  <path class="country" d="M494,138 L516,130 L528,140 L528,160 L516,176 L502,182 L490,174 L486,156 Z"/>
+  <path class="country" d="M524,108 L558,102 L580,110 L584,128 L570,142 L546,148 L524,140 L514,124 Z"/>
+  <path class="country" d="M526,148 L544,143 L554,153 L550,167 L534,171 L522,161 Z"/>
+  <path class="country" d="M502,82 L536,76 L562,82 L570,98 L556,110 L530,112 L506,104 Z"/>
+  <path class="country" d="M554,34 L624,24 L700,20 L770,20 L826,28 L864,42 L872,58 L856,72 L820,80 L770,84 L716,84 L666,82 L622,76 L584,68 L560,56 Z"/>
+  <path class="country" d="M822,28 L870,22 L906,28 L918,44 L910,60 L880,68 L850,64 L830,50 Z"/>
+  <path class="country" d="M700,62 L754,54 L802,56 L832,66 L834,82 L810,92 L772,96 L732,94 L704,86 Z"/>
+  <path class="country" d="M542,146 L578,138 L610,136 L628,148 L628,166 L610,178 L584,180 L558,172 L544,158 Z"/>
+  <path class="country" d="M578,172 L612,166 L630,178 L632,196 L618,210 L598,216 L578,210 L564,196 L564,180 Z"/>
+  <path class="country" d="M582,206 L620,198 L652,202 L668,220 L668,244 L652,262 L628,270 L604,268 L582,254 L570,234 Z"/>
+  <path class="country" d="M420,162 L472,152 L526,150 L566,158 L578,172 L572,188 L548,200 L510,206 L468,204 L428,194 L406,178 Z"/>
+  <path class="country" d="M404,186 L436,188 L468,198 L480,216 L478,238 L462,256 L438,264 L412,260 L392,244 L388,220 L396,202 Z"/>
+  <path class="country" d="M472,206 L524,200 L566,204 L584,218 L582,240 L566,258 L540,270 L508,272 L476,260 L456,242 L456,220 Z"/>
+  <path class="country" d="M558,202 L584,206 L612,218 L618,238 L608,258 L584,270 L556,272 L528,262 L512,244 L514,224 Z"/>
+  <path class="country" d="M594,220 L622,214 L640,226 L640,244 L622,256 L600,256 L582,242 L582,226 Z"/>
+  <path class="country" d="M468,264 L514,256 L558,256 L590,270 L606,292 L606,318 L592,340 L568,356 L538,362 L506,356 L476,338 L454,314 L450,288 Z"/>
+  <path class="country" d="M590,282 L604,274 L614,280 L616,300 L608,318 L596,324 L582,316 L580,298 Z"/>
+  <path class="country" d="M624,144 L668,136 L700,140 L714,158 L710,178 L692,192 L664,196 L636,190 L618,174 L618,156 Z"/>
+  <path class="country" d="M594,90 L644,84 L688,84 L716,92 L720,110 L706,124 L676,130 L644,128 L616,118 L600,104 Z"/>
+  <path class="country" d="M660,148 L698,142 L726,150 L738,168 L736,190 L720,208 L698,220 L672,224 L648,216 L630,200 L628,180 L638,164 Z"/>
+  <path class="country" d="M720,140 L758,132 L786,138 L798,154 L792,172 L772,184 L748,188 L726,180 L714,164 L716,148 Z"/>
+  <path class="country" d="M696,84 L752,74 L804,72 L836,80 L846,96 L832,114 L804,124 L766,128 L730,124 L704,110 Z"/>
+  <path class="country" d="M820,96 L836,90 L844,100 L840,116 L824,122 L812,112 L812,100 Z"/>
+  <path class="country" d="M840,82 L858,76 L866,86 L862,102 L848,108 L836,98 Z"/>
+  <path class="country" d="M848,104 L862,98 L868,110 L862,126 L848,128 L840,118 Z"/>
+  <path class="country" d="M810,158 L826,152 L836,162 L830,178 L814,184 L802,174 L802,162 Z"/>
+  <path class="country" d="M740,196 L780,188 L816,188 L838,198 L840,216 L820,226 L790,228 L760,220 L740,208 Z"/>
+  <path class="country" d="M806,198 L838,192 L860,200 L866,218 L854,230 L830,234 L806,226 L792,212 Z"/>
+  <path class="country" d="M762,284 L806,272 L846,268 L876,276 L898,294 L908,318 L902,344 L882,364 L852,378 L818,380 L784,370 L756,350 L736,324 L730,296 Z"/>
+  <path class="country" d="M906,342 L920,334 L928,346 L920,360 L906,360 L900,350 Z"/>
+  <path class="country" d="M912,362 L926,354 L932,368 L924,380 L910,380 L904,368 Z"/>
+</svg>
+  <div id="mapTooltip" class="map-tooltip"><div class="tt-name" id="ttName"></div><div class="tt-loc" id="ttLoc"></div><div class="tt-contact" id="ttContact"></div></div>
+  </div>
+  <div class="members-list" id="membersList"></div>
+</div></section>
+<div class="divider"></div>
+<section id="giving-section" style="background:linear-gradient(180deg,rgba(10,22,40,.6),rgba(6,13,26,.95));"><div class="section">
+  <p class="section-eyebrow">Support the Fellowship</p>
+  <h2 class="section-title">7th Tradition</h2>
+  <div class="giving-card">
+    <div class="giving-title">7th Tradition</div>
+    <p class="giving-verse">&#8220;Freely you have received; freely give.&#8221; &#8212; Matthew 10:8</p>
+    <img class="giving-art" src="https://i.ibb.co/0VRnG4vM/8-B1-D082-C-1448-409-E-B7-CB-88-E08-F95-A874.png" alt="7th Tradition">
+    <div class="giving-methods">
+      <div class="giving-method"><div class="gm-icon">&#128156;</div><div class="gm-label">Venmo</div><div class="gm-val">Timothy-Urbanek-2</div></div>
+      <div class="giving-method"><div class="gm-icon">&#128153;</div><div class="gm-label">PayPal</div><div class="gm-val">@FinallyFree2026</div></div>
+      <div class="giving-method"><div class="gm-icon">&#128155;</div><div class="gm-label">Zelle</div><div class="gm-val">(479) 619-6020</div></div>
+    </div>
+    <p style="font-size:.77rem;color:var(--gray);font-style:italic;">Finally Free Fellowship is entirely self-supporting.</p>
+  </div>
+</div></section>
+<div class="divider"></div>
+<section id="contact" class="section">
+  <p class="section-eyebrow">Questions?</p>
+  <h2 class="section-title">Get in Touch</h2>
+  <div class="contact-grid" id="contactGrid"></div>
+</section>
+<footer>
+  <div class="footer-brand">Finally Free Fellowship</div>
+  <p class="footer-verse">&#8220;The truth will set you free.&#8221; &#8212; John 8:32</p>
+  <ul class="footer-links">
+    <li><a href="#panic-section" style="color:#e74c3c;">&#128997; Help</a></li>
+    <li><a href="#meetings">Meetings</a></li><li><a href="#sobriety-section">Sobriety</a></li>
+    <li><a href="#ninety-section">90 in 90</a></li>
+    <li><a href="#journal-section">Journal</a></li><li><a href="#detox-section">Detox-21</a></li>
+    <li><a href="#map-section">Map</a></li><li><a href="#giving-section">7th Tradition</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="https://nextmeeting.org/275EE30A-220F-4FF2-A950-0ED2B5E4C257.html" target="_blank">NextMeeting</a></li>
+  </ul>
+  <p id="version-stamp" style="font-family:monospace;font-size:.55rem;color:rgba(138,155,181,.3);margin-bottom:.3rem;">v2026-03-26-BUILD7</p>
+  <p class="footer-copy">Finally Free Fellowship &middot; Warriors walking toward freedom together</p>
+</footer>
+<div class="modal-overlay" id="mapModal"><div class="modal">
+  <button class="modal-close" onclick="closeMapModal()">&#215;</button>
+  <h3 class="modal-title">Add My Location</h3>
+  <p class="modal-sub">Your pin is shared with all members.</p>
+  <div class="form-group"><label>Display Name</label><input type="text" id="mName" placeholder="John K."></div>
+  <div class="form-row">
+    <div class="form-group"><label>City</label><input type="text" id="mCity" placeholder="Dallas"></div>
+    <div class="form-group"><label>Country</label><input type="text" id="mCountry" placeholder="USA"></div>
+  </div>
+  <div class="form-group"><label>Contact (optional)</label><input type="text" id="mContact" placeholder="Email or phone"></div>
+  <div class="form-row">
+    <div class="form-group"><label>Latitude</label><input type="number" id="mLat" placeholder="32.78" step="0.01"></div>
+    <div class="form-group"><label>Longitude</label><input type="number" id="mLng" placeholder="-96.80" step="0.01"></div>
+  </div>
+  <p class="coord-hint">Find coordinates at <a href="https://www.latlong.net" target="_blank">latlong.net</a></p>
+  <button class="btn btn-gold" style="width:100%;" onclick="submitMember()">Place My Pin</button>
+</div></div>
+
+<div class="modal-overlay" id="addMeetingModal"><div class="modal" style="max-width:520px;">
+  <button class="modal-close" onclick="closeAddMeetingModal()">&#215;</button>
+  <h3 class="modal-title">&#10133; Add a Meeting</h3>
+  <p class="modal-sub">Saved locally on this device.</p>
+  <div class="form-row">
+    <div class="form-group"><label>Meeting Name</label><input type="text" id="amName" placeholder="e.g. Friday Warriors"></div>
+    <div class="form-group"><label>Day</label>
+      <select id="amDay"><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>UTC Time</label><input type="text" id="amUtc" placeholder="12:00 AM UTC"></div>
+    <div class="form-group"><label>Local Time Note</label><input type="text" id="amLocal" placeholder="7 PM Eastern"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Zoom ID</label><input type="text" id="amId" placeholder="813 140 1905"></div>
+    <div class="form-group"><label>Password</label><input type="text" id="amPw" placeholder="freeIndeed"></div>
+  </div>
+  <div class="form-group"><label>Zoom URL</label><input type="text" id="amUrl" placeholder="https://tinyurl.com/Finally-Free-Meeting"></div>
+  <div class="form-group"><label>Secretary / Host</label><input type="text" id="amSecretary" placeholder="Brother John"></div>
+  <div class="form-group"><label>Description</label><textarea id="amTagline" rows="2" placeholder="What is this meeting about?"></textarea></div>
+  <div style="display:flex;gap:.6rem;margin-top:.5rem;">
+    <button class="btn btn-gold" style="flex:1;" onclick="saveCustomMeeting()">Add Meeting</button>
+    <button class="btn btn-outline" style="flex:1;" onclick="closeAddMeetingModal()">Cancel</button>
+  </div>
+</div></div>
+
+
+<div class="modal-overlay" id="relapseModal"><div class="modal" style="max-width:460px;">
+  <button class="modal-close" onclick="closeRelapseModal()">&#215;</button>
+  <h3 class="modal-title" style="color:var(--gold-lt);">&#128997; Record a Relapse</h3>
+  <p class="modal-sub">This takes courage. Honesty is the first step back. Your clock will reset to today.</p>
+  <div class="form-group"><label>Date of Relapse</label><input type="date" id="relapseDate"></div>
+  <div class="form-group"><label>What happened? (optional)</label><textarea id="relapseNote" rows="3" placeholder="What triggered it? What will you do differently?"></textarea></div>
+  <div class="form-group"><label>New Sobriety Start Date</label><input type="date" id="relapseNewStart"></div>
+  <div style="display:flex;gap:.6rem;margin-top:.8rem;">
+    <button class="btn btn-gold" style="flex:1;" onclick="confirmRelapse()">Record &amp; Reset Clock</button>
+    <button class="btn btn-outline" style="flex:1;" onclick="closeRelapseModal()">Cancel</button>
+  </div>
+</div></div>
+
+<div class="modal-overlay" id="panicEnrollModal"><div class="modal" style="max-width:460px;">
+  <button class="modal-close" onclick="closePanicEnroll()">&#215;</button>
+  <h3 class="modal-title" style="color:#e74c3c;">&#128997; Send Alert to Fellowship</h3>
+  <p class="modal-sub">Your name and number will be visible to all FF members so they can reach out to you.</p>
+  <div class="form-group"><label>Your Name</label><input type="text" id="panicName" placeholder="Brother John"></div>
+  <div class="form-group"><label>Your Phone Number</label><input type="tel" id="panicPhone" placeholder="(555) 123-4567"></div>
+  <div class="form-group"><label>What&#8217;s going on? (optional)</label><textarea id="panicNote" rows="2" placeholder="Triggered, lonely, struggling with urges..."></textarea></div>
+  <div style="background:rgba(201,151,58,.08);border:1px solid rgba(201,151,58,.2);border-radius:4px;padding:.7rem .9rem;margin-bottom:1rem;">
+    <p style="font-size:.7rem;color:var(--gray);font-style:italic;margin-bottom:.4rem;">Reflect before you act out:</p>
+    <p style="font-size:.76rem;color:var(--gold-lt);">&#8220;What am I NOT doing in my program right now?&#8221;</p>
+  </div>
+  <div style="display:flex;gap:.6rem;">
+    <button class="panic-btn" style="flex:1;justify-content:center;" onclick="sendPanicAlert()">&#128997; Send Alert</button>
+    <button class="btn btn-outline" style="flex:1;" onclick="closePanicEnroll()">Cancel</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<script data-cfasync="false">
+console.log("FF APP LOADED - v2026-03-26-BUILD7");
+// Finally Free Fellowship — app.js
+
+var IMG = {
+  "campfire3": "https://i.ibb.co/H9ChYm8/1-B4-A9-B2-A-73-F9-42-E0-8-B5-A-34-CA4510-BA2-B.png",
+  "conquerors-reloaded": "https://i.ibb.co/Tx7fS21s/0-BE2-F74-D-C0-A6-4994-9452-F01154-D7152-A.jpg",
+  "topic-tuesday": "https://i.ibb.co/3Y52HLGh/signal-2026-03-17-190237.jpg",
+  "battle-plan": "https://i.ibb.co/HpFfFd2b/4133448-D-2-ED1-4-F29-A449-B5-DF3-B12-B843.jpg",
+  "singapore-cartel": "https://i.ibb.co/fGNpvXwW/4484-F6-DC-CB53-4620-8-DB9-2-DB3-ECECC83-F.jpg",
+  "space-capsule": "https://i.ibb.co/NdSxjCMx/9-A83-ECB4-E0-E0-4099-A324-413-A047-BD36-A.jpg",
+  "healing-room": "https://i.ibb.co/zWNkBWJg/9-BB66-BB6-514-C-4-CD0-9-E48-FC1-FC18-F996-A.jpg",
+  "seventh-tradition": "https://i.ibb.co/0VRnG4vM/8-B1-D082-C-1448-409-E-B7-CB-88-E08-F95-A874.png",
+  "thursday-conquerors": "https://i.ibb.co/Z1fvJ1z3/IMG-0139.jpg",
+  "thursday-warpath": "https://i.ibb.co/NdrBsJ5d/IMG-0138.jpg",
+};
+function getImg(id) { return IMG[id] || ""; }
+
+var MEETINGS = [
+  {day:"Sunday",    utc:"12:00 AM UTC", local:"5 PM Pacific / 8 PM Eastern", name:"Campfire 3 Share",          tagline:"Scripture drill, FASTER check-in, and journaling. An intimate fellowship discussion.", id:"813 140 1905", pw:"freeIndeed", url:"https://tinyurl.com/Finally-Free-Meeting",   secretary:"Anthony",        imgId:"campfire3"},
+  {day:"Monday",    utc:"12:00 AM UTC", local:"5 PM Pacific / 8 PM Eastern", name:"Conquerors Reloaded",       tagline:"Beginners meeting on the video series. No subscription required. All welcome.",          id:"813 140 1905", pw:"freeIndeed", url:"https://tinyurl.com/Finally-Free-Meeting",   secretary:"Frederick",      imgId:"conquerors-reloaded"},
+  {day:"Tuesday",   utc:"12:00 AM UTC", local:"5 PM Pacific / 8 PM Eastern", name:"Topic Tuesday Theatre",     tagline:"Member-led discussion on addiction and recovery topics. Real Talk. Real Change.",         id:"813 140 1905", pw:"freeIndeed", url:"https://tinyurl.com/Finally-Free-Meeting",   secretary:"Jacob",          imgId:"topic-tuesday"},
+  {day:"Wednesday", utc:"12:00 AM UTC", local:"5 PM Pacific / 8 PM Eastern", name:"Battle Plan for Purity",    tagline:"For committed Conquerors. Regular attendance and homework required.",                    id:"438 456 2619", pw:"Cooljohn",   url:"https://tinyurl.com/Finally-Free-Meeting-2", secretary:"Jared S",        imgId:"battle-plan"},
+  {day:"Thursday",  utc:"1:30 PM UTC",  local:"9:30 PM GMT+8 (Singapore)",   name:"The Singapore Cartel",      tagline:"Study the Conquerors series and Big Book. Fellowship across Asia.",                      id:"813 140 1905", pw:"freeIndeed", url:"https://tinyurl.com/Finally-Free-Meeting",   secretary:"Nick",           imgId:"singapore-cartel"},
+  {day:"Thursday",  utc:"12:00 AM UTC", local:"5 PM Pacific / 8 PM Eastern", name:"Thursday Night Conquerors", tagline:"Committed Conquerors group. Regular attendance and homework required.",                  id:"438 456 2619", pw:"Cooljohn",   url:"https://tinyurl.com/Finally-Free-Meeting-2", secretary:"Rusty",          imgId:"thursday-conquerors"},
+  {day:"Thursday",  utc:"12:00 AM UTC", local:"5 PM Pacific / 8 PM Eastern", name:"Thursday Night Warpath",    tagline:"Advanced Soul Refiners series. Prerequisite: completion of Conquerors.",                id:"813 140 1905", pw:"freeIndeed", url:"https://tinyurl.com/Finally-Free-Meeting",   secretary:"Morrison",       imgId:"thursday-warpath"},
+  {day:"Friday",    utc:"12:00 AM UTC", local:"5 PM Pacific / 8 PM Eastern", name:"The Space Capsule",         tagline:"Speaker disclosures, birthday celebrations, and sobriety chip meetings.",               id:"813 140 1905", pw:"freeIndeed", url:"https://tinyurl.com/Finally-Free-Meeting",   secretary:"John K",         imgId:"space-capsule"},
+  {day:"Saturday",  utc:"12:00 AM UTC", local:"5 PM Pacific / 8 PM Eastern", name:"The Healing Room",          tagline:"Trauma. The ten worst and secrets. Therapy-themed healing. You are safe here.",         id:"813 140 1905", pw:"freeIndeed", url:"https://tinyurl.com/Finally-Free-Meeting",   secretary:"Wayne",          imgId:"healing-room"}
+];
+
+var customMeetings = [];
+try { customMeetings = JSON.parse(localStorage.getItem("ff_custom_meetings")||"[]"); } catch(e) {}
+
+var meetingViewMode = "list";
+function setMeetingView(mode) {
+  meetingViewMode = mode;
+  document.getElementById("viewGrid").classList.toggle("active", mode==="grid");
+  document.getElementById("viewList").classList.toggle("active", mode==="list");
+  var btn = document.querySelector(".day-btn.active");
+  var dayMap = {"All":"all","Sun":"Sunday","Mon":"Monday","Tue":"Tuesday","Wed":"Wednesday","Thu":"Thursday","Fri":"Friday","Sat":"Saturday"};
+  renderMeetings(btn ? (dayMap[btn.textContent.trim()]||"all") : "all");
+}
+
+function toggleMeetingItem(el) {
+  el.closest(".m-list-item").classList.toggle("open");
+}
+
+function renderMeetings(filter) {
+  var grid = document.getElementById("meetingsGrid");
+  if (!grid) return;
+  var all  = MEETINGS.concat(customMeetings);
+  var data = (!filter || filter==="all") ? all : all.filter(function(m){ return m.day===filter; });
+  if (!data.length) {
+    grid.innerHTML = '<p style="color:var(--gray);font-style:italic;padding:1rem 0;">No meetings on this day.</p>';
+    return;
+  }
+
+  if (meetingViewMode === "grid") {
+    // ── GRID VIEW ──────────────────────────────────────────────────
+    grid.className = "meetings-grid";
+    var html = "";
+    for (var i = 0; i < data.length; i++) {
+      var m = data[i];
+      var imgSrc = m.isCustom ? (m.imgUrl||"") : getImg(m.imgId);
+      var imgHtml = imgSrc
+        ? '<img class="m-art" src="'+imgSrc+'" alt="'+m.name+'" loading="lazy">'
+        : '<div class="m-art" style="background:linear-gradient(135deg,#0d2244,#1a3a6b);display:flex;align-items:center;justify-content:center;font-size:2.5rem;">&#9876;</div>';
+      var badge  = m.isCustom ? ' <span style="font-size:.44rem;background:rgba(201,151,58,.18);border:1px solid rgba(201,151,58,.3);padding:.1rem .35rem;border-radius:2px;vertical-align:middle;">CUSTOM</span>' : '';
+      var delBtn = m.isCustom ? '<button onclick="deleteCustomMeeting('+JSON.stringify(m.customId)+')" class="copy-btn" style="color:rgba(220,80,80,.7);border-color:rgba(220,80,80,.3);">Remove</button>' : '';
+      var cid = JSON.stringify(m.id), cpw = JSON.stringify(m.pw);
+      html += '<div class="m-card">'
+        +'<div class="m-art-wrap">'+imgHtml+'<div class="m-art-overlay"></div></div>'
+        +'<div class="m-body">'
+        +'<div class="m-day">'+m.day+badge+'</div>'
+        +'<div class="m-name">'+m.name+'</div>'
+        +'<div class="m-tagline">'+m.tagline+'</div>'
+        +'<div class="m-detail"><span>&#128336;</span><span>'+m.utc+' &middot; '+m.local+'</span></div>'
+        +'<div class="m-detail"><span>&#128203;</span><span>ID: '+m.id+' &middot; PW: <strong style="color:var(--gold-pale)">'+m.pw+'</strong></span></div>'
+        +'<div class="m-detail"><span>&#128100;</span><span>Secretary: '+m.secretary+'</span></div>'
+        +'<div class="m-actions">'
+        +'<a href="'+m.url+'" target="_blank" class="join-btn">Join Zoom &rarr;</a>'
+        +'<button class="copy-btn" onclick="copyInfo('+cid+','+cpw+')">Copy Info</button>'
+        +delBtn+'</div></div></div>';
+    }
+    grid.innerHTML = html;
+  } else {
+    // ── LIST VIEW (default) ─────────────────────────────────────────
+    grid.className = "";
+    var html = "";
+    for (var i = 0; i < data.length; i++) {
+      var m = data[i];
+      var badge  = m.isCustom ? ' <span style="font-size:.44rem;background:rgba(201,151,58,.18);border:1px solid rgba(201,151,58,.3);padding:.1rem .35rem;border-radius:2px;vertical-align:middle;">CUSTOM</span>' : '';
+      var delBtn = m.isCustom ? '<button onclick="deleteCustomMeeting('+JSON.stringify(m.customId)+')" class="copy-btn" style="color:rgba(220,80,80,.7);border-color:rgba(220,80,80,.3);">Remove</button>' : '';
+      var cid = JSON.stringify(m.id), cpw = JSON.stringify(m.pw);
+      html += '<div class="m-list-item">'
+        +'<div class="m-list-header" onclick="toggleMeetingItem(this)">'
+        +'<span class="m-list-day-badge">'+m.day.substring(0,3)+'</span>'
+        +'<span class="m-list-name">'+m.name+badge+'</span>'
+        +'<span class="m-list-time">'+m.utc+'</span>'
+        +'<span class="m-list-chevron">&#9658;</span>'
+        +'</div>'
+        +'<div class="m-list-body">'
+        +'<div class="m-list-tagline">'+m.tagline+'</div>'
+        +'<div class="m-list-details">'
+        +'<div class="m-list-detail"><span>&#128336;</span><span>'+m.utc+' &middot; '+m.local+'</span></div>'
+        +'<div class="m-list-detail"><span>&#128203;</span><span>ID: '+m.id+' &nbsp; PW: <strong style="color:var(--gold-pale)">'+m.pw+'</strong></span></div>'
+        +'<div class="m-list-detail"><span>&#128100;</span><span>Secretary: '+m.secretary+'</span></div>'
+        +'</div>'
+        +'<div class="m-list-actions">'
+        +'<a href="'+m.url+'" target="_blank" class="join-btn">Join Zoom &rarr;</a>'
+        +'<button class="copy-btn" onclick="copyInfo('+cid+','+cpw+')">Copy Info</button>'
+        +delBtn+'</div></div></div>';
+    }
+    grid.innerHTML = html;
+  }
+}
+
+function filterDay(day, btn) {
+  var btns = document.querySelectorAll(".day-btn");
+  for (var i=0; i<btns.length; i++) btns[i].classList.remove("active");
+  btn.classList.add("active");
+  renderMeetings(day==="All"?"all":day);
+}
+
+function copyInfo(id, pw) {
+  navigator.clipboard.writeText("Meeting ID: "+id+"\nPassword: "+pw)
+    .then(function(){ showToast("Copied!"); })
+    .catch(function(){ showToast("ID: "+id+" / PW: "+pw); });
+}
+
+function openAddMeetingModal()  { var m=document.getElementById("addMeetingModal"); if(m) m.classList.add("open"); }
+function closeAddMeetingModal() {
+  var m=document.getElementById("addMeetingModal"); if(m) m.classList.remove("open");
+  ["amName","amUtc","amLocal","amId","amPw","amUrl","amSecretary","amTagline"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value="";
+  });
+}
+function saveCustomMeeting() {
+  var name = document.getElementById("amName").value.trim();
+  if (!name) { showToast("Meeting name is required."); return; }
+  customMeetings.push({
+    customId:  "cm_"+Date.now(),
+    isCustom:  true,
+    day:       document.getElementById("amDay").value,
+    utc:       document.getElementById("amUtc").value.trim()       || "See Zoom link",
+    local:     document.getElementById("amLocal").value.trim()     || "",
+    name:      name,
+    tagline:   document.getElementById("amTagline").value.trim()   || "",
+    id:        document.getElementById("amId").value.trim()        || "—",
+    pw:        document.getElementById("amPw").value.trim()        || "",
+    url:       document.getElementById("amUrl").value.trim()       || "https://zoom.us",
+    secretary: document.getElementById("amSecretary").value.trim() || "—",
+    imgUrl:    ""
+  });
+  localStorage.setItem("ff_custom_meetings", JSON.stringify(customMeetings));
+  closeAddMeetingModal();
+  var btn = document.querySelector(".day-btn.active");
+  var dayMap = {"All":"all","Sun":"Sunday","Mon":"Monday","Tue":"Tuesday","Wed":"Wednesday","Thu":"Thursday","Fri":"Friday","Sat":"Saturday"};
+  renderMeetings(btn ? (dayMap[btn.textContent.trim()]||"all") : "all");
+  showToast(name+" added!");
+}
+function deleteCustomMeeting(cid) {
+  customMeetings = customMeetings.filter(function(m){ return m.customId!==cid; });
+  localStorage.setItem("ff_custom_meetings", JSON.stringify(customMeetings));
+  var btn = document.querySelector(".day-btn.active");
+  var dayMap = {"All":"all","Sun":"Sunday","Mon":"Monday","Tue":"Tuesday","Wed":"Wednesday","Thu":"Thursday","Fri":"Friday","Sat":"Saturday"};
+  renderMeetings(btn ? (dayMap[btn.textContent.trim()]||"all") : "all");
+  showToast("Meeting removed.");
+}
+
+var D21 = [
+  {num:1,  turnIn:false, title:"Morning and Evening Prayer",         desc:"Pray each morning asking God for 1 day of sobriety. At night thank Him for getting you through. Do this with your AP 3 times a week."},
+  {num:2,  turnIn:false, title:"Clear Home of Porn and Triggers",    desc:"Remove all pornographic and suggestive material from your home. Have your AP on the phone with you during this."},
+  {num:3,  turnIn:false, title:"Join the FF Signal Group",           desc:"Request and join the Finally Free Signal group. Download all members phone numbers to your phone. This is a MUST."},
+  {num:4,  turnIn:false, title:"Download All Members Numbers",       desc:"A list of all FF members has been provided. Save every Signal phone number to your phone."},
+  {num:5,  turnIn:false, title:"Install Accountability Software",    desc:"Install accountability software on ALL devices with at least 3 allies. Ask in Signal if anyone has space in their family plans."},
+  {num:6,  turnIn:false, title:"Bookmark the FF Meeting Flyer",      desc:"Download the FF Meeting Flyer and mark it for easy access. Sign into one meeting to verify it works."},
+  {num:7,  turnIn:false, title:"Obtain Recovery Materials",          desc:"Get copies of: AA Big Book, AA 12 Steps and 12 Traditions, SA White Book, SA Step into Action."},
+  {num:8,  turnIn:true,  title:"Summarize Steps 1, 2 and 3",        desc:"Read Steps 1-3 from AA 12 Steps and 12 Traditions. Write one page of reflections per step. Share with your AP and FF group."},
+  {num:9,  turnIn:false, title:"Bookmark the NextMeeting Link",      desc:"Open the NextMeeting link and bookmark it on all browsers. Use it to find 24/7 SA meetings happening right now around the world."},
+  {num:10, turnIn:true,  title:"Begin 90 Meetings in 90 Days",       desc:"Start your 90-in-90 and document every meeting with date, location, and notes. Only SA and Conquerors or FF meetings count."},
+  {num:11, turnIn:true,  title:"Record Your Journey",                desc:"On a document titled My Program, begin cataloging things you heard in meetings that you want to implement to stay sober."},
+  {num:12, turnIn:false, title:"Commit to a Service Position",       desc:"Find an ongoing service position in FF or an SA meeting. Doing something once is not being in service."},
+  {num:13, turnIn:false, title:"30 Days of Fishing Prayer",          desc:"For 30 days pray for God to use you to help rescue one man from addiction. Do not stop until He answers."},
+  {num:14, turnIn:true,  title:"Write a Time Commitment Statement",  desc:"How will you prioritize your program and recovery above everything else? Present it to your group."},
+  {num:15, turnIn:true,  title:"Write a Plan to Help Others",        desc:"How will you help others in the short and long term? Think big. Read it to the group."},
+  {num:16, turnIn:true,  title:"How You Will Help Your AP",          desc:"Write out how you are going to help your accountability partner get and stay sober. Present to your group."},
+  {num:17, turnIn:false, title:"Obtain an Accountability Partner",   desc:"Find an AP who talks with you daily. Have them read their items 14, 15, and 16 to you before choosing them."},
+  {num:18, turnIn:false, title:"Get an SA Sponsor",                  desc:"Obtain an SA sponsor or Temporary Sponsor by completion of 90 days. They must cooperate with the Conquerors curriculum."},
+  {num:19, turnIn:false, title:"Find Someone You Are Sponsoring",    desc:"Within 90 days find someone you are sponsoring and working with intensely to help them get free."},
+  {num:20, turnIn:false, title:"AP Review of All 21",                desc:"Have your AP go over all 21 with you looking for holes. You must also go over their 21. Then meet with a leader to review."},
+  {num:21, turnIn:true,  title:"Final Certification",                desc:"Turn all materials in to your leader. Complete the Detox-21, receive final enrollment, and begin Conquerors."}
+];
+
+var d21Profile = null, d21State = {}, d21Notes = {};
+try { d21Profile = JSON.parse(localStorage.getItem("ff_d21_profile")||"null"); } catch(e) {}
+try { d21State   = JSON.parse(localStorage.getItem("ff_d21")        ||"{}");   } catch(e) {}
+try { d21Notes   = JSON.parse(localStorage.getItem("ff_d21_notes")  ||"{}");   } catch(e) {}
+
+function enrollD21() {
+  var name=document.getElementById("d21Name").value.trim();
+  var start=document.getElementById("d21StartDate").value;
+  var ap=document.getElementById("d21APName").value.trim();
+  if (!name||!start) { showToast("Enter your name and start date."); return; }
+  d21Profile={name:name,start:start,ap:ap};
+  localStorage.setItem("ff_d21_profile",JSON.stringify(d21Profile));
+  showD21Main();
+}
+function showD21Main() {
+  var ew=document.getElementById("d21EnrollWrap"), mw=document.getElementById("d21MainWrap");
+  if(ew) ew.style.display="none"; if(mw) mw.style.display="block";
+  var nd=document.getElementById("d21NameDisplay"),  ad=document.getElementById("d21APDisplay"),  sd=document.getElementById("d21StartDisplay");
+  if(nd) nd.textContent=d21Profile.name;
+  if(ad) ad.textContent=d21Profile.ap||"Not yet set";
+  if(sd) sd.textContent=new Date(d21Profile.start+"T12:00:00").toLocaleDateString();
+  renderD21List(); updateD21Stats();
+}
+function renderD21List() {
+  var list=document.getElementById("d21List"); if(!list) return;
+  var html="";
+  for (var i=0;i<D21.length;i++) {
+    var item=D21[i], done=!!d21State[item.num], note=d21Notes[item.num]||"";
+    var badges=(done?'<span class="badge badge-green">&#10003; Complete</span>':'')+
+               (item.turnIn?' <span class="badge badge-gold">Turn In</span>':'');
+    html+='<div class="d21-item'+(done?" completed":"")+'" id="d21item-'+item.num+'">'
+      +'<div class="d21-item-row">'
+      +'<div class="d21-check'+(done?" done":"")+'" onclick="toggleD21('+item.num+')">'+(done?"&#10003;":"")+'</div>'
+      +'<div class="d21-num">#'+item.num+'</div>'
+      +'<div class="d21-body">'
+      +'<div class="d21-title">'+item.title+'</div>'
+      +'<div class="d21-desc">'+item.desc+'</div>'
+      +'<div class="d21-badges">'+badges+'</div>'
+      +'<button class="d21-notes-btn" onclick="toggleD21Notes('+item.num+',this)">'+(note?"▼ Notes":"▶ Add notes")+'</button>'
+      +'<div class="d21-notes-wrap"><textarea class="d21-notes-input" id="d21note-'+item.num+'" placeholder="Notes, reflections..." onblur="saveD21Note('+item.num+')">'+note+'</textarea></div>'
+      +'</div></div></div>';
+  }
+  list.innerHTML=html;
+}
+function toggleD21(num) {
+  d21State[num]=!d21State[num];
+  localStorage.setItem("ff_d21",JSON.stringify(d21State));
+  renderD21List(); updateD21Stats();
+  showToast(d21State[num]?"Item "+num+" complete!":"Item "+num+" unchecked");
+}
+function toggleD21Notes(num,btn) {
+  var item=document.getElementById("d21item-"+num); if(!item) return;
+  item.classList.toggle("expanded");
+  var note=d21Notes[num]||"";
+  btn.textContent=item.classList.contains("expanded")?"Hide notes":(note?"Notes":"Add notes");
+}
+function saveD21Note(num) {
+  var el=document.getElementById("d21note-"+num); if(!el) return;
+  d21Notes[num]=el.value; localStorage.setItem("ff_d21_notes",JSON.stringify(d21Notes));
+  var btn=document.querySelector("#d21item-"+num+" .d21-notes-btn");
+  if(btn) btn.textContent=el.value?"Notes":"Add notes";
+}
+function updateD21Stats() {
+  var done=0; for(var k in d21State){if(d21State[k])done++;}
+  var pct=Math.round(done/21*100);
+  var el;
+  el=document.getElementById("d21StatDone");  if(el) el.textContent=done;
+  el=document.getElementById("d21StatLeft");  if(el) el.textContent=21-done;
+  el=document.getElementById("d21StatPct");   if(el) el.textContent=pct+"%";
+  el=document.getElementById("d21ProgFill");  if(el) el.style.width=pct+"%";
+  el=document.getElementById("d21PctText");   if(el) el.textContent=pct+"%";
+  el=document.getElementById("d21Circle");    if(el) el.style.strokeDashoffset=(263.9*(1-done/21)).toFixed(2);
+}
+function resetD21() {
+  if(!confirm("Reset your Detox-21?")) return;
+  d21State={}; d21Notes={}; d21Profile=null;
+  localStorage.removeItem("ff_d21"); localStorage.removeItem("ff_d21_notes"); localStorage.removeItem("ff_d21_profile");
+  var ew=document.getElementById("d21EnrollWrap"), mw=document.getElementById("d21MainWrap");
+  if(ew) ew.style.display="block"; if(mw) mw.style.display="none";
+  showToast("Detox-21 reset.");
+}
+function exportD21() {
+  if(!d21Profile) return;
+  var done=0; for(var k in d21State){if(d21State[k])done++;}
+  var lines=["FINALLY FREE - DETOX-21","Name: "+d21Profile.name,"AP: "+(d21Profile.ap||"Not set"),"Started: "+d21Profile.start,""];
+  for(var i=0;i<D21.length;i++){
+    var item=D21[i];
+    lines.push((d21State[item.num]?"[x]":"[ ]")+" #"+item.num+" - "+item.title+(item.turnIn?" (TURN IN)":"")+(d21Notes[item.num]?"\n    "+d21Notes[item.num]:""));
+  }
+  lines.push("","Progress: "+done+"/21 ("+Math.round(done/21*100)+"%)");
+  download("FF-Detox21.txt",lines.join("\n"));
+}
+
+var n90Data=null, logEntries=[];
+try { n90Data=JSON.parse(localStorage.getItem("ff_90in90")||"null"); } catch(e) {}
+try { logEntries=JSON.parse(localStorage.getItem("ff_90log")||"[]"); } catch(e) {}
+
+function switchN90(panel,btn) {
+  document.querySelectorAll("#n90Tabs .tab").forEach(function(t){t.classList.remove("active");});
+  document.querySelectorAll("#ninety-section .tab-panel").forEach(function(p){p.classList.remove("active");});
+  btn.classList.add("active");
+  document.getElementById("n90-"+panel).classList.add("active");
+  if(panel==="leaderboard") loadLeaderboard();
+  if(panel==="log") renderLogTable();
+}
+function enroll90() {
+  var name=document.getElementById("e90Name").value.trim();
+  var start=document.getElementById("e90Start").value;
+  if(!name||!start){showToast("Enter your name and start date.");return;}
+  n90Data={name:name,start:start};
+  localStorage.setItem("ff_90in90",JSON.stringify(n90Data));
+  renderProgress(); submitLeaderboard(name,logEntries.length);
+}
+function resetN90() {
+  if(!confirm("Reset enrollment? Your log will be kept.")) return;
+  localStorage.removeItem("ff_90in90"); n90Data=null;
+  var ew=document.getElementById("enrollFormWrap"), pw=document.getElementById("progressWrap");
+  if(ew) ew.style.display="block"; if(pw) pw.style.display="none";
+}
+function renderProgress() {
+  if(!n90Data) return;
+  var ew=document.getElementById("enrollFormWrap"), pw=document.getElementById("progressWrap");
+  if(ew) ew.style.display="none"; if(pw) pw.style.display="block";
+  var done=logEntries.length, pct=Math.min(100,Math.round(done/90*100));
+  var el;
+  el=document.getElementById("pb-name");     if(el) el.textContent=n90Data.name;
+  el=document.getElementById("stat-done");   if(el) el.textContent=done;
+  el=document.getElementById("stat-left");   if(el) el.textContent=Math.max(0,90-done);
+  el=document.getElementById("stat-streak"); if(el) el.textContent=calcStreak();
+  el=document.getElementById("pct-text");    if(el) el.textContent=pct+"%";
+  el=document.getElementById("progressCircle"); if(el) el.style.strokeDashoffset=(301.6*(1-done/90)).toFixed(2);
+  var s=new Date(n90Data.start+"T12:00:00"), t=new Date(s.getTime()+89*86400000);
+  el=document.getElementById("pb-start");  if(el) el.textContent=s.toLocaleDateString();
+  el=document.getElementById("pb-target"); if(el) el.textContent=t.toLocaleDateString();
+}
+function calcStreak() {
+  if(!logEntries.length) return 0;
+  var dates={};
+  logEntries.forEach(function(e){dates[e.date]=true;});
+  var streak=0, d=new Date();
+  for(var i=0;i<90;i++){
+    if(dates[d.toISOString().split("T")[0]]){streak++;d.setDate(d.getDate()-1);}
+    else break;
+  }
+  return streak;
+}
+function addLogEntry() {
+  if(!n90Data){showToast("Enroll first in the My Progress tab.");return;}
+  var num=parseInt(document.getElementById("logNum").value)||logEntries.length+1;
+  var date=document.getElementById("logDate").value;
+  var loc=document.getElementById("logLoc").value.trim();
+  var notes=document.getElementById("logNotes").value.trim();
+  if(!date||!loc){showToast("Date and location are required.");return;}
+  var filtered=logEntries.filter(function(e){return e.num!==num;});
+  filtered.push({num:num,date:date,loc:loc,notes:notes,id:Date.now()});
+  filtered.sort(function(a,b){return a.num-b.num;});
+  logEntries=filtered;
+  localStorage.setItem("ff_90log",JSON.stringify(logEntries));
+  renderLogTable(); renderProgress(); submitLeaderboard(n90Data.name,logEntries.length);
+  document.getElementById("logLoc").value=""; document.getElementById("logNotes").value="";
+  document.getElementById("logNum").value=logEntries.length+1;
+  showToast("Meeting #"+num+" logged!");
+}
+function deleteLog(id) {
+  logEntries=logEntries.filter(function(e){return e.id!==id;});
+  localStorage.setItem("ff_90log",JSON.stringify(logEntries));
+  renderLogTable(); renderProgress();
+}
+function renderLogTable() {
+  var tbody=document.getElementById("logTableBody"), empty=document.getElementById("logEmpty"), count=document.getElementById("logCount");
+  if(count) count.textContent=logEntries.length+" of 90 meetings logged";
+  var numEl=document.getElementById("logNum"); if(numEl) numEl.value=logEntries.length+1;
+  if(!logEntries.length){if(tbody) tbody.innerHTML=""; if(empty) empty.style.display="block"; return;}
+  if(empty) empty.style.display="none";
+  tbody.innerHTML=logEntries.map(function(e){
+    var d=new Date(e.date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"});
+    return "<tr><td class='log-day-num'>#"+e.num+"</td><td>"+d+"</td><td>"+(e.loc||"")+"</td>"
+      +"<td style='max-width:180px;word-break:break-word;'>"+(e.notes||"&mdash;")+"</td>"
+      +"<td><button onclick='deleteLog("+e.id+")' class='del-btn' style='background:none;border:none;color:rgba(138,155,181,.3);cursor:pointer;font-size:.85rem;'>&#10005;</button></td></tr>";
+  }).join("");
+}
+function exportLog() {
+  var lines=["FINALLY FREE - 90-IN-90 LOG","Name: "+(n90Data?n90Data.name:""),"Start: "+(n90Data?n90Data.start:""),"Generated: "+new Date().toLocaleDateString(),""];
+  logEntries.forEach(function(e){
+    lines.push(("  "+e.num).slice(-3)+"  "+new Date(e.date+"T12:00:00").toLocaleDateString()+"  "+(e.loc||"")+"  "+(e.notes||""));
+  });
+  lines.push("","Total: "+logEntries.length+"/90");
+  download("FF-90in90-Log.txt",lines.join("\n"));
+}
+async function submitLeaderboard(name,count) {
+  try { var b={}; try{var r=await window.storage.get("ff_leaderboard",true);if(r&&r.value)b=JSON.parse(r.value);}catch(e){} b[name]=count; await window.storage.set("ff_leaderboard",JSON.stringify(b),true); } catch(e) {}
+}
+async function loadLeaderboard() {
+  var el=document.getElementById("leaderboardList"); if(!el) return;
+  el.innerHTML="<p style='font-size:.8rem;color:var(--gray);font-style:italic;'>Loading...</p>";
+  try {
+    var res=await window.storage.get("ff_leaderboard",true);
+    if(!res||!res.value){el.innerHTML="<p style='font-size:.8rem;color:var(--gray);font-style:italic;'>No brothers enrolled yet.</p>";return;}
+    var board=JSON.parse(res.value); if(n90Data) board[n90Data.name]=logEntries.length;
+    var sorted=Object.entries(board).sort(function(a,b){return b[1]-a[1];});
+    el.innerHTML=sorted.map(function(entry,i){
+      var bname=entry[0],bcount=entry[1],pct=Math.min(100,Math.round(bcount/90*100));
+      var medal=["1st","2nd","3rd"][i]||(i+1)+"th";
+      return "<div class='lb-row'><div class='lb-rank'>"+medal+"</div><div class='lb-name'>"+bname+"</div>"
+        +"<div style='display:flex;align-items:center;gap:.6rem;'><div class='lb-bar-wrap'><div class='lb-bar' style='width:"+pct+"%'></div></div>"
+        +"<div class='lb-count'>"+bcount+"/90 ("+pct+"%)</div></div></div>";
+    }).join("") || "<p style='font-size:.8rem;color:var(--gray);font-style:italic;'>No data yet.</p>";
+  } catch(e) { el.innerHTML="<p style='font-size:.8rem;color:var(--gray);font-style:italic;'>Board unavailable.</p>"; }
+}
+
+var journalEntries=[];
+try { journalEntries=JSON.parse(localStorage.getItem("ff_journal")||"[]"); } catch(e) {}
+
+function handleMeetingSelect() {
+  var val=document.getElementById("jMeeting").value;
+  var wrap=document.getElementById("otherMeetingWrap");
+  if(wrap) wrap.className="other-wrap"+(val==="__other__"?" show":"");
+}
+function addJournalEntry() {
+  var sel=document.getElementById("jMeeting").value;
+  var meeting=sel==="__other__"?document.getElementById("otherMeeting").value.trim():sel;
+  if(sel==="__other__"&&!meeting){showToast("Enter the meeting name.");return;}
+  var date=document.getElementById("jDate").value;
+  var mood=document.getElementById("jMood").value;
+  var notes=document.getElementById("jNotes").value.trim();
+  var insight=document.getElementById("jInsight").value.trim();
+  if(!meeting||!date||!notes){showToast("Select a meeting, add a date and notes.");return;}
+  journalEntries.unshift({id:Date.now(),meeting:meeting,date:date,mood:mood,notes:notes,insight:insight,isOther:(sel==="__other__")});
+  localStorage.setItem("ff_journal",JSON.stringify(journalEntries));
+  renderJournal();
+  document.getElementById("jMeeting").value="";
+  document.getElementById("otherMeeting").value="";
+  var ow=document.getElementById("otherMeetingWrap"); if(ow) ow.className="other-wrap";
+  document.getElementById("jNotes").value=""; document.getElementById("jInsight").value="";
+  showToast("Journal entry saved!");
+}
+function deleteJEntry(id) {
+  journalEntries=journalEntries.filter(function(e){return e.id!==id;});
+  localStorage.setItem("ff_journal",JSON.stringify(journalEntries)); renderJournal();
+}
+function renderJournal() {
+  var filter=document.getElementById("jFilter").value;
+  var entries=journalEntries;
+  if(filter==="__other__") entries=journalEntries.filter(function(e){return e.isOther;});
+  else if(filter!=="all")  entries=journalEntries.filter(function(e){return e.meeting===filter;});
+  var countEl=document.getElementById("journalCount");
+  if(countEl) countEl.textContent=journalEntries.length+(journalEntries.length===1?" entry":" entries");
+  var el=document.getElementById("journalEntries"); if(!el) return;
+  if(!entries.length){el.innerHTML="<p class='j-empty'>No entries yet.</p>";return;}
+  el.innerHTML=entries.map(function(e){
+    var d=new Date(e.date+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+    var notesHtml=e.notes?e.notes.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>"):"";
+    return "<div class='j-entry'>"
+      +"<div class='j-entry-header'><div><div class='j-meeting-name'>"+e.meeting+"</div><div class='j-entry-date'>"+d+"</div></div>"
+      +"<div style='display:flex;align-items:center;gap:.4rem;'><span style='font-size:1rem;background:rgba(201,151,58,.12);padding:.2rem .5rem;border-radius:3px;'>"+e.mood+"</span>"
+      +"<button class='j-delete' onclick='deleteJEntry("+e.id+")'>&#10005;</button></div></div>"
+      +"<div class='j-entry-text'>"+notesHtml+"</div>"
+      +(e.insight?"<div class='j-entry-insight'><span>Key insight:</span> "+e.insight+"</div>":"")
+      +"</div>";
+  }).join("");
+}
+
+var mapMembers=[];
+async function loadMapMembers() {
+  try{var r=await window.storage.get("ff_fellowship_map",true);if(r&&r.value)mapMembers=JSON.parse(r.value);}
+  catch(e){try{var l=localStorage.getItem("ff_fellowship_map");if(l)mapMembers=JSON.parse(l);}catch(e2){}}
+  renderMap();
+}
+async function saveMapMembers() {
+  var json=JSON.stringify(mapMembers);
+  try{await window.storage.set("ff_fellowship_map",json,true);}
+  catch(e){try{localStorage.setItem("ff_fellowship_map",json);}catch(e2){}}
+}
+function geoToSVG(lat,lng){
+  var x=(lng+180)*(1000/360);
+  var mercN=Math.log(Math.tan(Math.PI/4+(lat*Math.PI/180)/2));
+  var y=250-(500*mercN/(2*Math.PI));
+  return{x:Math.max(5,Math.min(995,x)),y:Math.max(5,Math.min(495,y))};
+}
+function renderMap(){
+  document.querySelectorAll(".member-dot").forEach(function(d){d.remove();});
+  var svg=document.getElementById("world-map");
+  var list=document.getElementById("membersList");
+  var badge=document.getElementById("memberCountBadge");
+  if(!svg) return;
+  mapMembers.forEach(function(m,idx){
+    var pos=geoToSVG(m.lat,m.lng);
+    var g=document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","member-dot");
+    g.setAttribute("transform","translate("+pos.x.toFixed(1)+","+pos.y.toFixed(1)+")");
+    var pulse=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    pulse.setAttribute("r","7"); pulse.setAttribute("fill","rgba(201,151,58,.2)");
+    pulse.style.animation="ping 2s ease-out "+((idx*.4)%2)+"s infinite";
+    pulse.style.transformOrigin="center";
+    var dot=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    dot.setAttribute("r","4.5"); dot.setAttribute("fill","#c9973a");
+    dot.setAttribute("stroke","#f5dfa0"); dot.setAttribute("stroke-width","1.5");
+    g.appendChild(pulse); g.appendChild(dot); svg.appendChild(g);
+    g.addEventListener("mouseenter",function(){
+      var tt=document.getElementById("mapTooltip"), con=document.querySelector(".map-wrap");
+      if(!tt||!con) return;
+      document.getElementById("ttName").textContent=m.name;
+      document.getElementById("ttLoc").textContent=m.city+(m.country?", "+m.country:"");
+      document.getElementById("ttContact").textContent=m.contact||"";
+      tt.style.display="block";
+      var cr=con.getBoundingClientRect(),gr=g.getBoundingClientRect();
+      var left=gr.left-cr.left+12, top=gr.top-cr.top-75;
+      if(left+200>cr.width) left-=210; if(top<5) top=gr.top-cr.top+15;
+      tt.style.left=left+"px"; tt.style.top=top+"px";
+    });
+    g.addEventListener("mouseleave",function(){
+      var tt=document.getElementById("mapTooltip"); if(tt) tt.style.display="none";
+    });
+  });
+  if(badge) badge.textContent=mapMembers.length+(mapMembers.length===1?" brother":" brothers")+" on the map";
+  if(list) list.innerHTML=mapMembers.length?mapMembers.map(function(m){
+    return "<div class='member-pill'><div class='mp-name'>"+m.name+"</div><div class='mp-loc'>"+m.city+(m.country?", "+m.country:"")+"</div>"+(m.contact?"<div class='mp-contact'>"+m.contact+"</div>":"")+"</div>";
+  }).join(""):"<p style='font-size:.8rem;color:var(--gray);font-style:italic;padding:1rem 0;'>Be the first to place your pin, brother.</p>";
+}
+function openMapModal(){var m=document.getElementById("mapModal");if(m)m.classList.add("open");}
+function closeMapModal(){var m=document.getElementById("mapModal");if(m)m.classList.remove("open");}
+async function submitMember(){
+  var name=document.getElementById("mName").value.trim();
+  var city=document.getElementById("mCity").value.trim();
+  var country=document.getElementById("mCountry").value.trim();
+  var contact=document.getElementById("mContact").value.trim();
+  var lat=parseFloat(document.getElementById("mLat").value);
+  var lng=parseFloat(document.getElementById("mLng").value);
+  if(!name||!city||isNaN(lat)||isNaN(lng)){showToast("Fill in name, city, and coordinates.");return;}
+  mapMembers.push({name:name,city:city,country:country,contact:contact,lat:lat,lng:lng,added:Date.now()});
+  await saveMapMembers(); renderMap(); closeMapModal();
+  showToast("Pin placed! Welcome to the map.");
+  ["mName","mCity","mCountry","mContact","mLat","mLng"].forEach(function(id){document.getElementById(id).value="";});
+}
+
+function initApp() {
+  var today=new Date().toISOString().split("T")[0];
+  ["d21StartDate","logDate","e90Start","jDate","sobDate","relapseDate","relapseNewStart"].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value=today;
+  });
+  setMeetingView("list");
+  renderMeetings("all");
+  if (sobData) renderSobriety();
+  loadPanicAlerts();
+  if(d21Profile) showD21Main();
+  if(n90Data) renderProgress();
+  renderLogTable();
+  renderJournal();
+  loadMapMembers();
+  var modal=document.getElementById("mapModal");
+  if(modal) modal.addEventListener("click",function(e){if(e.target===this)closeMapModal();});
+  var amModal=document.getElementById("addMeetingModal");
+  if(amModal) amModal.addEventListener("click",function(e){if(e.target===this)closeAddMeetingModal();});
+}
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",initApp);
+} else { initApp(); }
+
+function showToast(msg){
+  var t=document.getElementById("toast"); if(!t) return;
+  t.innerHTML=msg; t.classList.add("show");
+  setTimeout(function(){t.classList.remove("show");},3500);
+}
+function download(filename,text){
+  var a=document.createElement("a");
+  a.href="data:text/plain;charset=utf-8,"+encodeURIComponent(text);
+  a.download=filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// Global exports
+window.filterDay=filterDay;
+window.setMeetingView=setMeetingView;
+window.toggleMeetingItem=toggleMeetingItem; window.copyInfo=copyInfo;
+window.enrollD21=enrollD21; window.toggleD21=toggleD21;
+window.toggleD21Notes=toggleD21Notes; window.saveD21Note=saveD21Note;
+window.resetD21=resetD21; window.exportD21=exportD21;
+window.switchN90=switchN90; window.enroll90=enroll90; window.resetN90=resetN90;
+window.addLogEntry=addLogEntry; window.deleteLog=deleteLog; window.exportLog=exportLog;
+window.addJournalEntry=addJournalEntry; window.deleteJEntry=deleteJEntry; window.renderJournal=renderJournal;
+window.handleMeetingSelect=handleMeetingSelect;
+window.openMapModal=openMapModal; window.closeMapModal=closeMapModal; window.submitMember=submitMember;
+window.openAddMeetingModal=openAddMeetingModal; window.closeAddMeetingModal=closeAddMeetingModal;
+window.saveCustomMeeting=saveCustomMeeting; window.deleteCustomMeeting=deleteCustomMeeting;
+
+// Render contact section via JS so emails aren't in raw HTML
+(function(){
+  var grid = document.getElementById("contactGrid");
+  if (!grid) return;
+  var contacts = [
+    {name:"John K", role:"Primary Contact", phone:"559-233-1290", tel:"5592331290", email:"john29062nd" + "@" + "yahoo.com"},
+    {name:"Jeff H", role:"Secondary Contact", phone:"253-222-0618", tel:"2532220618", email:""},
+    {name:"Fellowship Email", role:"General Inquiries", phone:"", tel:"", email:"finallyfreefellows" + "@" + "gmail.com"}
+  ];
+  grid.innerHTML = contacts.map(function(c){
+    return '<div class="contact-card">'
+      + '<div class="cc-name">'+c.name+'</div>'
+      + '<div class="cc-role">'+c.role+'</div>'
+      + (c.phone ? '<a href="tel:'+c.tel+'">'+c.phone+'</a>' : '')
+      + (c.email ? '<a href="mai'+'lto:'+c.email+'">'+c.email+'</a>' : '')
+      + '</div>';
+  }).join("");
+})();
+
+// ── SOBRIETY JOURNEY ──────────────────────────────────────────────────
+var sobData     = null;
+var sobRelapses = [];
+try { sobData     = JSON.parse(localStorage.getItem("ff_sobriety")         || "null"); } catch(e) {}
+try { sobRelapses = JSON.parse(localStorage.getItem("ff_sobriety_relapses")|| "[]");   } catch(e) {}
+
+var SOB_MILESTONES = [
+  {days:1,   label:"Just For Today", color:"#ffffff", textColor:"#1a1a1a"},
+  {days:7,   label:"1 Week",         color:"#c9973a", textColor:"#fff"},
+  {days:14,  label:"2 Weeks",        color:"#c9973a", textColor:"#fff"},
+  {days:21,  label:"21 Days",        color:"#ff6b35", textColor:"#fff"},
+  {days:30,  label:"30 Days",        color:"#ff6b35", textColor:"#fff"},
+  {days:60,  label:"60 Days",        color:"#27ae60", textColor:"#fff"},
+  {days:90,  label:"90 Days",        color:"#c0392b", textColor:"#fff"},
+  {days:180, label:"6 Months",       color:"#2980b9", textColor:"#fff"},
+  {days:270, label:"9 Months",       color:"#f1c40f", textColor:"#1a1a1a"},
+  {days:365, label:"1 Year",         color:"#ecf0f1", textColor:"#1a1a1a"},
+  {days:547, label:"18 Months",      color:"#7f8c8d", textColor:"#fff"},
+  {days:730, label:"2 Years",        color:"#1a1a1a", textColor:"#c9973a"},
+  {days:1095,label:"3 Years",        color:"#8e44ad", textColor:"#fff"},
+  {days:1460,label:"4 Years",        color:"#16a085", textColor:"#fff"},
+  {days:1825,label:"5 Years",        color:"#c9973a", textColor:"#1a1a1a"},
+];
+
+function startSobriety() {
+  var name  = document.getElementById("sobName").value.trim();
+  var date  = document.getElementById("sobDate").value;
+  var why   = document.getElementById("sobWhy").value.trim();
+  if (!name || !date) { showToast("Enter your name and start date."); return; }
+  sobData = { name:name, startDate:date, why:why };
+  localStorage.setItem("ff_sobriety", JSON.stringify(sobData));
+  renderSobriety();
+}
+
+function renderSobriety() {
+  if (!sobData) return;
+  document.getElementById("sobEnrollWrap").style.display = "none";
+  document.getElementById("sobMainWrap").style.display   = "block";
+
+  var start = new Date(sobData.startDate + "T00:00:00");
+  var now   = new Date();
+  now.setHours(0,0,0,0);
+  var msPerDay = 86400000;
+  var days  = Math.max(0, Math.floor((now - start) / msPerDay));
+  var weeks  = Math.floor(days / 7);
+  var months = Math.floor(days / 30.44);
+
+  // Update displays
+  document.getElementById("sobNameDisplay").textContent = sobData.name + "\u2019s Journey";
+  document.getElementById("sobWhyDisplay").textContent  = sobData.why ? "\u201c" + sobData.why + "\u201d" : "";
+  document.getElementById("sobStartDisplay").textContent = start.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  document.getElementById("sobDaysNum").textContent  = days;
+  document.getElementById("sobDaysStat").textContent  = days;
+  document.getElementById("sobWeeksStat").textContent = weeks;
+  document.getElementById("sobMonthsStat").textContent = months;
+
+  // Ring: animate up to nearest milestone or 365-day cycle
+  var ringMax = 365;
+  for (var i = 0; i < SOB_MILESTONES.length; i++) {
+    if (SOB_MILESTONES[i].days > days) { ringMax = SOB_MILESTONES[i].days; break; }
+  }
+  var pct = Math.min(1, days / ringMax);
+  document.getElementById("sobRing").style.strokeDashoffset = (427.3 * (1 - pct)).toFixed(2);
+
+  // Milestone badge
+  var nextMilestone = null;
+  var currentMilestone = null;
+  for (var i = 0; i < SOB_MILESTONES.length; i++) {
+    if (SOB_MILESTONES[i].days <= days) currentMilestone = SOB_MILESTONES[i];
+    else if (!nextMilestone) nextMilestone = SOB_MILESTONES[i];
+  }
+  var mBadge = document.getElementById("sobMilestoneDisplay");
+  if (currentMilestone && days === currentMilestone.days) {
+    mBadge.textContent = "\u2728 " + currentMilestone.label + " milestone!";
+  } else if (nextMilestone) {
+    var daysLeft = nextMilestone.days - days;
+    mBadge.textContent = daysLeft + " day" + (daysLeft===1?"":"s") + " to " + nextMilestone.label;
+  }
+
+  // Milestones grid
+  var grid = document.getElementById("sobMilestones");
+  var nextMs = null;
+  for (var mi = 0; mi < SOB_MILESTONES.length; mi++) {
+    if (SOB_MILESTONES[mi].days > days) { nextMs = SOB_MILESTONES[mi]; break; }
+  }
+  grid.innerHTML = SOB_MILESTONES.map(function(m) {
+    var achieved = days >= m.days;
+    var isNext = nextMs && m.days === nextMs.days;
+    var daysLeft = m.days - days;
+    var borderStyle = achieved
+      ? "background:"+m.color+";border:2px solid rgba(255,255,255,.3);box-shadow:0 0 18px "+m.color+"88;"
+      : isNext
+        ? "background:rgba(255,255,255,.06);border:2px dashed "+m.color+";box-shadow:0 0 12px "+m.color+"44;"
+        : "background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);opacity:.45;";
+    var labelColor = achieved ? m.color : isNext ? m.color : "var(--gray)";
+    var labelWeight = achieved ? "700" : "400";
+    var subLine = achieved
+      ? '<div style="font-size:.5rem;color:rgba(255,255,255,.7);margin-top:.2rem;">&#10003; Earned</div>'
+      : isNext
+        ? '<div style="font-size:.5rem;color:'+m.color+';margin-top:.2rem;font-weight:600;">'+daysLeft+' days away</div>'
+        : '<div style="font-size:.5rem;color:var(--gray);margin-top:.2rem;">'+m.days+' days</div>';
+    var chipBg = achieved ? m.color : "rgba(255,255,255,.08)";
+    var chipBorder = achieved ? "rgba(255,255,255,.4)" : "rgba(255,255,255,.15)";
+    var dotBg = achieved ? "rgba(255,255,255,.8)" : "rgba(255,255,255,.2)";
+    var dotGlow = achieved ? "0 0 4px rgba(255,255,255,.6)" : "none";
+    var chipInner = achieved ? "inset 0 2px 4px rgba(255,255,255,.3)" : "none";
+    return '<div style="'+borderStyle+'border-radius:8px;padding:.8rem .4rem;text-align:center;transition:all .3s;">'
+      +'<div style="width:36px;height:44px;border-radius:6px 6px 50% 50%;background:'+chipBg+';border:2px solid '+chipBorder+';margin:0 auto .4rem;display:flex;align-items:center;justify-content:center;box-shadow:'+chipInner+';">'
+      +'<div style="width:6px;height:6px;border-radius:50%;background:'+dotBg+';box-shadow:'+dotGlow+'"></div></div>'
+      +'<div style="font-family:Cinzel,serif;font-size:.56rem;color:'+labelColor+';letter-spacing:.06em;font-weight:'+labelWeight+';">'+m.label+'</div>'
+      +subLine
+      +'</div>';
+  }).join("");
+
+  // Relapse history
+  if (sobRelapses.length > 0) {
+    document.getElementById("sobRelapseHistoryWrap").style.display = "block";
+    document.getElementById("sobRelapseList").innerHTML = sobRelapses.slice().reverse().map(function(r, i) {
+      return '<div style="border-left:3px solid rgba(201,151,58,.3);padding:.6rem 1rem;margin-bottom:.6rem;background:rgba(255,255,255,.02);border-radius:0 4px 4px 0;">'
+        +'<div style="font-family:Cinzel,serif;font-size:.7rem;color:var(--gold);margin-bottom:.2rem;">'
+        + new Date(r.date+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"})
+        +'</div>'
+        +(r.note?'<div style="font-size:.76rem;color:var(--gray);font-style:italic;">'+r.note+'</div>':'')
+        +'<div style="font-size:.65rem;color:rgba(138,155,181,.5);margin-top:.3rem;">Streaked '+r.streakBefore+' days before this</div>'
+        +'</div>';
+    }).join("");
+  }
+}
+
+function openRelapseModal() {
+  var today = new Date().toISOString().split("T")[0];
+  document.getElementById("relapseDate").value    = today;
+  document.getElementById("relapseNewStart").value = today;
+  document.getElementById("relapseNote").value    = "";
+  document.getElementById("relapseModal").classList.add("open");
+}
+function closeRelapseModal() {
+  document.getElementById("relapseModal").classList.remove("open");
+}
+
+function confirmRelapse() {
+  var rDate    = document.getElementById("relapseDate").value;
+  var note     = document.getElementById("relapseNote").value.trim();
+  var newStart = document.getElementById("relapseNewStart").value;
+  if (!rDate || !newStart) { showToast("Please fill in the relapse date and new start date."); return; }
+
+  // Calculate streak before relapse
+  var start    = new Date(sobData.startDate + "T00:00:00");
+  var rDateObj = new Date(rDate + "T00:00:00");
+  var streakBefore = Math.max(0, Math.floor((rDateObj - start) / 86400000));
+
+  // Record relapse
+  sobRelapses.push({ date:rDate, note:note, streakBefore:streakBefore, newStart:newStart });
+  localStorage.setItem("ff_sobriety_relapses", JSON.stringify(sobRelapses));
+
+  // Reset sobriety clock
+  sobData.startDate = newStart;
+  localStorage.setItem("ff_sobriety", JSON.stringify(sobData));
+
+  closeRelapseModal();
+  renderSobriety();
+  showToast("Clock reset. You got back up, brother. That\u2019s what matters.");
+}
+
+function resetSobriety() {
+  if (!confirm("Reset your sobriety data? This cannot be undone.")) return;
+  sobData = null; sobRelapses = [];
+  localStorage.removeItem("ff_sobriety");
+  localStorage.removeItem("ff_sobriety_relapses");
+  document.getElementById("sobEnrollWrap").style.display = "block";
+  document.getElementById("sobMainWrap").style.display   = "none";
+  showToast("Sobriety data reset.");
+}
+
+function exportSobriety() {
+  if (!sobData) return;
+  var start = new Date(sobData.startDate + "T00:00:00");
+  var now   = new Date(); now.setHours(0,0,0,0);
+  var days  = Math.max(0, Math.floor((now - start) / 86400000));
+  var lines = [
+    "FINALLY FREE - SOBRIETY JOURNEY",
+    "Name: " + sobData.name,
+    (sobData.why ? "Why: " + sobData.why : ""),
+    "Sobriety Date: " + sobData.startDate,
+    "Days Free: " + days,
+    "Generated: " + new Date().toLocaleDateString(), ""
+  ];
+  if (sobRelapses.length) {
+    lines.push("RELAPSE JOURNAL:");
+    sobRelapses.forEach(function(r) {
+      lines.push("  " + r.date + " (streak of " + r.streakBefore + " days)" + (r.note ? " - " + r.note : ""));
+    });
+  }
+  lines.push("", "Every day of freedom matters. Keep going.");
+  download("FF-Sobriety.txt", lines.filter(Boolean).join("\n"));
+}
+
+window.startSobriety    = startSobriety;
+window.openRelapseModal  = openRelapseModal;
+window.closeRelapseModal = closeRelapseModal;
+window.confirmRelapse    = confirmRelapse;
+window.resetSobriety    = resetSobriety;
+window.exportSobriety   = exportSobriety;
+
+// ── PANIC BUTTON ──────────────────────────────────────────────────────
+var panicData = null;
+try { panicData = JSON.parse(localStorage.getItem("ff_panic_profile")||"null"); } catch(e) {}
+
+function openPanicEnroll() {
+  // Pre-fill if we have saved info
+  if (panicData) {
+    document.getElementById("panicName").value  = panicData.name  || "";
+    document.getElementById("panicPhone").value = panicData.phone || "";
+  }
+  document.getElementById("panicEnrollModal").classList.add("open");
+}
+function closePanicEnroll() {
+  document.getElementById("panicEnrollModal").classList.remove("open");
+}
+async function sendPanicAlert() {
+  var name  = document.getElementById("panicName").value.trim();
+  var phone = document.getElementById("panicPhone").value.trim();
+  var note  = document.getElementById("panicNote").value.trim();
+  if (!name || !phone) { showToast("Name and phone number are required."); return; }
+  panicData = {name:name, phone:phone};
+  localStorage.setItem("ff_panic_profile", JSON.stringify(panicData));
+  var alert = {name:name, phone:phone, note:note, time:Date.now()};
+  // Save to shared storage
+  try {
+    var existing = [];
+    try { var r = await window.storage.get("ff_panic_alerts",true); if(r&&r.value) existing=JSON.parse(r.value); } catch(e){}
+    // Remove old alert from this person if exists
+    existing = existing.filter(function(a){ return a.name !== name; });
+    existing.push(alert);
+    // Keep only last 20 alerts
+    if (existing.length > 20) existing = existing.slice(-20);
+    await window.storage.set("ff_panic_alerts", JSON.stringify(existing), true);
+  } catch(e) {}
+  closePanicEnroll();
+  document.getElementById("panicButtonWrap").style.display = "none";
+  document.getElementById("panicActiveWrap").style.display = "block";
+  document.getElementById("panicStatusText").textContent = "Alert sent for " + name + " (" + phone + ") — brothers are being notified.";
+  loadPanicAlerts();
+  showToast("Alert sent. Brothers will reach out. You are not alone.");
+}
+async function clearPanicAlert() {
+  if (!panicData) return;
+  try {
+    var r = await window.storage.get("ff_panic_alerts",true);
+    if (r && r.value) {
+      var alerts = JSON.parse(r.value).filter(function(a){ return a.name !== panicData.name; });
+      await window.storage.set("ff_panic_alerts", JSON.stringify(alerts), true);
+    }
+  } catch(e) {}
+  document.getElementById("panicButtonWrap").style.display = "block";
+  document.getElementById("panicActiveWrap").style.display = "none";
+  loadPanicAlerts();
+  showToast("Glad you\u2019re OK, brother. Keep fighting.");
+}
+async function loadPanicAlerts() {
+  var el = document.getElementById("panicAlertList"); if (!el) return;
+  try {
+    var r = await window.storage.get("ff_panic_alerts", true);
+    if (!r || !r.value) { el.innerHTML = ""; return; }
+    var alerts = JSON.parse(r.value);
+    var now = Date.now();
+    // Show only alerts from last 24 hours
+    alerts = alerts.filter(function(a){ return now - a.time < 86400000; });
+    if (!alerts.length) { el.innerHTML = ""; return; }
+    el.innerHTML = '<div style="font-family:Cinzel,serif;font-size:.6rem;color:#e74c3c;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.6rem;">Brothers Who Need a Call</div>'
+      + alerts.map(function(a) {
+          var ago = Math.floor((now - a.time) / 60000);
+          var agoStr = ago < 60 ? ago+"m ago" : Math.floor(ago/60)+"h ago";
+          return '<div style="background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);border-radius:4px;padding:.6rem .9rem;margin-bottom:.4rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;">'
+            +'<span style="font-size:1.1rem;">&#128997;</span>'
+            +'<div style="flex:1;">'
+            +'<div style="font-family:Cinzel,serif;font-size:.75rem;color:var(--white);">'+a.name+'</div>'
+            +(a.note?'<div style="font-size:.68rem;color:var(--gray);font-style:italic;">'+a.note+'</div>':'')
+            +'</div>'
+            +'<a href="tel:'+a.phone.replace(/\D/g,"")+'" class="btn btn-sm" style="background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff;font-family:Cinzel,serif;font-size:.5rem;letter-spacing:.1em;padding:.35rem .7rem;border-radius:2px;text-decoration:none;">Call '+a.phone+' &#128222;</a>'
+            +'<div style="font-size:.6rem;color:var(--gray);">'+agoStr+'</div>'
+            +'</div>';
+        }).join("");
+  } catch(e) { el.innerHTML = ""; }
+}
+
+window.openPanicEnroll  = openPanicEnroll;
+window.closePanicEnroll = closePanicEnroll;
+window.sendPanicAlert   = sendPanicAlert;
+window.clearPanicAlert  = clearPanicAlert;
+
+</script>
+</body>
+</html>
