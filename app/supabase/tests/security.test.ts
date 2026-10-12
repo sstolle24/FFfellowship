@@ -679,6 +679,22 @@ describe("view privileges (independent retest, Oct 2026)", () => {
     }
   });
 
+  it("functions created later by postgres in public aren't executable by anon or authenticated", async () => {
+    await admin(`create function public.zz_later_fn() returns int language sql as 'select 1'`);
+    try {
+      for (const role of ["anon", "authenticated"]) {
+        const [r] = await admin(`select has_function_privilege($1, 'public.zz_later_fn()', 'execute') as ok`, [role]);
+        expect(r.ok, role).toBe(false);
+      }
+      await expect(rows(null, `select public.zz_later_fn()`)).rejects.toThrow(/permission denied/);
+      await expect(rows(N1, `select public.zz_later_fn()`)).rejects.toThrow(/permission denied/);
+      // The service role keeps Supabase's default access.
+      expect((await admin(`select has_function_privilege('service_role', 'public.zz_later_fn()', 'execute') as ok`))[0].ok).toBe(true);
+    } finally {
+      await admin(`drop function public.zz_later_fn()`);
+    }
+  });
+
   it("tables and views created later get no API privileges by default", async () => {
     const [d] = await admin(
       `select coalesce(array_agg(distinct r.rolname::text), '{}') as roles
