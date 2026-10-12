@@ -14,6 +14,7 @@ deploys separately from the `app/` folder.
 | `supabase/migrations/0001_schema.sql` | Tables and enums (spec data model) |
 | `supabase/migrations/0002_rls.sql` | RLS on every table, default deny; member-safe views (`meetings_public`, `member_cards`, `member_contacts`, `sponsor_board`, `my_men`); storage policies |
 | `supabase/migrations/0003_functions.sql` | **All gates, server-side**: initials, returns, unlocks, milestones, matching, approvals, roles, panic, export/delete. Every approval/return/role/relationship change is audit-logged |
+| `supabase/migrations/0004_security_fixes.sql` | Fixes from the Oct 2026 independent security test (links for approved men only, deactivated mentors lose access, member card/contact limits, upload bucket limits, helper grants, …) |
 | `supabase/seed/build_seed.py` → `seed.sql` | Program content generated **verbatim** from the 10-26 source docs (Key 1 worksheet, The 21, Bill's Story Parts 1 & 2) + the current meeting schedule (no Zoom links) |
 | `supabase/tests/` | Security + gate tests against a real Postgres (`npm run test:db`) |
 | `src/app/(public)` | Home, About, How It Works, Meetings, FAQ, Get Started, Get Help Now, Pastor's Corner, Give, Privacy, Login |
@@ -25,7 +26,7 @@ deploys separately from the `app/` folder.
 ## Setup
 
 1. **Supabase project.** In the SQL editor run, in order:
-   `0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`, then `seed/seed.sql`.
+   `0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`, `0004_security_fixes.sql`, then `seed/seed.sql`.
    (Or `supabase db push` with the CLI.) The migrations create the private `submissions` bucket.
 2. **Auth settings** (Supabase → Authentication):
    - Email provider on, "Confirm email" on.
@@ -66,8 +67,9 @@ select cron.schedule('ff-daily', '0 14 * * *', $$select net.http_get(
 ## Tests
 
 ```bash
+npm test               # unit tests, then the database suite
 npm run test:db        # rebuilds a local Postgres from the migrations, then runs the security suite
-npx vitest run src     # unit tests (timezone math)
+npx vitest run src     # unit tests (timezone math, security helpers)
 ```
 `supabase/tests/reset_test_db.sh` expects a local Postgres 16 (see the script for host/port env vars).
 The suite proves, among others, the four required cases: a newcomer can't read another newcomer's
@@ -76,7 +78,7 @@ submissions (rows or storage), an ended sponsor loses access immediately, anon c
 
 ## Decisions baked in (Oct 2026)
 
-- **Pending members see meeting links** (and their joins are recorded). Program content stays hidden until approval.
+- **Meeting links are for approved members only.** Pending men see the public schedule with a note that links appear after approval; joins are recorded. Program content stays hidden until approval.
 - **Unshared journal entries**: visible to the owner and leaders. Shared ones also to his active AP/sponsor.
 - `intake_reason` lives in its own leaders-only table (`profile_intake`) so no member query can ever select it.
 - AP pairs are a single `relationships` row with `mutual = true`; both men get AP rights.
@@ -84,7 +86,10 @@ submissions (rows or storage), an ended sponsor loses access immediately, anon c
 - Key 1 AP step: with no active AP/sponsor, his **primary leader** confirms (any leader if none assigned).
 - Day-75 / "no sponsor" alerts count from **program start** (Key 2 #18 is due 90 days after joining).
 - Worksheet statements with no question (e.g. "15 years later, 100k people recovered…") show as notes and don't need answers.
-- Deleted accounts: deactivated at once, relationships ended; turn-ins, worksheet answers and journal purged after 30 days (`app_settings.purge_submissions_after_days`).
+- Deleted accounts: deactivated at once, relationships ended. After 30 days (`app_settings.purge_submissions_after_days`) the daily job erases turn-ins, worksheet answers, journal, video notes, 90-in-90 log, fishing, panic events and match requests, blanks email/phone/Signal/city, and deletes the login (auth user).
+- Marking a man inactive ends all his AP/sponsor relationships at once. Only admins can change a leader's or admin's status.
+- AP and leader initials on the same item must come from two different men.
+- Panic Button: always alerts his AP, sponsor and primary leader, plus the men he picks — picks are limited to Directory members, the men he walks with, and leaders.
 
 ## Not in v1
 

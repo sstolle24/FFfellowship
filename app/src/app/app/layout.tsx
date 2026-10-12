@@ -19,7 +19,7 @@ export default async function MemberLayout({ children }: { children: React.React
         ["/app/sponsor-desk", "Sponsor Desk"], ["/app/directory", "Directory"],
         ["/app/profile", "Profile & Privacy"],
       ]
-    : [["/app", "Dashboard"], ["/app/meetings", "Meetings & Links"], ["/app/profile", "Profile & Privacy"]];
+    : [["/app", "Dashboard"], ["/app/meetings", "Meetings"], ["/app/profile", "Profile & Privacy"]];
 
   return (
     <div className="min-h-screen md:flex">

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run src && npm run test:db",
     "test:db": "bash supabase/tests/reset_test_db.sh && vitest run supabase/tests",
     "seed:build": "python3 supabase/seed/build_seed.py"
   },
@@ -25,7 +26,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.20.5",
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -34,6 +35,6 @@
     "pg": "^8.23.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^3.2.7"
+    "vitest": "^5.0.3"
   }
 }

@@ -77,7 +77,7 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
           </ActionForm>
           {readyKey2 && man.id !== me.id && <ActionButton run={certifyKey2.bind(null, man.id)} confirm="Certify Detox-21 and open Key 3?">Certify Detox-21</ActionButton>}
           {man.id !== me.id && (man.status === "active"
-            ? <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "inactive")} confirm="Mark inactive? He'll lose member access.">Mark inactive</ActionButton>
+            ? <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "inactive")} confirm="Mark inactive? He'll lose member access and all his AP/sponsor relationships end.">Mark inactive</ActionButton>
             : man.status === "inactive" && <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "active")}>Reactivate</ActionButton>)}
         </Card>
       </div>

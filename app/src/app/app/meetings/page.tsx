@@ -2,7 +2,8 @@ import { requireUser } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { DAYS, localSlot } from "@/lib/time";
 import type { Meeting } from "@/lib/types";
-import { Badge, Card, SectionTitle } from "@/components/ui";
+import { Badge, Card, Notice, SectionTitle } from "@/components/ui";
+import { MeetingSchedule } from "@/components/MeetingSchedule";
 import { JoinButton } from "@/components/JoinButton";
 
 export const metadata = { title: "Meetings & Links" };
@@ -10,6 +11,19 @@ export const metadata = { title: "Meetings & Links" };
 export default async function MemberMeetings() {
   const me = await requireUser();
   const db = await supabaseServer();
+  // Links are for approved members only (RLS on `meetings`); pending men get the public schedule.
+  if (me.status !== "active") {
+    const { data: schedule } = await db.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner");
+    return (
+      <div className="max-w-4xl">
+        <SectionTitle sub="You're welcome at any of these meetings.">Meetings</SectionTitle>
+        <Notice>
+          Meeting links appear here after a leader approves your account. You&apos;ll get an email as soon as you&apos;re in.
+        </Notice>
+        <div className="mt-6"><MeetingSchedule meetings={schedule ?? []} /></div>
+      </div>
+    );
+  }
   const { data } = await db.from("meetings").select("*").eq("active", true);
   const rows = ((data as Meeting[]) ?? [])
     .map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), me.timezone) }))

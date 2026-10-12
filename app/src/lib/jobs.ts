@@ -1,6 +1,7 @@
 import "server-only";
 import { supabaseService } from "@/lib/supabase/server";
 import { sendTemplate } from "@/lib/email";
+import { purgeDeletedAccount } from "@/lib/purge";
 import { daysBetween, todayIn, weekStart } from "@/lib/time";
 
 const SOBRIETY_MILESTONES = [7, 30, 60, 90, 365];
@@ -77,19 +78,17 @@ export async function runDaily() {
     for (const l of leaders) tick("match_open_7d", await sendTemplate(l, "match_open_7d", { man: who?.first_name ?? "A brother", kind: r.type === "ap" ? "AP" : "sponsor" }, { dedupeKey: r.id }));
   }
 
-  // Purge turned-in work of accounts deleted more than N days ago.
+  // Purge accounts deleted more than N days ago (files, his records, contact fields, auth user).
   const { data: setting } = await db.from("app_settings").select("value").eq("key", "purge_submissions_after_days").single();
   const cutoff = new Date(Date.now() - Number(setting?.value ?? 30) * DAY).toISOString();
   const { data: gone } = await db.from("profiles").select("id").lt("deleted_at", cutoff);
   let purged = 0;
   for (const g of gone ?? []) {
-    const { data: files } = await db.from("submissions").select("file_path").eq("man_id", g.id).not("file_path", "is", null);
-    const paths = (files ?? []).map((f) => f.file_path as string);
-    if (paths.length) await db.storage.from("submissions").remove(paths);
-    await db.from("submissions").delete().eq("man_id", g.id);
-    await db.from("worksheet_answers").delete().eq("man_id", g.id);
-    await db.from("journal_entries").delete().eq("man_id", g.id);
-    purged += paths.length;
+    try {
+      purged += await purgeDeletedAccount(db, g.id);
+    } catch (err) {
+      console.error((err as Error).message); // retried on the next daily run
+    }
   }
   return { sent, purged_files: purged };
 }

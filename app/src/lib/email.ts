@@ -2,6 +2,7 @@ import "server-only";
 import { Resend } from "resend";
 import { env } from "@/lib/env";
 import { supabaseService } from "@/lib/supabase/server";
+import { emailLogMeta } from "@/lib/email-meta";
 
 /**
  * Templates. Subjects never contain meeting links, IDs or passwords. Meeting
@@ -16,7 +17,7 @@ const app = (p: string) => `${env.siteUrl}${p}`;
 export const TEMPLATES = {
   welcome: {
     subject: () => "Welcome to Finally Free Fellowship",
-    body: (v) => `Welcome, ${v.first}.\n\nWe got your sign-up. A leader will review it shortly and you'll get an email when you're approved.\n\nIn the meantime you can sign in to see the meeting schedule: ${app("/app/meetings")}\n\nIf you're struggling right now, don't wait: ${app("/get-help")}`,
+    body: (v) => `Welcome, ${v.first}.\n\nWe got your sign-up. A leader will review it shortly and you'll get an email when you're approved.\n\nIn the meantime you can sign in to see the meeting schedule: ${app("/app/meetings")}\n\nMeeting links appear there once a leader approves your account.\n\nIf you're struggling right now, don't wait: ${app("/get-help")}`,
   },
   new_signup: {
     subject: (v) => `New sign-up: ${v.first}`,
@@ -167,7 +168,7 @@ export async function sendTemplate(
   toId: string,
   template: TemplateName,
   vars: Vars = {},
-  opts: { dedupeKey?: string } = {},
+  opts: { dedupeKey?: string; stepId?: string } = {},
 ) {
   const db = supabaseService();
   const { data: p } = await db.from("profiles").select("email, first_name, email_prefs, deleted_at, status").eq("id", toId).single();
@@ -194,6 +195,6 @@ export async function sendTemplate(
   } else {
     console.info(`[email:dev] → ${p.email} | ${subject}`);
   }
-  await db.from("email_log").insert({ to_id: toId, template, meta: { ...vars, dedupe: opts.dedupeKey ?? null } });
+  await db.from("email_log").insert({ to_id: toId, template, meta: emailLogMeta(template, opts) });
   return true;
 }

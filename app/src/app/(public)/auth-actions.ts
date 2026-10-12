@@ -5,22 +5,24 @@ import { z } from "zod";
 import { supabaseServer, supabaseService } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { sendTemplate } from "@/lib/email";
+import { checkLimit, clientIpFrom } from "@/lib/ip";
+import { splitSignUp } from "@/lib/signup";
 
 export type FormState = { error?: string; ok?: string } | undefined;
 
 async function clientIp() {
-  const h = await headers();
-  return (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "unknown";
+  return clientIpFrom(await headers());
 }
 
-/** Server-side rate limit backed by the database (works across serverless instances). */
-async function allow(key: string, max: number, windowSeconds: number) {
-  try {
-    const { data } = await supabaseService().rpc("rate_limit_hit", { p_key: key, p_max: max, p_window_seconds: windowSeconds });
-    return data !== false;
-  } catch {
-    return true; // never lock people out because the limiter itself failed
-  }
+/**
+ * Server-side rate limit backed by the database (works across serverless instances).
+ * `failClosed`: refuse if the limiter can't be reached or the client IP is unknown.
+ */
+async function allow(key: string, max: number, windowSeconds: number, failClosed = false) {
+  return checkLimit(
+    () => supabaseService().rpc("rate_limit_hit", { p_key: key, p_max: max, p_window_seconds: windowSeconds }),
+    failClosed,
+  );
 }
 
 async function verifyTurnstile(token: string | null, ip: string) {
@@ -48,14 +50,19 @@ const SignUp = z.object({
 });
 
 export async function signUp(_: FormState, form: FormData): Promise<FormState> {
-  const ip = await clientIp();
-  if (!(await allow(`signup:${ip}`, 5, 3600))) return { error: "Too many sign-ups from this network. Try again in an hour." };
+  // Sign-up fails closed: no trustworthy IP or no limiter → no new account.
+  const ip = (await clientIp()) ?? (process.env.NODE_ENV !== "production" ? "local" : null);
+  if (!ip) return { error: "We couldn't verify your connection. Please try again in a few minutes." };
+  if (!(await allow(`signup:${ip}`, 5, 3600, true))) {
+    return { error: "Too many sign-ups from this network (or sign-up is briefly unavailable). Try again in an hour." };
+  }
   if (!(await verifyTurnstile(form.get("cf-turnstile-response") as string | null, ip))) {
     return { error: "Please complete the verification check." };
   }
   const parsed = SignUp.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
-  const { email, password, ...meta } = parsed.data;
+  // intake_reason stays out of user metadata (it would ride along in the session JWT).
+  const { email, password, intakeReason, meta } = splitSignUp(parsed.data);
 
   const supabase = await supabaseServer();
   const { data, error } = await supabase.auth.signUp({
@@ -66,6 +73,12 @@ export async function signUp(_: FormState, form: FormData): Promise<FormState> {
   if (error) return { error: error.message };
 
   if (data.user) {
+    if (intakeReason) {
+      // The sign-up trigger already created his profile_intake row (empty); fill it in.
+      const { error: ie } = await supabaseService().from("profile_intake")
+        .upsert({ profile_id: data.user.id, intake_reason: intakeReason }, { onConflict: "profile_id" });
+      if (ie) console.error("intake save failed", ie.message);
+    }
     await sendTemplate(data.user.id, "welcome").catch(() => {});
     const { data: leaders } = await supabaseService().from("profiles").select("id")
       .in("role", ["leader", "admin"]).eq("status", "active");
@@ -78,7 +91,7 @@ export async function logIn(_: FormState, form: FormData): Promise<FormState> {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
   const next = String(form.get("next") ?? "/app");
-  const ip = await clientIp();
+  const ip = (await clientIp()) ?? "unknown";
   if (!(await allow(`login:${ip}`, 20, 900)) || !(await allow(`login:${email}`, 8, 900))) {
     return { error: "Too many attempts. Wait 15 minutes and try again." };
   }
@@ -90,7 +103,7 @@ export async function logIn(_: FormState, form: FormData): Promise<FormState> {
 
 export async function sendMagicLink(_: FormState, form: FormData): Promise<FormState> {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
-  const ip = await clientIp();
+  const ip = (await clientIp()) ?? "unknown";
   if (!(await allow(`magic:${ip}`, 5, 900)) || !(await allow(`magic:${email}`, 3, 900))) {
     return { error: "Too many requests. Wait 15 minutes." };
   }

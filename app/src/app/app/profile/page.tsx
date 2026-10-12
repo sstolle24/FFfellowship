@@ -14,10 +14,19 @@ export default async function Profile() {
   const me = await requireUser();
   const db = await supabaseServer();
   const active = me.status === "active";
-  const [{ data: cs }, { data: members }] = await Promise.all([
+  const none = { data: [] as never[] };
+  const [{ data: cs }, { data: cards }, { data: listed }, { data: rels }] = await Promise.all([
     db.from("contact_sharing").select("*").eq("profile_id", me.id).single(),
-    active ? db.from("member_cards").select("id, first_name, display_name").neq("id", me.id).order("first_name") : Promise.resolve({ data: [] }),
+    active ? db.from("member_cards").select("id, first_name, display_name, is_leader").neq("id", me.id).order("first_name") : Promise.resolve(none),
+    active ? db.from("member_contacts").select("id").eq("directory_opt_in", true) : Promise.resolve(none),
+    active ? db.from("relationships").select("mentor_id, mentee_id").eq("status", "active") : Promise.resolve(none),
   ]);
+  // Panic picks: men listed in the Directory, his AP/sponsor/sponsees, and leaders (the server enforces the same set).
+  const allowed = new Set<string>([
+    ...(listed ?? []).map((m) => m.id as string),
+    ...(rels ?? []).map((r) => (r.mentor_id === me.id ? r.mentee_id : r.mentor_id) as string),
+  ]);
+  const members = (cards ?? []).filter((m) => m.is_leader || allowed.has(m.id));
   const panic: string[] = (cs?.panic_recipients as string[]) ?? [];
 
   return (
@@ -68,9 +77,9 @@ export default async function Profile() {
               <label key={n as string} className="flex items-center gap-2"><input type="checkbox" name={n as string} defaultChecked={!!v} className="accent-[#c9973a]" /> {l as string}</label>
             ))}
             <div>
-              <label className="lbl" htmlFor="panic">Panic Button recipients (in addition to your AP, sponsor and primary leader). Hold Ctrl/⌘ to pick several.</label>
+              <label className="lbl" htmlFor="panic">Panic Button recipients (in addition to your AP, sponsor and primary leader). Lists Directory members, the men you walk with, and leaders. Hold Ctrl/⌘ to pick several.</label>
               <select id="panic" name="panic" multiple defaultValue={panic} className="field min-h-36">
-                {(members ?? []).map((m) => <option key={m.id} value={m.id}>{m.display_name || m.first_name}</option>)}
+                {members.map((m) => <option key={m.id} value={m.id}>{m.display_name || m.first_name}</option>)}
               </select>
             </div>
             <Submit>Save sharing</Submit>
@@ -96,7 +105,7 @@ export default async function Profile() {
         <details>
           <summary className="cursor-pointer text-sm text-danger">Delete my account</summary>
           <ActionForm action={deleteAccount} className="mt-3 space-y-2">
-            <p className="text-sm text-muted">Your account is deactivated immediately, your AP/sponsor relationships end, and your turned-in work is permanently purged after 30 days. Type DELETE to confirm.</p>
+            <p className="text-sm text-muted">Your account is deactivated immediately, your AP/sponsor relationships end, and after 30 days your turned-in work, logs, journal and contact details are permanently erased along with your login. Type DELETE to confirm.</p>
             <input name="confirm" className="field max-w-48" autoComplete="off" />
             <Submit variant="danger">Delete my account</Submit>
           </ActionForm>

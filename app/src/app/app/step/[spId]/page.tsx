@@ -52,10 +52,21 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
     : true;
   const key1Fallback = mod?.key === "key_1" && leader && !manHasMentor && (!man.primary_leader_id || man.primary_leader_id === me.id);
 
+  // Key 1: the worksheet stays locked until all 3 videos are checked off (enforced by initial_self too).
+  let videosPending = false;
+  if (mod?.key === "key_1" && step.helper?.type === "worksheet") {
+    const [{ data: vids }, { data: watched }] = await Promise.all([
+      db.from("videos").select("id").eq("module_id", step.module_id),
+      db.from("video_progress").select("video_id").eq("man_id", sp.man_id).not("watched_at", "is", null),
+    ]);
+    const done = new Set((watched ?? []).map((w) => w.video_id));
+    videosPending = (vids ?? []).some((v) => !done.has(v.id));
+  }
+
   const st = sp.status;
-  const editable = self && (st === "open" || st === "returned");
+  const editable = self && (st === "open" || st === "returned") && !videosPending;
   const canAp = !self && (mentorOfHim || key1Fallback) && st === "self_initialed" && ["self_ap", "triple"].includes(step.gate_type);
-  const canLeader = !self && leader && (
+  const canLeader = !self && leader && sp.ap_initial_by !== me.id && (
     (step.gate_type === "triple" && st === "ap_initialed") || (step.gate_type === "leader" && st === "self_initialed"));
   const canReturn = !self && ((st === "self_initialed" && (leader || mentorOfHim)) || (st === "ap_initialed" && leader));
   const isWorksheet = step.helper?.type === "worksheet";
@@ -76,7 +87,8 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
   // Signed, short-lived links — created with the viewer's session, so storage RLS applies.
   const files = await Promise.all(((subs as Submission[]) ?? []).map(async (s) => {
     if (!s.file_path) return { ...s, url: null as string | null };
-    const { data } = await db.storage.from("submissions").createSignedUrl(s.file_path, 300);
+    // download: served as an attachment, never rendered inline on the storage origin.
+    const { data } = await db.storage.from("submissions").createSignedUrl(s.file_path, 300, { download: true });
     return { ...s, url: data?.signedUrl ?? null };
   }));
 
@@ -106,6 +118,7 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
         </Notice>
       )}
 
+      {self && videosPending && <Notice>Watch the 3 videos first — check each one off in <Link href="/app/program#key_1" className="underline">My Program</Link>, then this worksheet opens.</Notice>}
       {step.description && <Card className="whitespace-pre-line leading-relaxed">{step.description}</Card>}
       {helper && <Notice>{helper}</Notice>}
 
@@ -188,7 +201,9 @@ async function helperInfo(db: Db, step: ProgramStep, manId: string, man: { home_
     const { data } = await db.from("relationships").select("mentee_id").eq("status", "active").eq("mentor_id", manId).in("type", ["sponsor", "temp_sponsor"]);
     const names = await namesFor(db, (data ?? []).map((r) => r.mentee_id));
     const list = Object.values(names).join(", ");
-    return list ? `Sponsoring: ${list}.` : "Not linked as anyone's sponsor in the app yet.";
+    if (list) return `Sponsoring: ${list}.`;
+    // Names follow member_cards visibility; still show that he is linked.
+    return data?.length ? `Sponsoring ${data.length} ${data.length === 1 ? "man" : "men"} in the app.` : "Not linked as anyone's sponsor in the app yet.";
   }
   if (h === "cover_sheet") return "Your AP initials the cover sheet. Every orange item must have its turn-in uploaded first.";
   if (h === "cert_packet") return "Your packet is assembled automatically from your Key 1 worksheet, Key 2 cover sheet and orange turn-ins, and Key 3 Parts 1 and 2.";

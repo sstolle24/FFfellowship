@@ -49,7 +49,8 @@ export async function dispatchEvents(events: RpcEvent[] | undefined) {
 async function handle(e: RpcEvent) {
   const man = e.man_id as string | undefined;
   const send = (to: string[], t: TemplateName, v: Record<string, string | number | undefined> = {}) =>
-    Promise.all(to.filter((id) => id && id !== e.actor).map((id) => sendTemplate(id, t, v)));
+    Promise.all(to.filter((id) => id && id !== e.actor).map((id) =>
+      sendTemplate(id, t, v, { stepId: typeof e.step_id === "string" ? e.step_id : undefined })));
   const manName = await nameOf(man);
   const step = e.item ? `#${e.item} ${e.step}` : (e.step as string | undefined);
 

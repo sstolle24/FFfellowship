@@ -16,7 +16,8 @@ export default async function Dashboard() {
   const tz = me.timezone;
   const today = todayIn(tz);
 
-  const { data: meetings } = await supabase.from("meetings").select("*").eq("active", true);
+  // Schedule only (no links) — the same view for pending and approved men.
+  const { data: meetings } = await supabase.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner");
   const todays = ((meetings as Meeting[]) ?? [])
     .map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), tz) }))
     .filter((m) => m.slot.localDate === today)
@@ -28,7 +29,7 @@ export default async function Dashboard() {
         <SectionTitle>Welcome, {me.first_name}</SectionTitle>
         <Notice>
           Your sign-up is waiting for a leader&apos;s approval. You&apos;ll get an email as soon as you&apos;re in. Until then,
-          come to a meeting — you don&apos;t need to wait to start.
+          here&apos;s the meeting schedule — links appear after approval.
         </Notice>
         <TodaysMeetings meetings={todays} />
         <p className="text-sm text-muted">Struggling right now? <Link href="/get-help" className="text-gold underline">Get help now</Link>.</p>
@@ -90,7 +91,7 @@ export default async function Dashboard() {
   );
 }
 
-function TodaysMeetings({ meetings }: { meetings: (Meeting & { slot: { time: string } })[] }) {
+function TodaysMeetings({ meetings }: { meetings: (Pick<Meeting, "id" | "name" | "beginner"> & { slot: { time: string } })[] }) {
   return (
     <Card>
       <div className="flex items-center justify-between">

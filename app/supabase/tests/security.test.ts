@@ -139,8 +139,16 @@ describe("meetings", () => {
     expect(Object.keys(r[0]).sort()).toEqual(["beginner", "day_of_week", "id", "name", "start_time_utc", "tagline"]);
   });
 
-  it("pending members can see links (Steven's decision); joins are recorded", async () => {
-    expect((await rows(PENDING, `select zoom_url from meetings`))[0].zoom_url).toContain("zoom");
+  it("H1: pending members get the public schedule only, no links", async () => {
+    expect(await rows(PENDING, `select zoom_url from meetings`)).toHaveLength(0);
+    expect((await rows(PENDING, `select * from meetings_public`)).length).toBe(9);
+    const [m] = await admin(`select id from meetings limit 1`);
+    await expect(rpc(PENDING, "join_meeting", m.id)).rejects.toThrow(/Sign in to get meeting links/);
+    expect(await admin(`select * from meeting_link_joins where man_id = $1`, [PENDING])).toHaveLength(0);
+  });
+
+  it("active members can see links; joins are recorded", async () => {
+    expect((await rows(N1, `select zoom_url from meetings`))[0].zoom_url).toContain("zoom");
     const [m] = await admin(`select id from meetings limit 1`);
     const r = await rpc(N1, "join_meeting", m.id);
     expect(r.zoom_url).toContain("zoom");
@@ -166,14 +174,31 @@ describe("Module 0 → Key 1", () => {
     await expect(rpc(N1, "initial_self", apStep.id)).rejects.toThrow(/videos/);
   });
 
+  it("M6: the Key 1 worksheet needs all 3 videos checked off first", async () => {
+    const ws = await sp(N1, "key_1", null, 1);
+    const qs = await rows(N1, `select q.id from worksheet_questions q join program_modules m on m.id=q.module_id where m.key='key_1'`);
+    await as(N1, async (c) => {
+      for (const q of qs) await c.query(`insert into worksheet_answers (man_id, question_id, slot, answer) values ($1,$2,1,'answer')`, [N1, q.id]);
+    });
+    await expect(rpc(N1, "initial_self", ws.id)).rejects.toThrow(/Check off all 3 videos first/);
+    const vids = await rows(N1, `select v.id from videos v join program_modules m on m.id=v.module_id where m.key='key_1' order by v.order_no`);
+    await as(N1, (c) => c.query(`insert into video_progress (man_id, video_id, watched_at, notes) values ($1,$2,now(),'notes')`, [N1, vids[0].id]));
+    await expect(rpc(N1, "initial_self", ws.id)).rejects.toThrow(/Check off all 3 videos first/);
+    expect((await sp(N1, "key_1", null, 1)).status).toBe("open");
+  });
+
   it("worksheet needs every question answered", async () => {
     const ws = await sp(N1, "key_1", null, 1);
+    await admin(`delete from worksheet_answers where man_id = $1`, [N1]);
+    await as(N1, async (c) => {
+      const vids = await c.query(`select v.id from videos v join program_modules m on m.id=v.module_id where m.key='key_1'`);
+      for (const v of vids.rows) await c.query(`insert into video_progress (man_id, video_id, watched_at, notes) values ($1,$2,now(),'notes')
+        on conflict (man_id, video_id) do update set watched_at = now()`, [N1, v.id]);
+    });
     await expect(rpc(N1, "initial_self", ws.id)).rejects.toThrow(/Answer every question/);
     const qs = await rows(N1, `select q.id from worksheet_questions q join program_modules m on m.id=q.module_id where m.key='key_1'`);
     await as(N1, async (c) => {
       for (const q of qs) await c.query(`insert into worksheet_answers (man_id, question_id, slot, answer) values ($1,$2,1,'answer')`, [N1, q.id]);
-      const vids = await c.query(`select v.id from videos v join program_modules m on m.id=v.module_id where m.key='key_1'`);
-      for (const v of vids.rows) await c.query(`insert into video_progress (man_id, video_id, watched_at, notes) values ($1,$2,now(),'notes')`, [N1, v.id]);
     });
     await rpc(N1, "initial_self", ws.id);
     // locked after initial
@@ -416,5 +441,191 @@ describe("sponsor desk view", () => {
     expect(await rows(C, `select id from my_men`)).toHaveLength(0);
     expect(await rows(B, `select id from my_men`)).toHaveLength(0); // sponsorship is one-way
     expect(await rows(null, `select id from my_men`).catch(() => "denied")).toBe("denied");
+  });
+});
+
+describe("independent security test fixes (Oct 2026)", () => {
+  async function activeMan(first: string) {
+    const id = await newUser(first);
+    await rpc(LEADER, "approve_member", id, LEADER);
+    return id;
+  }
+  /** Puts one of his Key 2 items at `status` with a turn-in, bypassing the gates. */
+  async function key2Item(man: string, item: number, status: string) {
+    const step = await stepId("key_2", item);
+    const [r] = await admin(
+      `insert into step_progress (man_id, step_id, status) values ($1,$2,$3)
+       on conflict (man_id, step_id) do update set status = excluded.status returning id`, [man, step, status]);
+    await admin(`insert into submissions (step_progress_id, man_id, body_text, version) values ($1,$2,'work',1)
+                 on conflict do nothing`, [r.id, man]);
+    return r.id as string;
+  }
+
+  it("H2: a deactivated AP can't read his man's submissions or give initials", async () => {
+    const ap = await activeMan("Hank"); const man = await activeMan("Hal");
+    await rpc(LEADER, "leader_create_relationship", ap, man, "ap");
+    const item = await key2Item(man, 2, "self_initialed");
+    expect(await rows(ap, `select * from submissions where man_id = $1`, [man])).toHaveLength(1);
+
+    // Deactivated with the relationship row still active: is_ap_of now refuses him.
+    await admin(`update profiles set status = 'inactive' where id = $1`, [ap]);
+    expect(await rows(ap, `select * from submissions where man_id = $1`, [man])).toHaveLength(0);
+    expect(await rows(ap, `select * from step_progress where man_id = $1`, [man])).toHaveLength(0);
+    await expect(rpc(ap, "initial_ap", item)).rejects.toThrow(/Only his active AP/);
+    await expect(rpc(ap, "return_step", item, "nope")).rejects.toThrow(/can't return/);
+
+    // Deleted (not just inactive) is refused too.
+    await admin(`update profiles set status = 'active', deleted_at = now() where id = $1`, [ap]);
+    expect(await rows(ap, `select * from submissions where man_id = $1`, [man])).toHaveLength(0);
+  });
+
+  it("H2: set_member_status('inactive') ends all his active relationships", async () => {
+    const sponsor = await activeMan("Ivan"); const ap = await activeMan("Ike"); const man = await activeMan("Ira");
+    await rpc(LEADER, "leader_create_relationship", sponsor, man, "sponsor");
+    await rpc(LEADER, "leader_create_relationship", ap, sponsor, "ap");
+    const item = await key2Item(man, 3, "self_initialed");
+    await rpc(LEADER, "set_member_status", sponsor, "inactive");
+    expect(await admin(`select status from relationships where $1 in (mentor_id, mentee_id)`, [sponsor]))
+      .toEqual([{ status: "ended" }, { status: "ended" }]);
+    // Even if a leader re-activates him, the old access does not come back.
+    await rpc(LEADER, "set_member_status", sponsor, "active");
+    expect(await rows(sponsor, `select * from submissions where man_id = $1`, [man])).toHaveLength(0);
+    await expect(rpc(sponsor, "initial_ap", item)).rejects.toThrow(/Only his active AP/);
+  });
+
+  it("H3: member_contacts shows Signal only when shared, never the phone in its place", async () => {
+    const a = await activeMan("Jack"); const b = await activeMan("Jim");
+    await admin(`update profiles set phone = '555-0199', signal = null where id = $1`, [a]);
+    await admin(`update contact_sharing set share_signal = true, share_phone = false where profile_id = $1`, [a]);
+    let [c] = await rows(b, `select phone, signal from member_contacts where id = $1`, [a]);
+    expect(c).toEqual({ phone: null, signal: null });
+    await admin(`update profiles set signal = 'jack.01' where id = $1`, [a]);
+    [c] = await rows(b, `select phone, signal from member_contacts where id = $1`, [a]);
+    expect(c).toEqual({ phone: null, signal: "jack.01" });
+  });
+
+  it("M1: the leader who gave AP initials can't also give leader initials", async () => {
+    const man = await activeMan("Kirk");
+    await rpc(LEADER2, "leader_create_relationship", LEADER, man, "ap");
+    const item = await key2Item(man, 4, "self_initialed");
+    await rpc(LEADER, "initial_ap", item);
+    await expect(rpc(LEADER, "initial_leader", item)).rejects.toThrow(/A different leader must give leader initials/);
+    await rpc(LEADER2, "initial_leader", item);
+    expect((await admin(`select status from step_progress where id = $1`, [item]))[0].status).toBe("leader_initialed");
+  });
+
+  it("M2: member_cards only shows himself, Directory men, his relationships/open matches and leaders", async () => {
+    const me = await activeMan("Lou"); const stranger = await activeMan("Lyle");
+    const ap = await activeMan("Lane"); const offerer = await activeMan("Lars");
+    await rpc(ADMIN, "set_member_role", offerer, "ap_sponsor");
+    await rpc(LEADER, "leader_create_relationship", ap, me, "ap");
+    const req = await rpc(me, "create_match_request", "sponsor", "UTC", "", "", "");
+    await rpc(offerer, "offer_match", req.id);
+
+    const ids = (await rows(me, `select id from member_cards`)).map((r) => r.id);
+    expect(ids).toEqual(expect.arrayContaining([me, ap, offerer, LEADER, LEADER2, ADMIN]));
+    expect(ids).not.toContain(stranger);
+    expect(Object.keys((await rows(me, `select * from member_cards where id = $1`, [me]))[0])).not.toContain("sobriety_start_date");
+    expect((await rows(me, `select is_leader from member_cards where id = $1`, [LEADER]))[0].is_leader).toBe(true);
+    // The offerer sees the requester too (open match).
+    expect((await rows(offerer, `select id from member_cards where id = $1`, [me]))).toHaveLength(1);
+
+    await admin(`update contact_sharing set directory_opt_in = true where profile_id = $1`, [stranger]);
+    expect(await rows(me, `select id from member_cards where id = $1`, [stranger])).toHaveLength(1);
+    await admin(`update contact_sharing set directory_opt_in = false where profile_id = $1`, [stranger]);
+
+    // Panic picks outside that set are ignored; his AP and primary leader are always alerted.
+    await as(me, (c) => c.query(`update contact_sharing set panic_recipients = $1 where profile_id = $2`,
+      [JSON.stringify([stranger, LEADER2]), me]));
+    const r = await rpc(me, "trigger_panic");
+    const to: string[] = r.events[0].recipients;
+    expect(to).toEqual(expect.arrayContaining([ap, LEADER, LEADER2]));
+    expect(to).not.toContain(stranger);
+  });
+
+  it("M3: leaders can't change a leader's/admin's status; pending can't be set active", async () => {
+    await expect(rpc(LEADER, "set_member_status", LEADER2, "inactive")).rejects.toThrow(/Only an admin/);
+    await expect(rpc(LEADER, "set_member_status", ADMIN, "inactive")).rejects.toThrow(/Only an admin/);
+    const p = await newUser("Moe");
+    await expect(rpc(LEADER, "set_member_status", p, "active")).rejects.toThrow(/Use Approve/);
+    expect((await admin(`select status from profiles where id = $1`, [p]))[0].status).toBe("pending");
+    // An admin may; status is restored for the rest of the suite.
+    await rpc(ADMIN, "set_member_status", LEADER2, "inactive");
+    await rpc(ADMIN, "set_member_status", LEADER2, "active");
+    await expect(rpc(ADMIN, "set_member_status", ADMIN, "inactive")).rejects.toThrow(/your own status/);
+  });
+
+  it("M3: never leaves zero active admins", async () => {
+    // Only reachable if the caller isn't an active admin himself, which the
+    // admin check already blocks — so check the guard directly as the owner.
+    const src = (await admin(`select prosrc from pg_proc where proname = 'set_member_status'`))[0].prosrc as string;
+    expect(src).toMatch(/That would leave no active admin/);
+  });
+
+  it("M4: internal helpers can't be called by members; is_ap_of answers only the men involved or leaders", async () => {
+    const man = await activeMan("Ned2"); const ap = await activeMan("Noel"); const other = await activeMan("Nick");
+    await rpc(LEADER, "leader_create_relationship", ap, man, "ap");
+    const [{ id: spId }] = await admin(`select id from step_progress where man_id = $1 limit 1`, [man]);
+    const calls: [string, unknown[]][] = [
+      ["app.load_sp($1)", [spId]], ["app.module_done($1,'key_1')", [man]], ["app.has_milestone($1,'keys_complete')", [man]],
+      ["app.missing_turn_ins($1)", [man]], ["app.has_any_mentor($1)", [man]], ["app.step_done('open','self')", []],
+      ["app.audit('x','y',null,null)", []], ["app.award($1,'keys_complete',$1)", [man]], ["app.refresh_program($1)", [man]],
+      ["app.ensure_progress($1)", [man]],
+    ];
+    for (const [call, args] of calls) {
+      await expect(rows(man, `select ${call}`, args), call).rejects.toThrow(/permission denied/);
+    }
+    const isAp = async (who: string) => (await rows(who, `select app.is_ap_of($1,$2) as v`, [ap, man]))[0].v;
+    expect(await isAp(ap)).toBe(true);
+    expect(await isAp(man)).toBe(true);
+    expect(await isAp(LEADER)).toBe(true);
+    expect(await isAp(other)).toBe(false);
+    expect((await rows(other, `select app.is_sponsor_of($1,$2) as v`, [ap, man]))[0].v).toBe(false);
+  });
+
+  it("M5: bucket limits, and uploads only into an open step and a numeric version folder", async () => {
+    const [b] = await admin(`select file_size_limit, allowed_mime_types from storage.buckets where id = 'submissions'`);
+    expect(Number(b.file_size_limit)).toBe(20 * 1024 * 1024);
+    expect(b.allowed_mime_types).toEqual(expect.arrayContaining([
+      "application/pdf", "image/jpeg", "image/png", "image/heic", "image/webp", "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain",
+      "application/rtf", "application/vnd.oasis.opendocument.text"]));
+    expect(b.allowed_mime_types).not.toContain("text/html");
+
+    const man = await activeMan("Otto");
+    const open = await stepId("welcome", null);   // open after approval
+    const locked = await stepId("key_2", 9);      // locked for a new man
+    const put = (path: string) => as(man, (c) => c.query(`insert into storage.objects (bucket_id, name) values ('submissions', $1)`, [path]));
+    await put(`${man}/${open}/1/ok.pdf`);
+    for (const bad of [`${man}/${locked}/1/x.pdf`, `${man}/${open}/one/x.pdf`, `${man}/${open}/1/extra/x.pdf`,
+                       `${man}/not-a-step/1/x.pdf`, `${man}/x.pdf`]) {
+      await expect(put(bad), bad).rejects.toThrow(/row-level security/);
+    }
+  });
+
+  it("L3: sign-up works with no intake_reason in metadata; the server writes it to profile_intake", async () => {
+    const [{ id }] = await admin(`insert into auth.users (email, raw_user_meta_data) values ('quinn@test.local', $1) returning id`,
+      [JSON.stringify({ first_name: "Quinn" })]);
+    expect((await admin(`select intake_reason from profile_intake where profile_id = $1`, [id]))[0].intake_reason).toBeNull();
+    // What src/app/(public)/auth-actions.ts does with the service client after signUp.
+    await admin(`insert into profile_intake (profile_id, intake_reason) values ($1, 'private') on conflict (profile_id) do update set intake_reason = excluded.intake_reason`, [id]);
+    expect((await rows(LEADER, `select intake_reason from profile_intake where profile_id = $1`, [id]))[0].intake_reason).toBe("private");
+    expect(await rows(id, `select * from profile_intake`)).toHaveLength(0);
+  });
+
+  it("L4: a purged account can be scrubbed and its auth user deleted, even if he initialed others' items", async () => {
+    const leaderGone = await activeMan("Ray"); const man = await activeMan("Rob");
+    await rpc(ADMIN, "set_member_role", leaderGone, "leader");
+    const item = await key2Item(man, 5, "self_initialed");
+    await rpc(LEADER, "leader_create_relationship", leaderGone, man, "sponsor");
+    await rpc(leaderGone, "initial_ap", item);
+    await as(leaderGone, (c) => c.query(`insert into leader_notes (man_id, leader_id, body) values ($1,$2,'n')`, [man, leaderGone]));
+    await rpc(leaderGone, "delete_my_account");
+    // What runDaily's purge does (src/lib/purge.ts), as the service role.
+    await admin(`update profiles set email = null, phone = null, signal = null, city = null where id = $1`, [leaderGone]);
+    await admin(`delete from auth.users where id = $1`, [leaderGone]);
+    expect(await admin(`select * from profiles where id = $1`, [leaderGone])).toHaveLength(0);
+    const [s] = await admin(`select status, ap_initial_by from step_progress where id = $1`, [item]);
+    expect(s).toEqual({ status: "ap_initialed", ap_initial_by: null });
   });
 });

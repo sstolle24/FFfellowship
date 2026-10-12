@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Program } from "@/lib/program";
-import { dueDate } from "@/lib/program";
+import { dueDate, stepDone } from "@/lib/program";
 import type { Profile } from "@/lib/types";
 import { StepRow } from "@/components/StepParts";
 import { Badge, Card, Notice } from "@/components/ui";
@@ -56,10 +56,15 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
                 )}
 
                 <div className="space-y-2">
-                  {m.steps.map((s) => (
-                    <StepRow key={s.id} step={s} names={names} href={href(s.progress?.id)}
-                      due={dueDate(man.program_start_date, s.due_day)} />
-                  ))}
+                  {m.steps.map((s) => {
+                    // Key 1 worksheet: locked until all 3 videos are checked off.
+                    const waitVideos = self && m.key === "key_1" && s.helper?.type === "worksheet"
+                      && m.videos.some((v) => !v.watched_at) && !stepDone(s.progress?.status, s.gate_type);
+                    return (
+                      <StepRow key={s.id} step={s} names={names} href={waitVideos ? undefined : href(s.progress?.id)}
+                        due={dueDate(man.program_start_date, s.due_day)} lockedNote={waitVideos ? "Watch the 3 videos first" : undefined} />
+                    );
+                  })}
                 </div>
 
                 {m.key === "key_2" && (

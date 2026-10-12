@@ -4,9 +4,8 @@ import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { nextVersion, recordUpload } from "@/app/app/actions";
 import { Button, Notice } from "@/components/ui";
+import { TURN_IN_MAX_BYTES, turnInType } from "@/lib/mime";
 
-const MAX = 20 * 1024 * 1024;
-const OK = /\.(pdf|jpe?g|png|heic|webp|docx?|txt|rtf|odt)$/i;
 
 /** Uploads straight into the man's own private folder: {man}/{step}/{version}/{file}. */
 export function UploadTurnIn({ spId, stepId, manId }: { spId: string; stepId: string; manId: string }) {
@@ -18,15 +17,16 @@ export function UploadTurnIn({ spId, stepId, manId }: { spId: string; stepId: st
   async function upload() {
     const f = input.current?.files?.[0];
     if (!f) return setMsg({ error: "Choose a file first." });
-    if (f.size > MAX) return setMsg({ error: "That file is over 20 MB." });
-    if (!OK.test(f.name)) return setMsg({ error: "Use a PDF, photo, Word or text file." });
+    if (f.size > TURN_IN_MAX_BYTES) return setMsg({ error: "That file is over 20 MB." });
+    const contentType = turnInType(f.name);
+    if (!contentType) return setMsg({ error: "Use a PDF, photo, Word or text file." });
     setBusy(true);
     setMsg({});
     try {
       const v = await nextVersion(spId);
       const safe = f.name.replace(/[^\w.\-]+/g, "_").slice(-80);
       const path = `${manId}/${stepId}/${v}/${safe}`;
-      const { error } = await supabaseBrowser().storage.from("submissions").upload(path, f, { upsert: false, contentType: f.type || undefined });
+      const { error } = await supabaseBrowser().storage.from("submissions").upload(path, f, { upsert: false, contentType });
       if (error) throw new Error(error.message);
       const r = await recordUpload(spId, path, "");
       if (r?.error) throw new Error(r.error);

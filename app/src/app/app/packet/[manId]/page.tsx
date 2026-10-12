@@ -23,7 +23,7 @@ export default async function Packet({ params }: { params: Promise<{ manId: stri
   const turnIns = await Promise.all(k2.steps.filter((s) => s.turn_in).map(async (s) => {
     const latest = s.submissions[s.submissions.length - 1];
     let url: string | null = null;
-    if (latest?.file_path) url = (await db.storage.from("submissions").createSignedUrl(latest.file_path, 600)).data?.signedUrl ?? null;
+    if (latest?.file_path) url = (await db.storage.from("submissions").createSignedUrl(latest.file_path, 600, { download: true })).data?.signedUrl ?? null;
     return { s, latest, url };
   }));
 
