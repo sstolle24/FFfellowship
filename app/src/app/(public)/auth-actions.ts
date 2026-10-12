@@ -6,7 +6,7 @@ import { supabaseServer, supabaseService } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { sendTemplate } from "@/lib/email";
 import { checkLimit, clientIpFrom } from "@/lib/ip";
-import { splitSignUp } from "@/lib/signup";
+import { saveIntakeReason, splitSignUp } from "@/lib/signup";
 
 export type FormState = { error?: string; ok?: string } | undefined;
 
@@ -73,12 +73,8 @@ export async function signUp(_: FormState, form: FormData): Promise<FormState> {
   if (error) return { error: error.message };
 
   if (data.user) {
-    if (intakeReason) {
-      // The sign-up trigger already created his profile_intake row (empty); fill it in.
-      const { error: ie } = await supabaseService().from("profile_intake")
-        .upsert({ profile_id: data.user.id, intake_reason: intakeReason }, { onConflict: "profile_id" });
-      if (ie) console.error("intake save failed", ie.message);
-    }
+    // The sign-up trigger created his profile_intake row (empty); fill it in only if still empty.
+    if (intakeReason) await saveIntakeReason(supabaseService(), data.user.id, intakeReason);
     await sendTemplate(data.user.id, "welcome").catch(() => {});
     const { data: leaders } = await supabaseService().from("profiles").select("id")
       .in("role", ["leader", "admin"]).eq("status", "active");

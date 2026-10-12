@@ -38,4 +38,8 @@ language sql immutable as $$ select (string_to_array(name, '/'))[1:array_length(
 grant execute on function storage.foldername(text) to anon, authenticated;
 
 grant usage on schema public to anon, authenticated, service_role;
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+-- Supabase's real defaults: everything the postgres role creates in public is
+-- fully granted to the API roles. Migrations must revoke what they don't want.
+alter default privileges for role postgres in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges for role postgres in schema public grant all on routines to anon, authenticated, service_role;
+alter default privileges for role postgres in schema public grant all on sequences to anon, authenticated, service_role;

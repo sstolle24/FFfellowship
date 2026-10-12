@@ -603,12 +603,15 @@ describe("independent security test fixes (Oct 2026)", () => {
     }
   });
 
-  it("L3: sign-up works with no intake_reason in metadata; the server writes it to profile_intake", async () => {
+  it("L3: sign-up works with no intake_reason in metadata; the server fills profile_intake only while empty", async () => {
     const [{ id }] = await admin(`insert into auth.users (email, raw_user_meta_data) values ('quinn@test.local', $1) returning id`,
       [JSON.stringify({ first_name: "Quinn" })]);
     expect((await admin(`select intake_reason from profile_intake where profile_id = $1`, [id]))[0].intake_reason).toBeNull();
-    // What src/app/(public)/auth-actions.ts does with the service client after signUp.
-    await admin(`insert into profile_intake (profile_id, intake_reason) values ($1, 'private') on conflict (profile_id) do update set intake_reason = excluded.intake_reason`, [id]);
+    // What saveIntakeReason (src/lib/signup.ts) sends with the service client after signUp.
+    const save = (reason: string) =>
+      admin(`update profile_intake set intake_reason = $2 where profile_id = $1 and intake_reason is null`, [id, reason]);
+    await save("private");
+    await save("overwrite attempt");
     expect((await rows(LEADER, `select intake_reason from profile_intake where profile_id = $1`, [id]))[0].intake_reason).toBe("private");
     expect(await rows(id, `select * from profile_intake`)).toHaveLength(0);
   });
@@ -627,5 +630,62 @@ describe("independent security test fixes (Oct 2026)", () => {
     expect(await admin(`select * from profiles where id = $1`, [leaderGone])).toHaveLength(0);
     const [s] = await admin(`select status, ap_initial_by from step_progress where id = $1`, [item]);
     expect(s).toEqual({ status: "ap_initialed", ap_initial_by: null });
+  });
+});
+
+describe("view privileges (independent retest, Oct 2026)", () => {
+  const views = async () =>
+    (await admin(`select viewname from pg_views where schemaname = 'public' order by 1`)).map((r) => r.viewname as string);
+
+  it("anon and members can't insert, update or delete meetings_public", async () => {
+    const [m] = await admin(`select id, name from meetings limit 1`);
+    for (const who of [null, N1, LEADER]) {
+      await expect(rows(who, `insert into meetings_public (name, day_of_week, start_time_utc) values ('x', 1, '10:00')`))
+        .rejects.toThrow(/permission denied/);
+      await expect(rows(who, `update meetings_public set name = 'hacked' where id = $1`, [m.id])).rejects.toThrow(/permission denied/);
+      await expect(rows(who, `delete from meetings_public where id = $1`, [m.id])).rejects.toThrow(/permission denied/);
+    }
+    expect((await admin(`select name from meetings where id = $1`, [m.id]))[0].name).toBe(m.name);
+    expect((await rows(null, `select * from meetings_public`)).length).toBeGreaterThan(0); // still readable
+  });
+
+  it("an AP/sponsor can't update or delete his man's profile through my_men", async () => {
+    const ap = await newUser("Uri"); const sponsor = await newUser("Ulf"); const man = await newUser("Uwe");
+    for (const x of [ap, sponsor, man]) await rpc(LEADER, "approve_member", x, LEADER);
+    await rpc(LEADER, "leader_create_relationship", ap, man, "ap");
+    await rpc(LEADER, "leader_create_relationship", sponsor, man, "sponsor");
+    for (const who of [ap, sponsor]) {
+      expect((await rows(who, `select id from my_men`)).map((r) => r.id)).toContain(man); // still readable
+      await expect(rows(who, `update my_men set first_name = 'hacked' where id = $1`, [man])).rejects.toThrow(/permission denied/);
+      await expect(rows(who, `delete from my_men where id = $1`, [man])).rejects.toThrow(/permission denied/);
+    }
+    const [p] = await admin(`select first_name, deleted_at from profiles where id = $1`, [man]);
+    expect(p).toEqual({ first_name: "Uwe", deleted_at: null });
+  });
+
+  it("every public view grants only SELECT to anon/authenticated (and anon only meetings_public)", async () => {
+    const all = await views();
+    expect(all).toEqual(expect.arrayContaining(["meetings_public", "member_cards", "member_contacts", "my_men", "sponsor_board"]));
+    const grants = await admin(
+      `select c.relname as view, r.rolname as role, p.privilege_type as priv
+         from pg_class c join pg_namespace n on n.oid = c.relnamespace,
+              lateral aclexplode(c.relacl) p join pg_roles r on r.oid = p.grantee
+        where n.nspname = 'public' and c.relkind = 'v' and r.rolname in ('anon', 'authenticated')`);
+    expect(grants.filter((g) => g.priv !== "SELECT")).toEqual([]);
+    expect(grants.filter((g) => g.role === "anon").map((g) => g.view)).toEqual(["meetings_public"]);
+    for (const v of all) {
+      const has = (role: string) => grants.some((g) => g.view === v && g.role === role);
+      expect(has("authenticated"), v).toBe(true);
+    }
+  });
+
+  it("tables and views created later get no API privileges by default", async () => {
+    const [d] = await admin(
+      `select coalesce(array_agg(distinct r.rolname::text), '{}') as roles
+         from pg_default_acl a join pg_namespace n on n.oid = a.defaclnamespace,
+              lateral aclexplode(a.defaclacl) p join pg_roles r on r.oid = p.grantee
+        where n.nspname = 'public' and a.defaclobjtype = 'r' and a.defaclrole = 'postgres'::regrole`);
+    expect(d.roles).not.toContain("anon");
+    expect(d.roles).not.toContain("authenticated");
   });
 });

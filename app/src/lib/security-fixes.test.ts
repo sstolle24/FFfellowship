@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { checkLimit, clientIpFrom } from "./ip";
-import { splitSignUp } from "./signup";
+import { saveIntakeReason, splitSignUp } from "./signup";
 import { emailLogMeta } from "./email-meta";
 import { PURGE_TABLES, purgeDeletedAccount } from "./purge";
 import { turnInType } from "./mime";
@@ -52,7 +52,20 @@ describe("L3: intake_reason never goes into user metadata", () => {
   it("the sign-up action sends `meta` (not the raw form) and writes intake with the service client", () => {
     const src = readFileSync(join(root, "src/app/(public)/auth-actions.ts"), "utf8");
     expect(src).toMatch(/options: \{ data: meta,/);
-    expect(src).toMatch(/from\("profile_intake"\)\s*\.upsert/);
+    expect(src).toMatch(/saveIntakeReason\(supabaseService\(\), data\.user\.id, intakeReason\)/);
+    expect(src).not.toMatch(/upsert/);
+  });
+
+  it("saveIntakeReason only fills the reason while it is still null", async () => {
+    const calls: string[] = [];
+    const chain = {
+      update: (v: object) => { calls.push(`update ${JSON.stringify(v)}`); return chain; },
+      eq: (c: string, v: string) => { calls.push(`eq ${c}=${v}`); return chain; },
+      is: (c: string, v: null) => { calls.push(`is ${c}=${v}`); return Promise.resolve({ error: null }); },
+    };
+    const db = { from: (t: string) => { calls.push(`from ${t}`); return chain; } } as unknown as SupabaseClient;
+    await saveIntakeReason(db, "u1", "why I'm here");
+    expect(calls).toEqual(["from profile_intake", `update {"intake_reason":"why I'm here"}`, "eq profile_id=u1", "is intake_reason=null"]);
   });
 });
 
