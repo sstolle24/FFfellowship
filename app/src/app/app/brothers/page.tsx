@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireActive } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { fmtDate } from "@/lib/time";
+import { daysLabel, fmtDate } from "@/lib/time";
 import { STAGE_LABEL, type Stage } from "@/lib/types";
 import { ActionButton } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
@@ -36,7 +36,7 @@ export default async function Brothers() {
               <Badge tone="gold">{role}</Badge>
               {r.status === "accepted" && <Badge>Waiting on leader confirmation</Badge>}
             </div>
-            {c && <p className="text-sm text-muted">{c.day_count ?? "?"} days · {STAGE_LABEL[c.stage as Stage]}{c.home_group ? ` · ${c.home_group}` : ""} · since {fmtDate(r.started_at ?? r.created_at)}</p>}
+            {c && <p className="text-sm text-muted">{daysLabel(c.day_count)} · {STAGE_LABEL[c.stage as Stage]}{c.home_group ? ` · ${c.home_group}` : ""} · since {fmtDate(r.started_at ?? r.created_at)}</p>}
             <div className="flex flex-wrap gap-4 text-sm">
               {k?.phone && <a className="text-gold underline" href={`tel:${k.phone.replace(/[^\d+]/g, "")}`}>Call {k.phone}</a>}
               {k?.signal && <span>Signal: {k.signal}</span>}

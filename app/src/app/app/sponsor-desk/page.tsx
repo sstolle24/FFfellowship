@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireActive } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { relDays } from "@/lib/time";
+import { daysLabel, relDays } from "@/lib/time";
 import { STAGE_LABEL, type Stage } from "@/lib/types";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
 
@@ -64,7 +64,7 @@ export default async function SponsorDesk() {
                     {(m.my_roles ?? "").split(",").map((r: string) => <Badge key={r} tone="gold">{r === "ap" ? "AP" : r.replace("_", " ")}</Badge>)}
                     {quiet >= 3 && <Badge tone={quiet >= 7 ? "danger" : "orange"}>Quiet {quiet} days</Badge>}
                   </div>
-                  <p className="text-sm text-muted">{m.day_count ?? "?"} days · {STAGE_LABEL[m.stage as Stage]} · Key 2: {k2(m.id)}/21</p>
+                  <p className="text-sm text-muted">{daysLabel(m.day_count)} · {STAGE_LABEL[m.stage as Stage]} · Key 2: {k2(m.id)}/21</p>
                   <Link href={`/app/men/${m.id}`} className="text-sm text-gold underline">Open his program</Link>
                 </Card>
               );

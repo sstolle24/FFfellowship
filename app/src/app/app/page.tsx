@@ -60,7 +60,8 @@ export default async function Dashboard() {
       <SectionTitle sub={STAGE_LABEL[me.stage]}>Welcome back, {me.first_name}</SectionTitle>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Day count" value={days ?? "—"} hint={days === null ? <Link className="underline" href="/app/profile#sobriety">Set your date</Link> : "days free"} />
+        <Stat label="Day count" value={days ?? "Not set"}
+          hint={days === null ? <Link className="underline" href="/app/profile#sobriety">Add your sobriety date</Link> : days === 1 ? "day free" : "days free"} />
         <Stat label="90 in 90" value={`${ninety}/90`} hint={<Link className="underline" href="/app/ninety">Log a meeting</Link>} />
         <Stat label="Fishing" value={`${fishing.data?.length ?? 0}/3`} hint={<Link className="underline" href="/app/fishing">This week</Link>} />
         <PanicButton signalUrl={signal} />

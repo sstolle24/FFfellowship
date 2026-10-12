@@ -70,7 +70,7 @@ async function sp(man: string, module: string, item: number | null, order = 1) {
   return r as { id: string; status: string };
 }
 
-let LEADER: string, LEADER2: string, ADMIN: string, SPONSOR: string, N1: string, N2: string, PENDING: string;
+let LEADER: string, LEADER2: string, ADMIN: string, SPONSOR: string, N1: string, N2: string, PENDING: string, STRANGER: string;
 
 beforeAll(async () => {
   LEADER = await newUser("Larry");
@@ -87,6 +87,8 @@ beforeAll(async () => {
   await rpc(ADMIN, "set_member_role", SPONSOR, "ap_sponsor");
   await rpc(LEADER, "approve_member", N1, LEADER);
   await rpc(LEADER, "approve_member", N2, LEADER);
+  STRANGER = await newUser("Stan");
+  await rpc(LEADER, "approve_member", STRANGER, LEADER);
 });
 afterAll(() => pool.end());
 
@@ -169,32 +171,53 @@ describe("Module 0 → Key 1", () => {
     expect(p.stage).toBe("key_1");
   });
 
-  it("the AP step needs videos and worksheet first", async () => {
+  const key1Videos = async () =>
+    (await rows(N1, `select v.id from videos v join program_modules m on m.id=v.module_id where m.key='key_1' order by v.order_no`))
+      .map((v) => v.id as string);
+  const watch = (videoId: string) =>
+    as(N1, (c) => c.query(`insert into video_progress (man_id, video_id, watched_at, notes) values ($1,$2,now(),'notes')
+      on conflict (man_id, video_id) do update set watched_at = now()`, [N1, videoId]));
+
+  it("Key 1 opens with only the videos: worksheet and AP step stay locked", async () => {
+    expect((await sp(N1, "key_1", null, 1)).status).toBe("locked");
+    expect((await sp(N1, "key_1", null, 2)).status).toBe("locked");
     const apStep = await sp(N1, "key_1", null, 2);
-    await expect(rpc(N1, "initial_self", apStep.id)).rejects.toThrow(/videos/);
+    await expect(rpc(N1, "initial_self", apStep.id)).rejects.toThrow(/Finish the Fishing worksheet first/);
   });
 
-  it("M6: the Key 1 worksheet needs all 3 videos checked off first", async () => {
+  it("sequential: videos must be checked off in order (1 → 2 → 3)", async () => {
+    const [v1, v2, v3] = await key1Videos();
+    await expect(watch(v2)).rejects.toThrow(/Watch Video 1 first/);
+    await expect(watch(v3)).rejects.toThrow(/Watch Video 1 first/);
+    await watch(v1);
+    await expect(watch(v3)).rejects.toThrow(/Watch Video 2 first/);
+    await watch(v2);
+    // Can't un-check a video once he has moved past it.
+    await expect(as(N1, (c) => c.query(`update video_progress set watched_at = null where man_id = $1 and video_id = $2`, [N1, v1])))
+      .rejects.toThrow(/stays checked/);
+  });
+
+  it("M6 + sequential: the Fishing worksheet stays locked until all 3 videos are checked", async () => {
     const ws = await sp(N1, "key_1", null, 1);
-    const qs = await rows(N1, `select q.id from worksheet_questions q join program_modules m on m.id=q.module_id where m.key='key_1'`);
-    await as(N1, async (c) => {
-      for (const q of qs) await c.query(`insert into worksheet_answers (man_id, question_id, slot, answer) values ($1,$2,1,'answer')`, [N1, q.id]);
-    });
-    await expect(rpc(N1, "initial_self", ws.id)).rejects.toThrow(/Check off all 3 videos first/);
-    const vids = await rows(N1, `select v.id from videos v join program_modules m on m.id=v.module_id where m.key='key_1' order by v.order_no`);
-    await as(N1, (c) => c.query(`insert into video_progress (man_id, video_id, watched_at, notes) values ($1,$2,now(),'notes')`, [N1, vids[0].id]));
-    await expect(rpc(N1, "initial_self", ws.id)).rejects.toThrow(/Check off all 3 videos first/);
+    expect(ws.status).toBe("locked");
+    await expect(rpc(N1, "initial_self", ws.id)).rejects.toThrow(/Watch the 3 videos first/);
+    const [q] = await rows(N1, `select q.id from worksheet_questions q join program_modules m on m.id=q.module_id where m.key='key_1' limit 1`);
+    await expect(as(N1, (c) => c.query(`insert into worksheet_answers (man_id, question_id, slot, answer) values ($1,$2,1,'x')`, [N1, q.id])))
+      .rejects.toThrow(/Watch the 3 videos first/);
+    const wsPath = `${N1}/${await stepId("key_1", null, 1)}/1/ws.pdf`;
+    await expect(rpc(N1, "add_submission", ws.id, null, wsPath)).rejects.toThrow(/Watch the 3 videos first/);
+    await expect(as(N1, (c) => c.query(`insert into storage.objects (bucket_id, name) values ('submissions', $1)`, [wsPath])))
+      .rejects.toThrow(/row-level security/);
+    expect(await rpc(N1, "step_lock_reason", ws.id)).toBe("Watch the 3 videos first.");
+    const [, , v3] = await key1Videos();
+    await watch(v3);
     expect((await sp(N1, "key_1", null, 1)).status).toBe("open");
+    expect(await rpc(N1, "step_lock_reason", ws.id)).toBeNull();
+    expect((await sp(N1, "key_1", null, 2)).status).toBe("locked"); // AP go-over waits for the worksheet
   });
 
   it("worksheet needs every question answered", async () => {
     const ws = await sp(N1, "key_1", null, 1);
-    await admin(`delete from worksheet_answers where man_id = $1`, [N1]);
-    await as(N1, async (c) => {
-      const vids = await c.query(`select v.id from videos v join program_modules m on m.id=v.module_id where m.key='key_1'`);
-      for (const v of vids.rows) await c.query(`insert into video_progress (man_id, video_id, watched_at, notes) values ($1,$2,now(),'notes')
-        on conflict (man_id, video_id) do update set watched_at = now()`, [N1, v.id]);
-    });
     await expect(rpc(N1, "initial_self", ws.id)).rejects.toThrow(/Answer every question/);
     const qs = await rows(N1, `select q.id from worksheet_questions q join program_modules m on m.id=q.module_id where m.key='key_1'`);
     await as(N1, async (c) => {
@@ -205,6 +228,8 @@ describe("Module 0 → Key 1", () => {
     await expect(as(N1, (c) => c.query(`update worksheet_answers set answer='edit' where man_id=$1`, [N1]))).rejects.toThrow(/locked/);
     // snapshot submission created
     expect(await rows(N1, `select * from submissions where step_progress_id = $1`, [ws.id])).toHaveLength(1);
+    // his part done → the AP go-over opens (no need to wait for anyone's initials)
+    expect((await sp(N1, "key_1", null, 2)).status).toBe("open");
   });
 
   it("with no AP/sponsor, only his primary leader may give the Key 1 AP confirmation", async () => {
@@ -212,6 +237,9 @@ describe("Module 0 → Key 1", () => {
     await rpc(N1, "initial_self", apStep.id);
     await expect(rpc(N2, "initial_ap", apStep.id)).rejects.toThrow(/Only his active AP/);
     await expect(rpc(LEADER2, "initial_ap", apStep.id)).rejects.toThrow(/Only his active AP/);
+    // Key 2 stays shut until the Key 1 AP sign-off is in.
+    expect((await sp(N1, "key_2", 1)).status).toBe("locked");
+    expect(await rpc(N1, "step_lock_reason", (await sp(N1, "key_2", 1)).id)).toBe("Finish Key 1 first.");
     const r = await rpc(LEADER, "initial_ap", apStep.id);
     expect(r.events.some((e: { module: string }) => e.module === "key_2")).toBe(true);
   });
@@ -251,11 +279,38 @@ describe("matching", () => {
 });
 
 describe("Key 2 — triple gate", () => {
+  it("sequential: only #1 opens with Key 2; the next item opens when he finishes his part", async () => {
+    expect((await sp(N1, "key_2", 1)).status).toBe("open");
+    for (const n of [2, 3, 9, 21]) expect((await sp(N1, "key_2", n)).status, `#${n}`).toBe("locked");
+    const s3 = await sp(N1, "key_2", 3);
+    await expect(rpc(N1, "initial_self", s3.id)).rejects.toThrow(/Finish #1 first/);
+    await expect(rpc(N1, "add_submission", s3.id, "early", null)).rejects.toThrow(/Finish #1 first/);
+    expect(await rpc(N1, "step_lock_reason", s3.id)).toBe("Finish #1 first.");
+    expect(await rpc(STRANGER, "step_lock_reason", s3.id)).toBeNull(); // strangers learn nothing
+    await rpc(N1, "initial_self", (await sp(N1, "key_2", 1)).id);
+    // #2 (30 days of prayer) is a background item: it starts now and #3 opens right behind it.
+    expect((await sp(N1, "key_2", 2)).status).toBe("open");
+    expect((await sp(N1, "key_2", 3)).status).toBe("open");
+    expect((await sp(N1, "key_2", 4)).status).toBe("locked");
+  });
+
+  it("items up to #8 in order (his initials alone keep him moving)", async () => {
+    for (let n = 3; n <= 8; n++) {
+      const s = await sp(N1, "key_2", n);
+      expect(s.status, `#${n}`).toBe("open");
+      await rpc(N1, "initial_self", s.id);
+    }
+    expect((await sp(N1, "key_2", 9)).status).toBe("open");
+    expect((await sp(N1, "key_2", 10)).status).toBe("locked");
+  });
+
   it("orange item can't be initialed without a turn-in", async () => {
     const s = await sp(N1, "key_2", 9);
     await expect(rpc(N1, "initial_self", s.id)).rejects.toThrow(/Turn in/);
+    await expect(rpc(N1, "add_submission", s.id, null, `${N2}/x/1/file.pdf`)).rejects.toThrow(/path/);
     await rpc(N1, "add_submission", s.id, "My steps 1, 2 and 3", null);
     await rpc(N1, "initial_self", s.id);
+    expect((await sp(N1, "key_2", 10)).status).toBe("open");
   });
 
   it("upload paths must be inside his own folder", async () => {
@@ -304,23 +359,49 @@ describe("Key 2 — triple gate", () => {
     await expect(rpc(N2, "initial_leader", s.id)).rejects.toThrow(/Only leaders/);
   });
 
-  it("#20 cover sheet blocks until every orange turn-in is uploaded", async () => {
+  it("background items don't block, but #20 still needs their turn-ins", async () => {
+    // He moves through #11–#19 with his own initials; #10 (90 in 90), #12, #16, #18 and #19 run in the background.
+    for (const n of [11, 13, 14, 15, 17]) {
+      const s = await sp(N1, "key_2", n);
+      expect(s.status, `#${n}`).toBe("open");
+      if ([11, 13, 14, 15].includes(n)) await rpc(N1, "add_submission", s.id, `item ${n}`, null);
+      await rpc(N1, "initial_self", s.id);
+    }
+    expect((await sp(N1, "key_2", 20)).status).toBe("open");
     const s20 = await sp(N1, "key_2", 20);
-    await expect(rpc(N1, "initial_self", s20.id)).rejects.toThrow(/missing for items: 10, 11, 13, 14, 15/);
+    await expect(rpc(N1, "initial_self", s20.id)).rejects.toThrow(/missing for items: 10$/);
+  });
+
+  it("a returned item doesn't re-lock what follows, but Key 3 waits for every sign-off", async () => {
+    const s5 = await sp(N1, "key_2", 5);
+    await rpc(N2, "return_step", s5.id, "Only 12 contacts — need 20");
+    expect((await sp(N1, "key_2", 5)).status).toBe("returned");
+    for (const n of [6, 7, 20]) expect((await sp(N1, "key_2", n)).status, `#${n}`).not.toBe("locked");
+    expect((await sp(N1, "key_2", 21)).status).toBe("locked"); // still waiting on #20 (his cover sheet), not on the return
+    await rpc(N1, "initial_self", s5.id); // fixed and re-initialed
   });
 
   it("all 21 + leader confirmation → Detox-21 certified, Key 3 opens", async () => {
     for (let n = 1; n <= 21; n++) {
-      const s = await sp(N1, "key_2", n);
+      let s = await sp(N1, "key_2", n);
       if (s.status === "leader_initialed") continue;
-      if ([10, 11, 13, 14, 15].includes(n)) await rpc(N1, "add_submission", s.id, `item ${n}`, null);
-      await rpc(N1, "initial_self", s.id);
+      if (s.status === "open" || s.status === "returned") {
+        if (n === 10) await rpc(N1, "add_submission", s.id, `item ${n}`, null);
+        await rpc(N1, "initial_self", s.id);
+      }
       await rpc(SPONSOR, "initial_ap", s.id); // sponsor may give AP initials too
       if (n === 13) await expect(rpc(N2, "set_read_to_group", s.id, true)).rejects.toThrow(/Leaders only/);
       if (n === 13) await rpc(LEADER, "set_read_to_group", s.id, true);
+      // Key 3 stays locked until the very last sign-off and a leader's certification.
+      expect((await sp(N1, "key_3_part_1", null)).status).toBe("locked");
       await rpc(LEADER, "initial_leader", s.id);
+      s = await sp(N1, "key_2", n);
+      expect(s.status, `#${n}`).toBe("leader_initialed");
     }
     expect((await sp(N1, "key_3_part_1", null)).status).toBe("locked"); // needs leader confirm
+    const k3 = await sp(N1, "key_3_part_1", null);
+    expect(await rpc(N1, "step_lock_reason", k3.id)).toBe("Finish Key 2 first.");
+    await expect(rpc(N1, "initial_self", k3.id)).rejects.toThrow(/Finish Key 2 first/);
     await expect(rpc(N2, "leader_certify_key2", N1)).rejects.toThrow(/Leaders only/);
     const r = await rpc(LEADER, "leader_certify_key2", N1);
     expect(r.events.map((e: { type: string }) => e.type)).toEqual(expect.arrayContaining(["milestone", "module_unlocked"]));
@@ -703,5 +784,48 @@ describe("view privileges (independent retest, Oct 2026)", () => {
         where n.nspname = 'public' and a.defaclobjtype = 'r' and a.defaclrole = 'postgres'::regrole`);
     expect(d.roles).not.toContain("anon");
     expect(d.roles).not.toContain("authenticated");
+  });
+});
+
+describe("sequential program: existing progress (0007)", () => {
+  it("a man partway through Key 2 keeps everything he did; untouched items re-lock in order", async () => {
+    const man = await newUser("Walt");
+    await rpc(LEADER, "approve_member", man, LEADER);
+    // Old rules: whole modules opened at once. Recreate that state directly.
+    await admin(`update step_progress sp set status = 'self_initialed', self_initialed_at = now()
+                   from program_steps ps join program_modules pm on pm.id = ps.module_id
+                  where ps.id = sp.step_id and sp.man_id = $1 and pm.key in ('welcome','key_1')`, [man]);
+    await admin(`update step_progress sp set status = 'ap_initialed', ap_initial_by = $2, ap_initialed_at = now()
+                   from program_steps ps where ps.id = sp.step_id and sp.man_id = $1 and ps.gate_type = 'self_ap'`, [man, LEADER]);
+    await admin(`insert into video_progress (man_id, video_id, watched_at)
+                 select $1, v.id, now() from videos v join program_modules pm on pm.id = v.module_id where pm.key = 'key_1'`, [man]);
+    await admin(`update step_progress sp set status = 'open' from program_steps ps join program_modules pm on pm.id = ps.module_id
+                  where ps.id = sp.step_id and sp.man_id = $1 and pm.key = 'key_2'`, [man]);
+    const status = async (n: number) => (await sp(man, "key_2", n)).status;
+    for (const n of [1, 2, 3, 4, 5, 6]) {
+      const id = await stepId("key_2", n);
+      await admin(`update step_progress set status = $3, self_initialed_at = now() where man_id = $1 and step_id = $2`,
+        [man, id, n <= 3 ? "leader_initialed" : "self_initialed"]);
+    }
+    const s9 = await sp(man, "key_2", 9);
+    await admin(`update step_progress set status = 'self_initialed', self_initialed_at = now() where id = $1`, [s9.id]);
+    await admin(`insert into submissions (step_progress_id, man_id, body_text, version) values ($1, $2, 'steps', 1)`, [s9.id, man]);
+    const s11 = await sp(man, "key_2", 11); // touched (typed a draft turn-in) but not initialed
+    await admin(`insert into submissions (step_progress_id, man_id, body_text, version) values ($1, $2, 'draft', 1)`, [s11.id, man]);
+
+    await admin(`select app.resequence_progress()`);
+
+    for (const n of [1, 2, 3]) expect(await status(n), `#${n}`).toBe("leader_initialed");
+    for (const n of [4, 5, 6, 9]) expect(await status(n), `#${n}`).toBe("self_initialed");
+    expect(await status(7)).toBe("open");     // his next item
+    expect(await status(8)).toBe("locked");   // waits for #7
+    expect(await status(10)).toBe("locked");
+    expect(await status(11)).toBe("open");    // he'd already started it — kept
+    expect(await status(21)).toBe("locked");
+    expect((await sp(man, "key_1", null, 2)).status).toBe("ap_initialed");
+    // Running it again changes nothing.
+    await admin(`select app.resequence_progress()`);
+    expect(await status(7)).toBe("open");
+    expect(await status(8)).toBe("locked");
   });
 });

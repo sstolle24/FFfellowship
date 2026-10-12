@@ -5,7 +5,7 @@ export const metadata = { title: "How the Program Works" };
 
 const STEPS = [
   ["Module 0 — Welcome", "Sign up, get approved by a leader, and commit to the program. You can start attending meetings right away."],
-  ["Key 1 — The 3 Videos", "Watch the three foundation videos, take notes, and complete the Permanent / Real Sobriety (\"Fishing\") worksheet. Then go over your notes and worksheet with your accountability partner (AP)."],
+  ["Key 1 — The 3 Videos", "Watch the three foundation videos, take notes, and complete the Fishing worksheet. Then go over your notes and worksheet with your accountability partner (AP)."],
   ["Key 2 — \"The 21\"", "Finally Free's virtual detox: 21 concrete actions — prayer, clearing your home, accountability software, disclosure, Steps 1–3, 90 meetings in 90 days, service, an AP, a sponsor, and more. Each item is initialed three times: by you, by your AP, and by a leader. Orange items are turned in."],
   ["Key 3 — Bill's Story", "Watch the Bill W. movie and answer the timestamped questionnaire in two parts (minutes 1–59, then 59 to the end)."],
   ["Certification", "Your Key 1 worksheet, Key 2 cover sheet and turn-ins, and Key 3 answers are assembled into a packet for leader review. Then you're Fellowship certified — and when a man you sponsor gets certified, you're ministry eligible."],

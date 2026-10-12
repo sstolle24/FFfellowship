@@ -55,6 +55,9 @@ KEY2_TITLES = {
 }
 TURN_IN = {9, 10, 11, 13, 14, 15}
 DUE = {12: 14, 19: 30, 18: 90}
+# Timed / waiting-on-others items: start when they open and don't block the next
+# item while their timer runs (still need every sign-off before Key 2 completes).
+BACKGROUND = {2, 10, 12, 16, 18, 19}
 HELPERS = {
     4: {"type": "meeting_link_joined", "sub": "D"},
     16: {"type": "relationship", "rel": "ap"},
@@ -146,7 +149,7 @@ def main(k1, k2, k3):
         ("welcome", 1, "Module 0 — Welcome",
          "Welcome to Finally Free Fellowship. Read through how the program works — the 3 Keys to Freedom — "
          "and commit to walking it out with your brothers.", None),
-        ("key_1", 2, "Key 1 — The 3 Videos and Permanent / Real Sobriety",
+        ("key_1", 2, "Key 1 — The 3 Videos and the Fishing worksheet",
          verse + "\n\n" + k1_closing, "key1_videos_worksheet/Permanent_Real_Sobriety_Worksheet_10-26"),
         ("key_2", 3, 'Key 2 — Finally Free\'s "Virtual Detox" Program: "The 21"',
          k2_intro, "key2_detox21/Detox21_The21_Key2_10-26"),
@@ -179,7 +182,7 @@ def main(k1, k2, k3):
     # Key 1
     for i in range(1, 4):
         w(f"insert into videos (module_id, order_no, title) values ({mid('key_1')}, {i}, {q(f'Video {i}')});")
-    step("key_1", 1, None, "Permanent / Real Sobriety worksheet",
+    step("key_1", 1, None, "Fishing worksheet",
          "Fill in the worksheet below (or upload your completed paper copy).", "self",
          helper={"type": "worksheet"})
     step("key_1", 2, None, "Went over video notes and worksheet with AP",
@@ -192,7 +195,8 @@ def main(k1, k2, k3):
     # Key 2 — The 21
     for n in range(1, 22):
         step("key_2", n, n, KEY2_TITLES[n], k2_items[n], "triple",
-             turn_in=n in TURN_IN, due=DUE.get(n), helper=HELPERS.get(n))
+             turn_in=n in TURN_IN, due=DUE.get(n),
+             helper={**HELPERS.get(n, {}), "background": True} if n in BACKGROUND else HELPERS.get(n))
     w(f"insert into app_settings values ('key2_closing', {q(json.dumps(k2_closing))}::jsonb) "
       "on conflict (key) do update set value = excluded.value;")
     w("")

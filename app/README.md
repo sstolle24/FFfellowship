@@ -17,6 +17,7 @@ deploys separately from the `app/` folder.
 | `supabase/migrations/0004_security_fixes.sql` | Fixes from the Oct 2026 independent security test (links for approved men only, deactivated mentors lose access, member card/contact limits, upload bucket limits, helper grants, …) |
 | `supabase/migrations/0005_view_grants.sql` | Views are SELECT-only for the API roles (Supabase grants ALL on new objects by default); new tables/views start with no API access |
 | `supabase/migrations/0006_function_defaults.sql` | New functions start with no EXECUTE for anon/authenticated/PUBLIC; each migration grants what it needs |
+| `supabase/migrations/0007_sequential_program.sql` | Sequential program: keys in order, assignments in order inside each key, background items, clear "Finish … first" refusals; re-sequences existing progress without undoing anything a man did |
 | `supabase/seed/build_seed.py` → `seed.sql` | Program content generated **verbatim** from the 10-26 source docs (Key 1 worksheet, The 21, Bill's Story Parts 1 & 2) + the current meeting schedule (no Zoom links) |
 | `supabase/tests/` | Security + gate tests against a real Postgres (`npm run test:db`) |
 | `public/brand/`, `scripts/build_brand.py` | Self-hosted FF cross logo (1x/2x PNG + WebP). The script regenerates the logo, favicon, apple-touch-icon and Open Graph image from the source PNG |
@@ -29,7 +30,7 @@ deploys separately from the `app/` folder.
 ## Setup
 
 1. **Supabase project.** In the SQL editor run, in order:
-   `0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`, `0004_security_fixes.sql`, `0005_view_grants.sql`, `0006_function_defaults.sql`, then `seed/seed.sql`.
+   `0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`, `0004_security_fixes.sql`, `0005_view_grants.sql`, `0006_function_defaults.sql`, `0007_sequential_program.sql`, then `seed/seed.sql`.
    (Or `supabase db push` with the CLI.) The migrations create the private `submissions` bucket.
 2. **Auth settings** (Supabase → Authentication):
    - Email provider on, "Confirm email" on.
@@ -81,6 +82,15 @@ submissions (rows or storage), an ended sponsor loses access immediately, anon c
 `meetings.zoom_*`, and a man can't approve his own leader gate.
 
 ## Decisions baked in (Oct 2026)
+
+- **Keys are strictly sequential**: Module 0 → Key 1 → Key 2 → Key 3 (Part 1, Part 2) → Certification. A key opens only when every
+  item of the previous one is fully signed off (self, AP and leader as each item's gate defines; Key 2 also needs a leader's Detox-21 certification).
+- **Assignments inside a key are sequential too**: Key 1 is Video 1 → 2 → 3 → Fishing worksheet → AP go-over; Key 2 is #1 → #21; Key 3 is
+  Part 1 → Part 2. The next one opens when he has finished *his* part of every earlier one (his initials, which already require any turn-in or
+  worksheet answers) — he doesn't wait for AP/leader initials to keep moving. A returned item never re-locks what follows.
+- **Background items** (`program_steps.helper.background = true`) start when they open and don't hold back the next item:
+  Key 2 #2 (pray 30 days), #10 (90 in 90), #12 (service position, day 14), #16 (get an AP), #18 (sponsor by day 90), #19 (sponsor someone, day 30).
+  They still need every sign-off before Key 2 completes. Change the list in the Table editor.
 
 - **Meeting links are for approved members only.** Pending men see the public schedule with a note that links appear after approval; joins are recorded. Program content stays hidden until approval.
 - **Unshared journal entries**: visible to the owner and leaders. Shared ones also to his active AP/sponsor.

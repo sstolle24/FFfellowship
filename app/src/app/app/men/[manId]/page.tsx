@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireActive, isLeader } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadProgram } from "@/lib/program";
+import { daysLabel } from "@/lib/time";
 import { initialerNames } from "@/lib/names";
 import { ProgramView } from "@/components/ProgramView";
 import { SectionTitle } from "@/components/ui";
@@ -24,7 +25,7 @@ export default async function ManProgram({ params }: { params: Promise<{ manId: 
   return (
     <div className="max-w-4xl">
       <Link href="/app/sponsor-desk" className="text-sm text-muted hover:text-gold">← Sponsor Desk</Link>
-      <SectionTitle sub={`${man.day_count ?? "?"} days`}>{man.display_name || man.first_name}&apos;s program</SectionTitle>
+      <SectionTitle sub={daysLabel(man.day_count)}>{man.display_name || man.first_name}&apos;s program</SectionTitle>
       <ProgramView man={man as unknown as Profile} program={program} names={names} self={false} />
     </div>
   );

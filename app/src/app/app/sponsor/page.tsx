@@ -1,7 +1,7 @@
 import { requireActive, isSponsorRole } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { namesFor } from "@/lib/names";
-import { fmtDate } from "@/lib/time";
+import { daysLabel, fmtDate } from "@/lib/time";
 import { STAGE_LABEL, type Stage } from "@/lib/types";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
@@ -44,7 +44,7 @@ export default async function SponsorPage() {
                   return (
                     <div key={o.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-line p-3">
                       <span className="font-semibold">{names[o.offerer_id]}</span>
-                      {c && <span className="text-sm text-muted">{c.day_count ?? "?"} days · {STAGE_LABEL[c.stage as Stage]}{c.home_group ? ` · ${c.home_group}` : ""}</span>}
+                      {c && <span className="text-sm text-muted">{daysLabel(c.day_count)} · {STAGE_LABEL[c.stage as Stage]}{c.home_group ? ` · ${c.home_group}` : ""}</span>}
                       <span className="ml-auto"><ActionButton run={acceptOffer.bind(null, o.id)} confirm={`Accept ${names[o.offerer_id]}?`}>Accept</ActionButton></span>
                     </div>
                   );
@@ -84,7 +84,7 @@ export default async function SponsorPage() {
                 <Card key={b.request_id} className="flex flex-wrap items-center gap-3 p-4">
                   <span className="display text-ink">{b.first_name}</span>
                   <Badge tone="gold">{b.type === "ap" ? "Needs an AP" : "Needs a sponsor"}</Badge>
-                  <span className="text-sm text-muted">{b.day_count ?? "?"} days · {STAGE_LABEL[b.stage as Stage]} · {b.timezone}</span>
+                  <span className="text-sm text-muted">{daysLabel(b.day_count)} · {STAGE_LABEL[b.stage as Stage]} · {b.timezone}</span>
                   <span className="text-xs text-muted">posted {fmtDate(b.created_at)}</span>
                   <span className="ml-auto">
                     {b.i_offered ? <Badge tone="ok">You offered</Badge> : <ActionButton run={offerMatch.bind(null, b.request_id)} confirm={`Offer to walk with ${b.first_name}?`}>Offer</ActionButton>}

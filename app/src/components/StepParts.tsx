@@ -51,8 +51,9 @@ export function StepRow({ step, names, href, due, lockedNote }: {
       <div className="min-w-0 flex-1">
         <div className="text-ink">{step.title}</div>
         <div className="mt-1 flex flex-wrap gap-1.5">
-          {lockedNote ? <Badge tone="muted">{lockedNote}</Badge> : <StatusBadge step={step} />}
+          {lockedNote ? <><Badge tone="muted">Locked</Badge><span className="text-xs text-muted">{lockedNote}</span></> : <StatusBadge step={step} />}
           {step.turn_in && <Badge tone="orange">Turn in</Badge>}
+          {step.helper?.background === true && !lockedNote && <Badge tone="muted">Runs in the background</Badge>}
           {due && <Badge tone="muted">Due {fmtDate(due)}</Badge>}
           {step.progress?.read_to_group && <Badge tone="ok">Read to group</Badge>}
         </div>

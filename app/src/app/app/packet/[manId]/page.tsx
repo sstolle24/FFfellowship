@@ -41,7 +41,7 @@ export default async function Packet({ params }: { params: Promise<{ manId: stri
         </div>
       </header>
 
-      <Answers title="Key 1 — Permanent / Real Sobriety worksheet" mod={program.byKey.key_1} />
+      <Answers title="Key 1 — Fishing worksheet" mod={program.byKey.key_1} />
 
       <section>
         <h2 className="text-lg text-gold">Key 2 — The 21</h2>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Program } from "@/lib/program";
-import { dueDate, stepDone } from "@/lib/program";
+import { dueDate } from "@/lib/program";
 import type { Profile } from "@/lib/types";
 import { StepRow } from "@/components/StepParts";
 import { Badge, Card, Notice } from "@/components/ui";
@@ -22,7 +22,8 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
               {m.done ? <Badge tone="ok">Complete</Badge> : m.unlocked ? <Badge tone="gold">Open</Badge> : <Badge>Locked</Badge>}
             </div>
             {!m.unlocked ? (
-              <p className="text-sm text-muted">Opens when the previous key is complete.</p>
+              // Locked key: no instructions, videos or items — just what opens it.
+              <p className="text-sm text-muted">{m.lockNote} It opens once every item there is signed off.</p>
             ) : (
               <div className="space-y-3">
                 {m.description && m.key !== "key_3_part_2" && (
@@ -34,7 +35,15 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
 
                 {m.videos.length > 0 && (
                   <div className="grid gap-3 md:grid-cols-3">
-                    {m.videos.map((v) => (
+                    {m.videos.map((v) => v.lockNote ? (
+                      <Card key={v.id} className="p-4 opacity-60">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="display text-ink">{v.title}</span>
+                          <Badge>Locked</Badge>
+                        </div>
+                        <p className="mt-2 text-xs text-muted">{v.lockNote}</p>
+                      </Card>
+                    ) : (
                       <Card key={v.id} className="p-4">
                         <div className="flex items-center justify-between gap-2">
                           <span className="display text-ink">{v.title}</span>
@@ -56,15 +65,10 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
                 )}
 
                 <div className="space-y-2">
-                  {m.steps.map((s) => {
-                    // Key 1 worksheet: locked until all 3 videos are checked off.
-                    const waitVideos = self && m.key === "key_1" && s.helper?.type === "worksheet"
-                      && m.videos.some((v) => !v.watched_at) && !stepDone(s.progress?.status, s.gate_type);
-                    return (
-                      <StepRow key={s.id} step={s} names={names} href={waitVideos ? undefined : href(s.progress?.id)}
-                        due={dueDate(man.program_start_date, s.due_day)} lockedNote={waitVideos ? "Watch the 3 videos first" : undefined} />
-                    );
-                  })}
+                  {m.steps.map((s) => (
+                    <StepRow key={s.id} step={s} names={names} href={s.lockNote ? undefined : href(s.progress?.id)}
+                      due={dueDate(man.program_start_date, s.due_day)} lockedNote={s.lockNote ?? undefined} />
+                  ))}
                 </div>
 
                 {m.key === "key_2" && (

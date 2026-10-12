@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabase/server";
-import { dayCount, daysBetween, fmtDate, relDays, todayIn } from "@/lib/time";
+import { dayCount, daysBetween, daysLabel, fmtDate, relDays, todayIn } from "@/lib/time";
 import { STAGE_LABEL, type Stage } from "@/lib/types";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
@@ -56,7 +56,7 @@ export default async function Matching() {
                     {age >= 7 && <Badge tone="danger">Open {age} days</Badge>}
                     <span className="ml-auto text-xs text-muted">{fmtDate(r.created_at)}</span>
                   </div>
-                  {m && <p className="text-muted">{dayCount(m.sobriety_start_date, m.timezone) ?? "?"} days · {STAGE_LABEL[m.stage as Stage]} · {r.timezone}</p>}
+                  {m && <p className="text-muted">{daysLabel(dayCount(m.sobriety_start_date, m.timezone))} · {STAGE_LABEL[m.stage as Stage]} · {r.timezone}</p>}
                   <p className="text-muted">Best times: {r.best_times || "—"} · Contact: {r.contact_pref || "—"}</p>
                   {r.notes && <p className="whitespace-pre-line">Notes: {r.notes}</p>}
                   {os.length > 0 && <p>Offers from: {os.map((o) => name(o.offerer_id)).join(", ")}</p>}

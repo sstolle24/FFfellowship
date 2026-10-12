@@ -35,6 +35,12 @@ export function dayCount(start: string | null, tz: string): number | null {
   return Math.max(0, daysBetween(start, todayIn(tz)));
 }
 
+/** "42 days", "1 day", or "No sobriety date set" — never "? days". */
+export function daysLabel(n: number | null | undefined): string {
+  if (n === null || n === undefined) return "No sobriety date set";
+  return `${n} day${n === 1 ? "" : "s"}`;
+}
+
 /** Monday of the current week in his timezone (Fishing "Your 3 This Week"). */
 export function weekStart(tz: string): string {
   const today = todayIn(tz);

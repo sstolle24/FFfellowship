@@ -56,7 +56,7 @@ export default async function Review() {
           <div className="space-y-2">
             {readyKey2.map((id) => (
               <Card key={id} className="flex items-center gap-3 p-3">
-                <Link href={`/leader/men/${id}`} className="display flex-1 hover:text-gold">{name(id)}</Link>
+                <Link href={`/leader/men/${id}`} className="display min-w-0 flex-1 break-words hover:text-gold">{name(id)}</Link>
                 <Badge tone="ok">21/21 signed off</Badge>
                 <ActionButton run={certifyKey2.bind(null, id)} confirm={`Certify ${name(id)} for Detox-21 and open Key 3?`}>Certify</ActionButton>
               </Card>
@@ -74,9 +74,9 @@ export default async function Review() {
               const since = p.ap_initialed_at ?? p.self_initialed_at;
               return (
                 <Link key={p.id} href={`/app/step/${p.id}`} className="block">
-                  <Card className="flex flex-wrap items-center gap-3 p-3 hover:border-gold">
-                    <span className="display w-32 truncate">{name(p.man_id)}</span>
-                    <span className="flex-1">{s.item_number ? `#${s.item_number} ` : ""}{s.title}</span>
+                  <Card className="flex flex-wrap items-center gap-x-4 gap-y-1 p-3 hover:border-gold">
+                    <span className="display min-w-0 basis-full break-words text-ink sm:basis-56 sm:shrink-0">{name(p.man_id)}</span>
+                    <span className="min-w-0 flex-1 break-words">{s.item_number ? `#${s.item_number} ` : ""}{s.title}</span>
                     {s.turn_in && <Badge tone="orange">Turn in</Badge>}
                     <span className="text-xs text-muted" title={fmtDateTime(since, me.timezone)}>{relDays(since)}d waiting</span>
                   </Card>

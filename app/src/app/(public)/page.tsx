@@ -23,7 +23,7 @@ export default function Home() {
 
       <section className="mx-auto grid max-w-6xl gap-5 px-4 py-16 md:grid-cols-3">
         {[
-          ["Key 1", "Three videos and the Permanent / Real Sobriety worksheet — the why behind everything we do."],
+          ["Key 1", "Three videos and the Fishing worksheet — the why behind everything we do."],
           ["Key 2", "“The 21”: your virtual detox. Twenty-one concrete actions, signed off by you, your AP and a leader."],
           ["Key 3", "Bill's Story — the movie and questionnaire that show how one man helping another changed the world."],
         ].map(([k, t]) => (

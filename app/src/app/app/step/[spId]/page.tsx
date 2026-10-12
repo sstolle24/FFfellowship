@@ -35,6 +35,18 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
 
   const self = sp.man_id === me.id;
   const leader = isLeader(me);
+
+  // Locked item (opened by URL): no instructions, worksheet or upload — just what opens it.
+  if (sp.status === "locked") {
+    const { data: reason } = await db.rpc("step_lock_reason", { p_sp: spId });
+    return (
+      <div className="max-w-3xl space-y-5">
+        <Link href={self ? "/app/program" : leader ? `/leader/men/${sp.man_id}` : "/app/sponsor-desk"} className="text-sm text-muted hover:text-gold">← Back</Link>
+        <SectionTitle sub={mod?.title}>{step.item_number ? `#${step.item_number} ` : ""}{step.title}</SectionTitle>
+        <Notice><strong>Locked.</strong> {(reason as string | null) ?? "This item isn't open yet."}</Notice>
+      </div>
+    );
+  }
   const { data: rels } = await db.from("relationships").select("type, mentor_id, mentee_id, mutual").eq("status", "active");
   const mentorOfHim = (rels ?? []).some((r) =>
     (r.mentor_id === me.id && r.mentee_id === sp.man_id) || (r.mutual && r.mentee_id === me.id && r.mentor_id === sp.man_id));
@@ -105,10 +117,10 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
       </SectionTitle>
 
       <div className="flex flex-wrap items-center gap-3">
-        <StatusBadge step={{ ...step, progress: sp, submissions: [] }} />
+        <StatusBadge step={{ ...step, progress: sp, submissions: [], lockNote: null }} />
         {step.turn_in && <Badge tone="orange">Turn in</Badge>}
         {due && <Badge>Due {fmtDate(due)}</Badge>}
-        <div className="ml-auto"><InitialBoxes step={{ ...step, progress: sp, submissions: [] }} names={names} /></div>
+        <div className="ml-auto"><InitialBoxes step={{ ...step, progress: sp, submissions: [], lockNote: null }} names={names} /></div>
       </div>
 
       {st === "returned" && sp.review_note && (
