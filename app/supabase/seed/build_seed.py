@@ -203,7 +203,7 @@ def main(k1, k2, k3):
 
     # Key 3
     w(f"insert into videos (module_id, order_no, title) values ({mid('key_3_part_1')}, 1, "
-      f"{q('Bill W. movie (title & link TBD)')});")
+      f"{q('My Name Is Bill W.')});")
     step("key_3_part_1", 1, None, "Bill's Story worksheet — Part 1 (minutes 1–59)",
          "Watch the movie up to minute 59 and answer the worksheet (or upload it).", "triple",
          helper={"type": "worksheet"})

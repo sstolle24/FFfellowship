@@ -10,7 +10,7 @@ export const metadata = { title: "My Program" };
 export default async function MyProgram() {
   const me = await requireActive();
   const supabase = await supabaseServer();
-  const program = await loadProgram(supabase, me.id);
+  const program = await loadProgram(supabase, me.id, { links: true });
   const names = await initialerNames(supabase, program);
   const { data: closing } = await supabase.from("app_settings").select("value").eq("key", "key2_closing").maybeSingle();
   return (

@@ -174,9 +174,7 @@ describe("Module 0 → Key 1", () => {
   const key1Videos = async () =>
     (await rows(N1, `select v.id from videos v join program_modules m on m.id=v.module_id where m.key='key_1' order by v.order_no`))
       .map((v) => v.id as string);
-  const watch = (videoId: string) =>
-    as(N1, (c) => c.query(`insert into video_progress (man_id, video_id, watched_at, notes) values ($1,$2,now(),'notes')
-      on conflict (man_id, video_id) do update set watched_at = now()`, [N1, videoId]));
+  const watch = (videoId: string) => rpc(N1, "save_video", videoId, "notes", "My one-page reflection.", null, true);
 
   it("Key 1 opens with only the videos: worksheet and AP step stay locked", async () => {
     expect((await sp(N1, "key_1", null, 1)).status).toBe("locked");
@@ -193,8 +191,10 @@ describe("Module 0 → Key 1", () => {
     await expect(watch(v3)).rejects.toThrow(/Watch Video 2 first/);
     await watch(v2);
     // Can't un-check a video once he has moved past it.
+    await expect(rpc(N1, "save_video", v1, "notes", "My one-page reflection.", null, false)).rejects.toThrow(/stays checked/);
+    // Members can't write video progress directly — only through save_video.
     await expect(as(N1, (c) => c.query(`update video_progress set watched_at = null where man_id = $1 and video_id = $2`, [N1, v1])))
-      .rejects.toThrow(/stays checked/);
+      .rejects.toThrow(/permission denied/);
   });
 
   it("M6 + sequential: the Fishing worksheet stays locked until all 3 videos are checked", async () => {
@@ -405,7 +405,8 @@ describe("Key 2 — triple gate", () => {
     await expect(rpc(N2, "leader_certify_key2", N1)).rejects.toThrow(/Leaders only/);
     const r = await rpc(LEADER, "leader_certify_key2", N1);
     expect(r.events.map((e: { type: string }) => e.type)).toEqual(expect.arrayContaining(["milestone", "module_unlocked"]));
-    expect((await sp(N1, "key_3_part_1", null)).status).toBe("open");
+    expect(r.events.some((e: { module?: string }) => e.module === "key_3_part_1")).toBe(true);
+    expect((await sp(N1, "key_3_part_1", null)).status).toBe("locked"); // Key 3 is open; its worksheet waits for the movie
     expect((await sp(N1, "key_3_part_2", null)).status).toBe("locked");
     expect((await admin(`select stage from profiles where id=$1`, [N1]))[0].stage).toBe("key_3");
   });
@@ -418,6 +419,17 @@ describe("Key 3 → certification", () => {
       for (const q of qs) await c.query(`insert into worksheet_answers (man_id, question_id, slot, answer) values ($1,$2,1,'a')`, [man, q.id]);
     });
   }
+  it("A3: the Part 1 worksheet waits for \"My Name Is Bill W.\"", async () => {
+    const p1 = await sp(N1, "key_3_part_1", null);
+    expect(p1.status).toBe("locked");
+    expect(await rpc(N1, "step_lock_reason", p1.id)).toBe('Watch "My Name Is Bill W." first.');
+    const [movie] = await rows(N1, `select v.id, v.title from videos v join program_modules m on m.id = v.module_id where m.key = 'key_3_part_1'`);
+    expect(movie.title).toBe("My Name Is Bill W.");
+    await rpc(N1, "save_video", movie.id, "", null, null, true); // no reflection needed for the movie
+    expect((await sp(N1, "key_3_part_1", null)).status).toBe("open");
+    expect((await sp(N1, "key_3_part_2", null)).status).toBe("locked");
+  });
+
   it("Part 2 opens once Part 1 is self-initialed", async () => {
     await answerAll(N1, "key_3_part_1");
     const p1 = await sp(N1, "key_3_part_1", null);
@@ -797,8 +809,9 @@ describe("sequential program: existing progress (0007)", () => {
                   where ps.id = sp.step_id and sp.man_id = $1 and pm.key in ('welcome','key_1')`, [man]);
     await admin(`update step_progress sp set status = 'ap_initialed', ap_initial_by = $2, ap_initialed_at = now()
                    from program_steps ps where ps.id = sp.step_id and sp.man_id = $1 and ps.gate_type = 'self_ap'`, [man, LEADER]);
-    await admin(`insert into video_progress (man_id, video_id, watched_at)
-                 select $1, v.id, now() from videos v join program_modules pm on pm.id = v.module_id where pm.key = 'key_1'`, [man]);
+    await admin(`insert into video_progress (man_id, video_id, watched_at, reflection)
+                 select $1, v.id, now(), 'r' from videos v join program_modules pm on pm.id = v.module_id where pm.key = 'key_1'
+                 order by v.order_no`, [man]);
     await admin(`update step_progress sp set status = 'open' from program_steps ps join program_modules pm on pm.id = ps.module_id
                   where ps.id = sp.step_id and sp.man_id = $1 and pm.key = 'key_2'`, [man]);
     const status = async (n: number) => (await sp(man, "key_2", n)).status;
@@ -827,5 +840,80 @@ describe("sequential program: existing progress (0007)", () => {
     await admin(`select app.resequence_progress()`);
     expect(await status(7)).toBe("open");
     expect(await status(8)).toBe("locked");
+  });
+});
+
+describe("videos and Key 1 reflections (0008)", () => {
+  let man: string, ap: string, key1: string[], movie: string;
+  beforeAll(async () => {
+    man = await newUser("Vic"); ap = await newUser("Val");
+    for (const x of [man, ap]) await rpc(LEADER, "approve_member", x, LEADER);
+    await rpc(LEADER, "leader_create_relationship", ap, man, "ap");
+    key1 = (await admin(`select v.id from videos v join program_modules m on m.id = v.module_id where m.key = 'key_1' order by v.order_no`)).map((r) => r.id);
+    [{ id: movie }] = await admin(`select v.id from videos v join program_modules m on m.id = v.module_id where m.key = 'key_3_part_1'`);
+  });
+
+  it("A1: leaders set a video's link and passcode in the app; members can't", async () => {
+    await expect(rpc(man, "leader_set_video", key1[0], "https://zoom.example/rec/1", "pw1")).rejects.toThrow(/Leaders only/);
+    await expect(rpc(LEADER, "leader_set_video", key1[0], "javascript:alert(1)", "pw1")).rejects.toThrow(/https/);
+    for (const [i, id] of key1.entries()) await rpc(LEADER, "leader_set_video", id, `https://zoom.example/rec/${i + 1}`, `pw${i + 1}`);
+    await rpc(LEADER, "leader_set_video", movie, "https://vimeo.example/billw", "");
+    const rowsL = await rows(LEADER, `select * from leader_list_videos()`);
+    expect(rowsL.find((v) => v.id === key1[1])).toMatchObject({ video_url: "https://zoom.example/rec/2", passcode: "pw2" });
+    expect(rowsL.find((v) => v.id === movie)).toMatchObject({ title: "My Name Is Bill W.", passcode: null });
+    await expect(rows(man, `select * from leader_list_videos()`)).rejects.toThrow(/Leaders only/);
+    // The passcode never lands in the audit log.
+    expect(JSON.stringify(await admin(`select detail from audit_log where action = 'video_link_set'`))).not.toContain("pw");
+  });
+
+  it("A2: links/passcodes only for his own unlocked videos — never anon, pending or locked", async () => {
+    await expect(rows(man, `select video_url from videos`)).rejects.toThrow(/permission denied/);
+    await expect(rows(man, `select passcode from videos`)).rejects.toThrow(/permission denied/);
+    expect((await rows(man, `select id, title from videos`)).length).toBeGreaterThan(0); // titles still fine
+    await expect(rows(null, `select * from videos`)).rejects.toThrow(/permission denied/);
+    await expect(rows(null, `select * from video_links()`)).rejects.toThrow(/permission denied/);
+    expect(await rows(PENDING, `select * from video_links()`)).toHaveLength(0);
+    expect(await rows(man, `select * from video_links()`)).toHaveLength(0); // Key 1 still locked (Module 0)
+    await rpc(man, "initial_self", (await sp(man, "welcome", null)).id);
+    const links = await rows(man, `select * from video_links()`);
+    expect(links).toEqual([{ video_id: key1[0], video_url: "https://zoom.example/rec/1", passcode: "pw1" }]);
+    // His AP doesn't get them through him either.
+    expect((await rows(ap, `select * from video_links()`)).map((l) => l.video_id)).not.toContain(key1[1]);
+  });
+
+  it("B: a reflection is required before a Key 1 video counts as done", async () => {
+    await expect(rpc(man, "save_video", key1[0], "notes", "  ", null, true)).rejects.toThrow(/reflection/);
+    await rpc(man, "save_video", key1[0], "notes", null, null, false); // notes alone are fine
+    expect(await rows(man, `select * from video_links() where video_id = $1`, [key1[1]])).toHaveLength(0);
+    const r = await rpc(man, "save_video", key1[0], "notes", "What I heard in Video 1…", null, true);
+    expect(r.events).toEqual([expect.objectContaining({ type: "turn_in_submitted", man_id: man, step: "Video 1 reflection" })]);
+    expect((await rows(man, `select * from video_links()`)).map((l) => l.video_id)).toEqual([key1[0], key1[1]]);
+    // Saving again without changing it doesn't re-notify the leader.
+    expect((await rpc(man, "save_video", key1[0], "more notes", "What I heard in Video 1…", null, true)).events).toEqual([]);
+    // Can't clear the reflection on a checked video.
+    await expect(rpc(man, "save_video", key1[0], "", "", null, true)).rejects.toThrow(/reflection/);
+  });
+
+  it("B: reflection files go in his own folder for an open video", async () => {
+    const put = (path: string) => as(man, (c) => c.query(`insert into storage.objects (bucket_id, name) values ('submissions', $1)`, [path]));
+    await put(`${man}/${key1[1]}/1/reflection.pdf`);
+    await expect(put(`${man}/${key1[2]}/1/reflection.pdf`)).rejects.toThrow(/row-level security/); // Video 3 locked
+    await expect(put(`${ap}/${key1[1]}/1/reflection.pdf`)).rejects.toThrow(/row-level security/);
+    await expect(rpc(man, "save_video", key1[1], "", null, `${ap}/${key1[1]}/1/x.pdf`, true)).rejects.toThrow(/path/);
+    await rpc(man, "save_video", key1[1], "", null, `${man}/${key1[1]}/1/reflection.pdf`, true); // a file counts as the reflection
+  });
+
+  it("B: reflections are visible to him, his AP and leaders — nobody else", async () => {
+    const read = (who: string) => rows(who, `select reflection from video_progress where man_id = $1 and video_id = $2`, [man, key1[0]]);
+    for (const who of [man, ap, LEADER]) expect((await read(who))[0]?.reflection, who).toBe("What I heard in Video 1…");
+    expect(await read(STRANGER)).toHaveLength(0);
+    expect(await rows(STRANGER, `select * from storage.objects where name like $1`, [`${man}/%`])).toHaveLength(0);
+    expect(await rows(ap, `select * from storage.objects where name like $1`, [`${man}/%`])).toHaveLength(1);
+  });
+
+  it("B + sequencing: the Fishing worksheet opens only after all 3 videos (and reflections)", async () => {
+    expect((await sp(man, "key_1", null, 1)).status).toBe("locked");
+    await rpc(man, "save_video", key1[2], "", "Video 3 reflection", null, true);
+    expect((await sp(man, "key_1", null, 1)).status).toBe("open");
   });
 });

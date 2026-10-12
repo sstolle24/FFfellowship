@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, LinkButton, Logo } from "@/components/ui";
+import { KEY_INFO } from "@/lib/keys";
 
 export default function Home() {
   return (
@@ -22,14 +23,12 @@ export default function Home() {
       </section>
 
       <section className="mx-auto grid max-w-6xl gap-5 px-4 py-16 md:grid-cols-3">
-        {[
-          ["Key 1", "Three videos and the Fishing worksheet — the why behind everything we do."],
-          ["Key 2", "“The 21”: your virtual detox. Twenty-one concrete actions, signed off by you, your AP and a leader."],
-          ["Key 3", "Bill's Story — the movie and questionnaire that show how one man helping another changed the world."],
-        ].map(([k, t]) => (
-          <Card key={k}>
-            <div className="display text-sm tracking-[0.3em] text-gold">{k}</div>
-            <p className="mt-3 text-ink">{t}</p>
+        {Object.values(KEY_INFO).map((k) => (
+          <Card key={k.label}>
+            <div className="display text-sm tracking-[0.3em] text-gold">{k.label}</div>
+            <p className="mt-3 text-ink">{k.what}</p>
+            <p className="mt-3 text-sm"><span className="text-muted">In the Kingdom: </span><span className="text-gold">{k.kingdom}</span></p>
+            <p className="mt-1 text-sm text-muted">{k.application}</p>
           </Card>
         ))}
       </section>

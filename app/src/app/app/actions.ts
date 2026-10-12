@@ -65,16 +65,24 @@ export async function saveAnswers(_: S, form: FormData): Promise<S> {
 }
 
 export async function saveVideo(videoId: string, _: S, form: FormData): Promise<S> {
-  const me = await getMe();
-  if (!me) return { error: "Sign in first." };
   const watched = form.get("watched") === "on";
-  const supabase = await supabaseServer();
-  const { error } = await supabase.from("video_progress").upsert(
-    { man_id: me.id, video_id: videoId, notes: String(form.get("notes") ?? "").slice(0, 10000), watched_at: watched ? new Date().toISOString() : null },
-    { onConflict: "man_id,video_id" },
-  );
+  const reflection = form.get("reflection");
+  const r = await callRpc("save_video", {
+    p_video: videoId,
+    p_notes: String(form.get("notes") ?? "").slice(0, 10000),
+    p_reflection: reflection === null ? null : String(reflection).slice(0, 20000),
+    p_file_path: null,
+    p_watched: watched,
+  });
   revalidatePath("/app/program");
-  return error ? { error: error.message } : { ok: watched ? "Checked off." : "Notes saved." };
+  return r.ok ? { ok: watched ? "Saved and checked off." : "Saved." } : { error: r.error };
+}
+
+/** Called after the browser uploaded his reflection file into {man}/{video}/{n}/. */
+export async function recordReflectionFile(videoId: string, path: string): Promise<S> {
+  const r = await callRpc("save_video", { p_video: videoId, p_notes: null, p_reflection: null, p_file_path: path, p_watched: null });
+  revalidatePath("/app/program");
+  return r.ok ? { ok: "Reflection uploaded." } : { error: r.error };
 }
 
 // ───────────────────────── meetings, 90 in 90, journal, fishing ─────────────────────────

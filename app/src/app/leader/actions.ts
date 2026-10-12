@@ -110,3 +110,13 @@ function localToUtc(dow: number, hhmm: string, tz: string) {
   const utc = new Date(guess.getTime() - (asLocal - guess.getTime()));
   return { day: utc.getUTCDay(), time: `${String(utc.getUTCHours()).padStart(2, "0")}:${String(utc.getUTCMinutes()).padStart(2, "0")}` };
 }
+
+/** A program video's link and passcode (never stored in the repo). */
+export async function saveVideoLink(videoId: string, _: S, form: FormData): Promise<S> {
+  const r = await callRpc("leader_set_video", {
+    p_video: videoId, p_url: String(form.get("url") ?? ""), p_passcode: String(form.get("passcode") ?? ""),
+  });
+  revalidatePath("/leader/meetings");
+  revalidatePath("/app/program");
+  return r.ok ? { ok: "Saved." } : { error: r.error };
+}

@@ -10,7 +10,11 @@ export type StepView = ProgramStep & {
   lockNote: string | null;
 };
 export type VideoView = {
-  id: string; order_no: number; title: string; video_url: string | null; watched_at: string | null; notes: string | null;
+  id: string; order_no: number; title: string; watched_at: string | null; notes: string | null;
+  /** Link + passcode: only on his own My Program, only once the video is unlocked (public.video_links). */
+  video_url: string | null; passcode: string | null;
+  /** Key 1 one-page reflection (text and/or file), visible like other turn-ins. */
+  reflection: string | null; reflection_file_path: string | null; reflection_url: string | null;
   /** Videos are watched in order: "Watch Video 1 first." */
   lockNote: string | null;
 };
@@ -49,13 +53,13 @@ export function stepDone(s: StepStatus | undefined, g: Gate) {
  * Everything about one man's program, read with the caller's own client —
  * so RLS decides whether the caller may see it (self, active AP/sponsor, leader).
  */
-export async function loadProgram(db: SupabaseClient, manId: string) {
+export async function loadProgram(db: SupabaseClient, manId: string, opts: { links?: boolean } = {}) {
   const [mods, steps, prog, subs, vids, vprog, qs, ans, ms] = await Promise.all([
     db.from("program_modules").select("*").order("order_no"),
     db.from("program_steps").select("*").order("order_no"),
     db.from("step_progress").select("*").eq("man_id", manId),
     db.from("submissions").select("*").eq("man_id", manId).order("version"),
-    db.from("videos").select("*").order("order_no"),
+    db.from("videos").select("id, module_id, order_no, title").order("order_no"),
     db.from("video_progress").select("*").eq("man_id", manId),
     db.from("worksheet_questions").select("*").order("order_no"),
     db.from("worksheet_answers").select("question_id, slot, answer").eq("man_id", manId),
@@ -65,6 +69,17 @@ export async function loadProgram(db: SupabaseClient, manId: string) {
   const subsBy = new Map<string, Submission[]>();
   for (const s of (subs.data as Submission[]) ?? []) subsBy.set(s.step_progress_id, [...(subsBy.get(s.step_progress_id) ?? []), s]);
   const vpBy = new Map((vprog.data ?? []).map((v) => [v.video_id, v]));
+  const links = new Map<string, { video_url: string | null; passcode: string | null }>();
+  if (opts.links) {
+    const { data } = await db.rpc("video_links");
+    for (const l of (data as { video_id: string; video_url: string | null; passcode: string | null }[]) ?? []) links.set(l.video_id, l);
+  }
+  // Short-lived download links for reflection files, created with the viewer's session (storage RLS applies).
+  const reflectionUrls = new Map<string, string>();
+  await Promise.all((vprog.data ?? []).filter((v) => v.reflection_file_path).map(async (v) => {
+    const { data } = await db.storage.from("submissions").createSignedUrl(v.reflection_file_path, 300, { download: true });
+    if (data?.signedUrl) reflectionUrls.set(v.video_id, data.signedUrl);
+  }));
   const ansBy = new Map<string, string[]>();
   for (const a of ans.data ?? []) {
     const arr = ansBy.get(a.question_id) ?? [];
@@ -76,9 +91,13 @@ export async function loadProgram(db: SupabaseClient, manId: string) {
     const videos: VideoView[] = [];
     for (const v of (vids.data ?? []).filter((x) => x.module_id === m.id)) {
       const prev = videos[videos.length - 1];
+      const vp = vpBy.get(v.id);
       videos.push({
-        id: v.id, order_no: v.order_no, title: v.title, video_url: v.video_url,
-        watched_at: vpBy.get(v.id)?.watched_at ?? null, notes: vpBy.get(v.id)?.notes ?? null,
+        id: v.id, order_no: v.order_no, title: v.title,
+        video_url: links.get(v.id)?.video_url ?? null, passcode: links.get(v.id)?.passcode ?? null,
+        watched_at: vp?.watched_at ?? null, notes: vp?.notes ?? null,
+        reflection: vp?.reflection ?? null, reflection_file_path: vp?.reflection_file_path ?? null,
+        reflection_url: reflectionUrls.get(v.id) ?? null,
         lockNote: prev && !prev.watched_at ? (prev.lockNote ?? `Watch ${prev.title} first.`) : null,
       });
     }

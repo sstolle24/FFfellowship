@@ -5,6 +5,9 @@ import type { Profile } from "@/lib/types";
 import { StepRow } from "@/components/StepParts";
 import { Badge, Card, Notice } from "@/components/ui";
 import { VideoCheck } from "@/components/VideoCheck";
+import { CopyButton } from "@/components/CopyButton";
+import { KeyMeaning } from "@/components/KeyMeaning";
+import { keyInfoFor } from "@/lib/keys";
 
 /** The whole program for one man. `self` shows his own video check-offs; others see read-only status. */
 export function ProgramView({ man, program, names, self, key2Closing }: {
@@ -21,6 +24,7 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
               <h2 className="text-xl text-gold">{m.title}</h2>
               {m.done ? <Badge tone="ok">Complete</Badge> : m.unlocked ? <Badge tone="gold">Open</Badge> : <Badge>Locked</Badge>}
             </div>
+            {keyInfoFor(m.key) && <KeyMeaning info={keyInfoFor(m.key)!} />}
             {!m.unlocked ? (
               // Locked key: no instructions, videos or items — just what opens it.
               <p className="text-sm text-muted">{m.lockNote} It opens once every item there is signed off.</p>
@@ -49,15 +53,31 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
                           <span className="display text-ink">{v.title}</span>
                           {v.watched_at && <Badge tone="ok">Watched</Badge>}
                         </div>
-                        {v.video_url ? (
-                          <a href={v.video_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-sm text-gold underline">Watch</a>
+                        {self && (v.video_url ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <a href={v.video_url} target="_blank" rel="noopener noreferrer"
+                              className="rounded-lg bg-gold px-3 py-1.5 text-sm font-semibold text-navy hover:brightness-110">Watch</a>
+                            {v.passcode && <CopyButton value={v.passcode} />}
+                          </div>
                         ) : (
                           <p className="mt-2 text-xs text-muted">Link coming soon — ask your leader.</p>
-                        )}
+                        ))}
+                        {self && v.passcode && <p className="mt-1 text-xs text-muted">Passcode: <span className="select-all font-mono text-ink">{v.passcode}</span></p>}
                         {self ? (
-                          <VideoCheck videoId={v.id} watched={!!v.watched_at} notes={v.notes ?? ""} checkable={m.key === "key_1"} />
+                          <VideoCheck videoId={v.id} manId={man.id} watched={!!v.watched_at} notes={v.notes ?? ""}
+                            reflection={v.reflection ?? ""} reflectionFile={v.reflection_file_path} reflectionUrl={v.reflection_url}
+                            needsReflection={m.key === "key_1"} />
                         ) : (
-                          v.notes && <p className="mt-2 whitespace-pre-line text-sm text-muted">{v.notes}</p>
+                          <>
+                            {v.notes && <p className="mt-2 whitespace-pre-line text-sm text-muted">{v.notes}</p>}
+                            {m.key === "key_1" && (v.reflection || v.reflection_file_path ? (
+                              <div className="mt-3 rounded-lg border border-line p-3 text-sm">
+                                <div className="text-xs uppercase tracking-widest text-muted">Reflection</div>
+                                {v.reflection && <p className="mt-1 whitespace-pre-line">{v.reflection}</p>}
+                                {v.reflection_url && <a href={v.reflection_url} className="mt-1 inline-block text-gold underline" rel="noopener noreferrer">{v.reflection_file_path?.split("/").pop()}</a>}
+                              </div>
+                            ) : <p className="mt-2 text-xs italic text-muted">No reflection yet.</p>)}
+                          </>
                         )}
                       </Card>
                     ))}

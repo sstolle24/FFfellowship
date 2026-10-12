@@ -93,3 +93,43 @@ describe("polish", () => {
     expect(daysLabel(42)).toBe("42 days");
   });
 });
+
+describe("videos and key meanings (Oct 2026 follow-up)", () => {
+  it("video links/passcodes load only for his own My Program (links: true)", async () => {
+    const calls: string[] = [];
+    const base = fakeDb({
+      program_modules: [mod("key_1", 2)],
+      videos: [{ id: "v1", module_id: "key_1", order_no: 1, title: "Video 1" }],
+    });
+    const db = { ...base, from: base.from, rpc: (fn: string) => { calls.push(fn); return Promise.resolve({ data: [{ video_id: "v1", video_url: "https://x.example/1", passcode: "pc" }] }); } } as unknown as SupabaseClient;
+    const other = await loadProgram(db, "m");
+    expect(calls).toEqual([]);
+    expect(other.byKey.key_1.videos[0]).toMatchObject({ video_url: null, passcode: null });
+    const mine = await loadProgram(db, "m", { links: true });
+    expect(calls).toEqual(["video_links"]);
+    expect(mine.byKey.key_1.videos[0]).toMatchObject({ video_url: "https://x.example/1", passcode: "pc" });
+  });
+
+  it("each key carries its meaning from the 3 Keys graphic", async () => {
+    const { KEY_INFO, keyInfoFor, PROGRAM_PROMISE } = await import("./keys");
+    expect(KEY_INFO.key_1).toMatchObject({ kingdom: "Real Repentance" });
+    expect(KEY_INFO.key_2).toMatchObject({ kingdom: "Putting on the Full Armour" });
+    expect(KEY_INFO.key_3).toMatchObject({ kingdom: "Preparing for the Harvest" });
+    expect(keyInfoFor("key_3_part_1")).toBe(KEY_INFO.key_3);
+    expect(keyInfoFor("key_3_part_2")).toBeNull(); // shown once, on Part 1
+    expect(PROGRAM_PROMISE).toMatch(/as little as 2-4 weeks/);
+    const { readFileSync } = await import("node:fs");
+    const how = readFileSync(new URL("../app/(public)/how-it-works/page.tsx", import.meta.url), "utf8");
+    expect(how).toMatch(/PROGRAM_PROMISE/);
+    expect(how).toMatch(/KEY_INFO\.key_1/);
+    expect(readFileSync(new URL("../app/(public)/page.tsx", import.meta.url), "utf8")).toMatch(/KEY_INFO/);
+  });
+
+  it("no real video links or passcodes are committed (the repo is public)", async () => {
+    const { execSync } = await import("node:child_process");
+    const hits = execSync(
+      `git grep --untracked -nIiE "zoom\\.us/rec|vimeo\\.com/[0-9]|passcode\\s*[:=]\\s*[\\"'][^\\"']{4,}[\\"']" -- . ':!*.test.ts' ':!node_modules' ':!.next' || true`,
+      { cwd: new URL("../..", import.meta.url).pathname, encoding: "utf8" });
+    expect(hits.trim()).toBe("");
+  });
+});

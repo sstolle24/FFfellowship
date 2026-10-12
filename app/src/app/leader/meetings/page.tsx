@@ -5,21 +5,46 @@ import type { Meeting } from "@/lib/types";
 import { ActionButton } from "@/components/forms";
 import { Card, SectionTitle } from "@/components/ui";
 import { MeetingForm } from "@/components/MeetingForm";
+import { VideoLinkForm } from "@/components/VideoLinkForm";
 import { deleteMeeting } from "../actions";
+type VideoRow = { id: string; module_title: string; title: string; video_url: string | null; passcode: string | null };
 
-export const metadata = { title: "Meetings Admin" };
+export const metadata = { title: "Meetings & Videos" };
 
 export default async function MeetingsAdmin() {
   const me = await requireLeader();
   const db = await supabaseServer();
-  const { data } = await db.from("meetings").select("*").order("name");
+  const [{ data }, { data: videos }] = await Promise.all([
+    db.from("meetings").select("*").order("name"),
+    db.rpc("leader_list_videos"),
+  ]);
   const rows = ((data as Meeting[]) ?? []).map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), me.timezone) }))
     .sort((a, b) => a.slot.dayIndex - b.slot.dayIndex);
   return (
     <div className="max-w-4xl space-y-6">
       <SectionTitle sub={`Enter times in your timezone (${me.timezone}); members see them in theirs. Links, IDs and passcodes are only ever shown to signed-in members.`}>
-        Meetings Admin
+        Meetings &amp; Videos
       </SectionTitle>
+      <Card id="videos">
+        <h2 className="text-lg text-gold">Program videos</h2>
+        <p className="mb-4 text-sm text-muted">
+          Paste each recording&apos;s link and passcode here — never in the code. Men see them only once that video is
+          unlocked for them, with a Copy passcode button.
+        </p>
+        <div className="space-y-5">
+          {((videos as VideoRow[]) ?? []).map((v) => (
+            <div key={v.id}>
+              <div className="mb-2 flex flex-wrap items-baseline gap-2">
+                <span className="display text-ink">{v.title}</span>
+                <span className="text-xs text-muted">{v.module_title}</span>
+                {!v.video_url && <span className="text-xs text-orange">no link</span>}
+              </div>
+              <VideoLinkForm videoId={v.id} url={v.video_url ?? ""} passcode={v.passcode ?? ""} />
+            </div>
+          ))}
+        </div>
+      </Card>
+      <h2 className="text-lg text-gold">Meetings</h2>
       <Card>
         <h2 className="mb-3 text-lg text-gold">Add a meeting</h2>
         <MeetingForm tz={me.timezone} />

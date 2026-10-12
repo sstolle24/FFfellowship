@@ -20,7 +20,7 @@ export default async function LeaderLayout({ children }: { children: React.React
         </div>
         <NavLinks links={[
           ["/leader", "Pipeline"], ["/leader/review", "Review Queue"], ["/leader/matching", "Matching Board"],
-          ["/leader/members", "Members & Roles"], ["/leader/meetings", "Meetings Admin"], ["/leader/reports", "Reports"],
+          ["/leader/members", "Members & Roles"], ["/leader/meetings", "Meetings & Videos"], ["/leader/reports", "Reports"],
         ]} />
         <div className="px-4 pb-4 pt-2 text-sm"><Link href="/app" className="text-muted hover:text-gold">← My member area</Link></div>
       </aside>
