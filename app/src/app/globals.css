@@ -1,26 +1,49 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-navy: #0b1426;
+  --color-navy-2: #101c33;
+  --color-panel: #121f38;
+  --color-line: #233558;
+  --color-gold: #c9973a;
+  --color-gold-hi: #e2b864;
+  --color-ink: #ece7dc;
+  --color-muted: #9aa6bb;
+  --color-orange: #e2772b;
+  --color-ok: #5fae7e;
+  --color-danger: #d9534f;
+  --font-display: "Cinzel", Georgia, serif;
+  --font-body: "Lora Variable", Georgia, serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html { background: var(--color-navy); color-scheme: dark; }
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-navy);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: 0.04em; }
+a { text-underline-offset: 3px; }
+::selection { background: var(--color-gold); color: var(--color-navy); }
+
+/* Subtle gold rule used under section titles */
+.rule { height: 1px; background: linear-gradient(90deg, var(--color-gold), transparent); }
+
+/* Form controls */
+.field {
+  width: 100%;
+  background: var(--color-navy-2);
+  border: 1px solid var(--color-line);
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--color-ink);
+}
+.field:focus { outline: 2px solid var(--color-gold); outline-offset: 1px; border-color: transparent; }
+label.lbl { display: block; font-size: 0.85rem; color: var(--color-muted); margin-bottom: 0.3rem; }
+
+@media print {
+  html, body { background: #fff !important; color: #000 !important; }
+  .no-print { display: none !important; }
+  .print-card { border: 1px solid #000 !important; background: #fff !important; color: #000 !important; }
 }

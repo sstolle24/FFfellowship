@@ -267,3 +267,19 @@ create policy sub_obj_insert on storage.objects for insert to authenticated
               and (storage.foldername(name))[1] = auth.uid()::text
               and app.is_active());
 -- No update/delete policies: uploads are append-only versions.
+
+-- Sponsor Desk: the men this caller is an ACTIVE AP or sponsor for, with the
+-- extra fields a sponsor needs (inactivity, program start). Nobody else's.
+create view my_men as
+  select p.id, p.first_name, p.display_name, p.stage, p.timezone, p.home_group,
+         p.sobriety_start_date, p.program_start_date, p.last_active_at,
+         case when p.sobriety_start_date is null then null
+              else (current_date - p.sobriety_start_date) end as day_count,
+         (select string_agg(distinct r.type::text, ',') from relationships r
+           where r.status = 'active'
+             and ((r.mentor_id = auth.uid() and r.mentee_id = p.id)
+               or (r.mutual and r.mentee_id = auth.uid() and r.mentor_id = p.id))) as my_roles
+  from profiles p
+  where p.deleted_at is null and p.status = 'active'
+    and (app.is_ap_of(auth.uid(), p.id) or app.is_sponsor_of(auth.uid(), p.id));
+grant select on my_men to authenticated;

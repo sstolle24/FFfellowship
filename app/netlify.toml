@@ -1,0 +1,7 @@
+# In Netlify: Site settings → Build & deploy → Base directory = app
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[functions]
+  directory = "netlify/functions"

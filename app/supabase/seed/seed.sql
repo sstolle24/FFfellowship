@@ -2,6 +2,10 @@
 -- re-run the script when a doc changes.
 
 begin;
+-- Refuse to wipe content once men have progress (deleting modules cascades to step_progress).
+do $$ begin if exists (select 1 from step_progress) or exists (select 1 from meeting_logs) then
+  raise exception 'Progress already exists - refusing to re-seed. Update program rows in place instead.';
+end if; end $$;
 delete from program_modules;
 
 insert into program_modules (key, order_no, title, description, source_doc) values ('welcome', 1, 'Module 0 — Welcome', 'Welcome to Finally Free Fellowship. Read through how the program works — the 3 Keys to Freedom — and commit to walking it out with your brothers.', null);

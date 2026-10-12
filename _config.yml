@@ -1,0 +1,5 @@
+# GitHub Pages (Jekyll) keeps serving the existing single-file site at the repo
+# root. The new Next.js app lives in app/ and deploys separately, so keep its
+# source out of the Pages build.
+exclude:
+  - app

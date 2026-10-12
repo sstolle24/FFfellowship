@@ -406,3 +406,15 @@ describe("privacy", () => {
     expect(await rows(N1, `select * from step_progress where man_id=$1`, [N2])).toHaveLength(0); // AP link ended
   });
 });
+
+describe("sponsor desk view", () => {
+  it("my_men shows only men the caller actively walks with", async () => {
+    const A = await newUser("Abe"); const B = await newUser("Ben"); const C = await newUser("Cal");
+    for (const x of [A, B, C]) await rpc(LEADER, "approve_member", x, LEADER);
+    await rpc(LEADER, "leader_create_relationship", A, B, "sponsor");
+    expect((await rows(A, `select id from my_men`)).map((r) => r.id)).toEqual([B]);
+    expect(await rows(C, `select id from my_men`)).toHaveLength(0);
+    expect(await rows(B, `select id from my_men`)).toHaveLength(0); // sponsorship is one-way
+    expect(await rows(null, `select id from my_men`).catch(() => "denied")).toBe("denied");
+  });
+});

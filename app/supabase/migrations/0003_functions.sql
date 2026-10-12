@@ -751,6 +751,14 @@ begin
   return true;
 end $$;
 
+-- Reports: leaders' CSV exports are audit-logged.
+create or replace function public.log_report_export(p_kind text) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if not app.is_leader() then perform app.fail('Leaders only.'); end if;
+  perform app.audit('report_exported', null, null, jsonb_build_object('kind', p_kind));
+end $$;
+
 -- ───────────────────────── grants ─────────────────────────
 revoke all on all functions in schema public from public, anon;
 grant execute on all functions in schema public to authenticated;
