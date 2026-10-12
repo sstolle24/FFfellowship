@@ -47,3 +47,12 @@ label.lbl { display: block; font-size: 0.85rem; color: var(--color-muted); margi
   .no-print { display: none !important; }
   .print-card { border: 1px solid #000 !important; background: #fff !important; color: #000 !important; }
 }
+
+/* Brand logo: the old site's gold drop-shadow (static in headers, pulsing on the hero). */
+.logo-shadow { filter: drop-shadow(0 0 8px rgba(201, 151, 58, 0.45)); }
+.logo-glow { animation: logo-glow 3s ease-in-out infinite; filter: drop-shadow(0 0 30px rgba(201, 151, 58, 0.5)); }
+@keyframes logo-glow {
+  0%, 100% { filter: drop-shadow(0 0 18px rgba(201, 151, 58, 0.4)); }
+  50% { filter: drop-shadow(0 0 50px rgba(201, 151, 58, 0.9)); }
+}
+@media (prefers-reduced-motion: reduce) { .logo-glow { animation: none; } }

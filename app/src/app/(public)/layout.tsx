@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Monogram } from "@/components/ui";
+import { Logo } from "@/components/ui";
 import { getMe } from "@/lib/auth";
 
 const NAV = [
@@ -18,7 +18,7 @@ export default async function PublicLayout({ children }: { children: React.React
       <header className="sticky top-0 z-20 border-b border-line/60 bg-navy/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Link href="/" className="flex items-center gap-3">
-            <Monogram size={38} />
+            <Logo size={38} priority />
             <span className="display hidden text-lg text-gold sm:inline">Finally Free</span>
           </Link>
           <nav className="ml-auto hidden items-center gap-5 text-sm lg:flex">

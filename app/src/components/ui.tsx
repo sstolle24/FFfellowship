@@ -1,15 +1,19 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
-/** The "FF" monogram: two interlocked serif Fs inside a gold ring. */
-export function Monogram({ size = 40 }: { size?: number }) {
+/**
+ * The Finally Free logo (gold FF with the cross), self-hosted under /brand.
+ * `size` is the rendered height in px; width follows the logo's proportions.
+ * `glow` adds the pulsing gold halo used on the old site's hero.
+ */
+export function Logo({ size = 40, glow = false, priority = false }: { size?: number; glow?: boolean; priority?: boolean }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-label="Finally Free" role="img">
-      <circle cx="32" cy="32" r="30" fill="none" stroke="#c9973a" strokeWidth="2" />
-      <circle cx="32" cy="32" r="26" fill="none" stroke="#c9973a" strokeWidth="0.75" opacity="0.6" />
-      <text x="32" y="41" textAnchor="middle" fontFamily="Cinzel, Georgia, serif" fontSize="25"
-        fontWeight="700" fill="#c9973a" letterSpacing="-3">FF</text>
-    </svg>
+    <picture className="inline-block shrink-0">
+      <source type="image/webp" srcSet="/brand/ff-logo.webp 1x, /brand/ff-logo@2x.webp 2x" />
+      <img src="/brand/ff-logo.png" srcSet="/brand/ff-logo.png 1x, /brand/ff-logo@2x.png 2x" alt="Finally Free"
+        style={{ height: size, width: "auto" }} className={glow ? "logo-glow" : "logo-shadow"}
+        loading={priority ? "eager" : "lazy"} decoding="async" fetchPriority={priority ? "high" : undefined} />
+    </picture>
   );
 }
 

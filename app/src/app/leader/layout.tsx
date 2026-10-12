@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireLeader } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { Monogram } from "@/components/ui";
+import { Logo } from "@/components/ui";
 import { NavLinks } from "@/components/NavLinks";
 
 export default async function LeaderLayout({ children }: { children: React.ReactNode }) {
@@ -12,7 +12,7 @@ export default async function LeaderLayout({ children }: { children: React.React
     <div className="min-h-screen md:flex">
       <aside className="no-print border-b border-line bg-navy-2 md:sticky md:top-0 md:h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
         <div className="flex items-center gap-3 p-4">
-          <Link href="/"><Monogram size={36} /></Link>
+          <Link href="/"><Logo size={36} priority /></Link>
           <div>
             <div className="display text-gold">Leader area</div>
             <div className="text-xs text-muted">{me.first_name} · {me.role === "admin" ? "Admin" : "Leader"}</div>

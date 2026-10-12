@@ -19,6 +19,7 @@ deploys separately from the `app/` folder.
 | `supabase/migrations/0006_function_defaults.sql` | New functions start with no EXECUTE for anon/authenticated/PUBLIC; each migration grants what it needs |
 | `supabase/seed/build_seed.py` → `seed.sql` | Program content generated **verbatim** from the 10-26 source docs (Key 1 worksheet, The 21, Bill's Story Parts 1 & 2) + the current meeting schedule (no Zoom links) |
 | `supabase/tests/` | Security + gate tests against a real Postgres (`npm run test:db`) |
+| `public/brand/`, `scripts/build_brand.py` | Self-hosted FF cross logo (1x/2x PNG + WebP). The script regenerates the logo, favicon, apple-touch-icon and Open Graph image from the source PNG |
 | `src/app/(public)` | Home, About, How It Works, Meetings, FAQ, Get Started, Get Help Now, Pastor's Corner, Give, Privacy, Login |
 | `src/app/app` | Member area: Dashboard, My Program, item page, cover sheet, packet, Meetings & Links, 90 in 90, Journal, Fishing, Sponsor/AP + Sponsor Board, My Brothers, Sponsor Desk, Directory, Profile & Privacy |
 | `src/app/leader` | Pipeline, Review Queue, Man Detail, Matching Board, Members & Roles, Meetings Admin, Reports (CSV) |

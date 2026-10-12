@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser, isLeader, isSponsorRole } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { Monogram } from "@/components/ui";
+import { Logo } from "@/components/ui";
 import { NavLinks } from "@/components/NavLinks";
 import { logOut } from "../(public)/auth-actions";
 
@@ -25,7 +25,7 @@ export default async function MemberLayout({ children }: { children: React.React
     <div className="min-h-screen md:flex">
       <aside className="no-print border-b border-line bg-navy-2 md:sticky md:top-0 md:h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
         <div className="flex items-center gap-3 p-4">
-          <Link href="/"><Monogram size={36} /></Link>
+          <Link href="/"><Logo size={36} priority /></Link>
           <div className="min-w-0">
             <div className="display truncate text-gold">{me.display_name || me.first_name}</div>
             <div className="text-xs text-muted">{me.status === "pending" ? "Awaiting approval" : "Member"}</div>

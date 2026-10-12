@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, LinkButton, Monogram } from "@/components/ui";
+import { Card, LinkButton, Logo } from "@/components/ui";
 
 export default function Home() {
   return (
@@ -7,7 +7,7 @@ export default function Home() {
       <section className="relative overflow-hidden border-b border-line/60">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(201,151,58,0.18),transparent_60%)]" />
         <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 py-20 text-center md:py-28">
-          <Monogram size={84} />
+          <Logo size={84} glow priority />
           <h1 className="mt-6 text-4xl text-ink md:text-6xl">Finally <span className="text-gold">Free</span></h1>
           <p className="mt-5 max-w-2xl text-lg text-muted md:text-xl">
             A Christ-centered, peer-led fellowship of men walking out of sexual addiction — together, every day, with a
