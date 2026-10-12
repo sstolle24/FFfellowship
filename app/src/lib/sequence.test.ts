@@ -133,3 +133,33 @@ describe("videos and key meanings (Oct 2026 follow-up)", () => {
     expect(hits.trim()).toBe("");
   });
 });
+
+describe("certification packet: Key 1 reflections", () => {
+  it("one entry per video, in order, with text/file/date — missing ones flagged", async () => {
+    const { packetReflections } = await import("./program");
+    const base = fakeDb({
+      program_modules: [mod("key_1", 2)],
+      videos: [1, 2, 3].map((n) => ({ id: `v${n}`, module_id: "key_1", order_no: n, title: `Video ${n}` })),
+      video_progress: [
+        { video_id: "v1", watched_at: "2026-10-01", reflection: "God showed me…", reflection_file_path: null, reflection_at: "2026-10-01T15:00:00Z" },
+        { video_id: "v2", watched_at: "2026-10-02", reflection: null, reflection_file_path: "m/v2/1/page.pdf", reflection_at: "2026-10-02T15:00:00Z" },
+      ],
+    });
+    const db = { from: base.from, storage: { from: () => ({ createSignedUrl: (p: string) => Promise.resolve({ data: { signedUrl: `https://signed/${p}` } }) }) } } as unknown as SupabaseClient;
+    const p = await loadProgram(db, "m");
+    expect(packetReflections(p.byKey.key_1)).toEqual([
+      { videoId: "v1", title: "Video 1", text: "God showed me…", fileName: null, fileUrl: null, savedAt: "2026-10-01T15:00:00Z", missing: false },
+      { videoId: "v2", title: "Video 2", text: null, fileName: "page.pdf", fileUrl: "https://signed/m/v2/1/page.pdf", savedAt: "2026-10-02T15:00:00Z", missing: false },
+      { videoId: "v3", title: "Video 3", text: null, fileName: null, fileUrl: null, savedAt: null, missing: true },
+    ]);
+  });
+
+  it("the packet shows them before the Fishing worksheet, with 'No reflection on file' for gaps", async () => {
+    const { readFileSync } = await import("node:fs");
+    const src = readFileSync(new URL("../app/app/packet/[manId]/page.tsx", import.meta.url), "utf8");
+    expect(src.indexOf("Key 1 — Video reflections")).toBeGreaterThan(0);
+    expect(src.indexOf("Key 1 — Video reflections")).toBeLessThan(src.indexOf('title="Key 1 — Fishing worksheet"'));
+    expect(src).toMatch(/No reflection on file/);
+    expect(src).toMatch(/packetReflections\(program\.byKey\.key_1\)/);
+  });
+});

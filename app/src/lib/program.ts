@@ -14,7 +14,7 @@ export type VideoView = {
   /** Link + passcode: only on his own My Program, only once the video is unlocked (public.video_links). */
   video_url: string | null; passcode: string | null;
   /** Key 1 one-page reflection (text and/or file), visible like other turn-ins. */
-  reflection: string | null; reflection_file_path: string | null; reflection_url: string | null;
+  reflection: string | null; reflection_file_path: string | null; reflection_url: string | null; reflection_at: string | null;
   /** Videos are watched in order: "Watch Video 1 first." */
   lockNote: string | null;
 };
@@ -97,7 +97,7 @@ export async function loadProgram(db: SupabaseClient, manId: string, opts: { lin
         video_url: links.get(v.id)?.video_url ?? null, passcode: links.get(v.id)?.passcode ?? null,
         watched_at: vp?.watched_at ?? null, notes: vp?.notes ?? null,
         reflection: vp?.reflection ?? null, reflection_file_path: vp?.reflection_file_path ?? null,
-        reflection_url: reflectionUrls.get(v.id) ?? null,
+        reflection_url: reflectionUrls.get(v.id) ?? null, reflection_at: vp?.reflection_at ?? null,
         lockNote: prev && !prev.watched_at ? (prev.lockNote ?? `Watch ${prev.title} first.`) : null,
       });
     }
@@ -162,4 +162,17 @@ export function dueDate(programStart: string | null, dueDay: number | null) {
   const d = new Date(programStart + "T12:00:00Z");
   d.setUTCDate(d.getUTCDate() + dueDay);
   return d.toISOString().slice(0, 10);
+}
+
+/** Key 1 reflections for the certification packet: one entry per video, in order, missing ones flagged. */
+export function packetReflections(key1: ModuleView) {
+  return key1.videos.map((v) => ({
+    videoId: v.id,
+    title: v.title,
+    text: v.reflection,
+    fileName: v.reflection_file_path?.split("/").pop() ?? null,
+    fileUrl: v.reflection_url,
+    savedAt: v.reflection_at,
+    missing: !v.reflection && !v.reflection_file_path,
+  }));
 }

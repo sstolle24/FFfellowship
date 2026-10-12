@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireActive } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { loadProgram, type ModuleView } from "@/lib/program";
+import { loadProgram, packetReflections, type ModuleView } from "@/lib/program";
 import { namesFor } from "@/lib/names";
 import { fmtDate } from "@/lib/time";
 import { PrintButton } from "@/components/PrintButton";
@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui";
 
 export const metadata = { title: "Certification packet" };
 
-/** Auto-assembled: Key 1 worksheet, Key 2 cover sheet + orange turn-ins, Key 3 Parts 1 & 2. */
+/** Auto-assembled: Key 1 reflections + worksheet, Key 2 cover sheet + orange turn-ins, Key 3 Parts 1 & 2.
+ *  Read with the viewer's own session, so RLS limits it to him, his active AP/sponsor and leaders. */
 export default async function Packet({ params }: { params: Promise<{ manId: string }> }) {
   const { manId } = await params;
   await requireActive();
@@ -40,6 +41,30 @@ export default async function Packet({ params }: { params: Promise<{ manId: stri
           {program.milestones.map((m) => <Badge key={m.type + m.awarded_at} tone="ok">{m.type.replace(/_/g, " ")} · {fmtDate(m.awarded_at)}</Badge>)}
         </div>
       </header>
+
+      <section>
+        <h2 className="text-lg text-gold">Key 1 — Video reflections</h2>
+        <ol className="mt-3 space-y-3 text-sm">
+          {packetReflections(program.byKey.key_1).map((r) => (
+            <li key={r.videoId} className="rounded-lg border border-line p-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="font-semibold">{r.title}</span>
+                {r.savedAt && <span className="text-xs text-muted">Saved {fmtDate(r.savedAt)}</span>}
+              </div>
+              {r.missing ? (
+                <p className="mt-1 italic text-muted">No reflection on file</p>
+              ) : (
+                <>
+                  {r.text && <p className="mt-1 whitespace-pre-line">{r.text}</p>}
+                  {r.fileName && (r.fileUrl
+                    ? <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-gold underline">{r.fileName}</a>
+                    : <p className="mt-1 text-muted">{r.fileName}</p>)}
+                </>
+              )}
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <Answers title="Key 1 — Fishing worksheet" mod={program.byKey.key_1} />
 

@@ -911,6 +911,25 @@ describe("videos and Key 1 reflections (0008)", () => {
     expect(await rows(ap, `select * from storage.objects where name like $1`, [`${man}/%`])).toHaveLength(1);
   });
 
+  it("packet: reflection text, file and saved date reach him, his AP/sponsor and leaders — nobody else", async () => {
+    const sponsor = await newUser("Vince");
+    await rpc(LEADER, "approve_member", sponsor, LEADER);
+    await rpc(LEADER, "leader_create_relationship", sponsor, man, "sponsor");
+    const q = `select v.order_no, vp.reflection, vp.reflection_file_path, vp.reflection_at
+                 from video_progress vp join videos v on v.id = vp.video_id
+                where vp.man_id = $1 and v.id = any($2::uuid[]) order by v.order_no`;
+    for (const who of [man, ap, sponsor, LEADER]) {
+      const r = await rows(who, q, [man, key1]);
+      expect(r.map((x) => x.order_no), who).toEqual([1, 2]);
+      expect(r[0].reflection).toBe("What I heard in Video 1…");
+      expect(r[1].reflection_file_path).toBe(`${man}/${key1[1]}/1/reflection.pdf`);
+      expect(r.every((x) => x.reflection_at instanceof Date)).toBe(true);
+    }
+    expect(await rows(STRANGER, q, [man, key1])).toHaveLength(0);
+    await rpc(man, "end_relationship", (await rows(man, `select id from relationships where mentor_id = $1 and status = 'active'`, [sponsor]))[0].id);
+    expect(await rows(sponsor, q, [man, key1])).toHaveLength(0); // ended sponsor: gone at once
+  });
+
   it("B + sequencing: the Fishing worksheet opens only after all 3 videos (and reflections)", async () => {
     expect((await sp(man, "key_1", null, 1)).status).toBe("locked");
     await rpc(man, "save_video", key1[2], "", "Video 3 reflection", null, true);
