@@ -15,7 +15,7 @@ export default async function Journal() {
     db.from("meetings").select("id, name").eq("active", true).order("name"),
   ]);
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="space-y-6">
       <SectionTitle sub="Catalog what you hear and learn — this feeds your “My Program” page (Key 2 #11).">Meeting Journal</SectionTitle>
       <Card>
         <ActionForm action={addJournal} resetOnOk className="space-y-3">

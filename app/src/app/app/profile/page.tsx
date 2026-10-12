@@ -30,7 +30,7 @@ export default async function Profile() {
   const panic: string[] = (cs?.panic_recipients as string[]) ?? [];
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="space-y-6">
       <SectionTitle>Profile &amp; Privacy</SectionTitle>
 
       <Card>

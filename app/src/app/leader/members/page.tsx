@@ -22,13 +22,13 @@ export default async function Members() {
   const admin = me.role === "admin";
 
   return (
-    <div className="max-w-5xl space-y-8">
+    <div className="space-y-8">
       <SectionTitle sub={admin ? "Approve sign-ups and manage roles." : "Approve sign-ups. Only an admin can change roles."}>Members &amp; Roles</SectionTitle>
 
       <section>
         <h2 className="mb-2 text-lg text-gold">Waiting for approval ({pending.length})</h2>
-        {pending.length ? pending.map((p) => (
-          <Card key={p.id} className="mb-3 space-y-2 text-sm">
+        {pending.length ? <div className="grid gap-3 lg:grid-cols-2">{pending.map((p) => (
+          <Card key={p.id} className="space-y-2 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <span className="display text-base">{p.first_name}</span>
               <span className="text-muted">{p.email} · {p.city ? `${p.city}, ` : ""}{p.country ?? ""} · {p.timezone}</span>
@@ -46,7 +46,7 @@ export default async function Members() {
               <Submit>Approve</Submit>
             </ActionForm>
           </Card>
-        )) : <Empty>No one waiting.</Empty>}
+        ))}</div> : <Empty>No one waiting.</Empty>}
       </section>
 
       <section>

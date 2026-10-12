@@ -41,7 +41,7 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
   const readyKey2 = !k2.done && k2.steps.every((s) => s.progress?.status === "leader_initialed");
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="space-y-6">
       <Link href="/leader" className="text-sm text-muted hover:text-gold">← Pipeline</Link>
       <SectionTitle sub={`${STAGE_LABEL[man.stage]} · ${man.role.replace("_", "/")} · ${man.status}`}>{man.display_name || man.first_name}</SectionTitle>
 

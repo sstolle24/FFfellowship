@@ -24,7 +24,7 @@ export default async function Matching() {
     && !(active ?? []).some((r) => r.mentee_id === m.id && r.type !== "ap"));
 
   return (
-    <div className="max-w-5xl space-y-8">
+    <div className="space-y-8">
       <SectionTitle sub="Requests, offers, sponsor confirmations — and direct matches.">Matching Board</SectionTitle>
 
       {(pendingRels ?? []).length > 0 && (
@@ -42,7 +42,7 @@ export default async function Matching() {
       <section>
         <h2 className="mb-2 text-lg text-gold">Open requests</h2>
         {reqs?.length ? (
-          <div className="space-y-2">
+          <div className="grid gap-2 lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
             {reqs.map((r) => {
               const m = man(r.requester_id);
               const age = relDays(r.created_at) ?? 0;

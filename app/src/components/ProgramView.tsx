@@ -33,7 +33,7 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
                 {m.description && m.key !== "key_3_part_2" && (
                   <details className="rounded-lg border border-line bg-panel p-3 text-sm">
                     <summary className="cursor-pointer text-muted">Read the instructions</summary>
-                    <div className="mt-3 whitespace-pre-line leading-relaxed">{m.description}</div>
+                    <div className="mt-3 max-w-prose whitespace-pre-line leading-relaxed">{m.description}</div>
                   </details>
                 )}
 

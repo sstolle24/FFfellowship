@@ -15,7 +15,7 @@ export default async function MemberMeetings() {
   if (me.status !== "active") {
     const { data: schedule } = await db.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner");
     return (
-      <div className="max-w-4xl">
+      <div>
         <SectionTitle sub="You're welcome at any of these meetings.">Meetings</SectionTitle>
         <Notice>
           Meeting links appear here after a leader approves your account. You&apos;ll get an email as soon as you&apos;re in.
@@ -30,7 +30,7 @@ export default async function MemberMeetings() {
     .sort((a, b) => a.slot.at.getTime() - b.slot.at.getTime());
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <SectionTitle sub={`Times in your timezone (${me.timezone}). Change it in Profile.`}>Meetings &amp; Links</SectionTitle>
       <p className="mb-6 text-sm text-muted">Join from here — your first join checks off Key 2 item #4 (D) automatically. Please don&apos;t share links or passwords outside the Fellowship.</p>
       <div className="space-y-6">

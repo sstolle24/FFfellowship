@@ -28,7 +28,7 @@ export default async function SponsorDesk() {
     && (stepBy.get(p.step_id)?.program_modules as unknown as { key: string } | null)?.key === "key_2").length;
 
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="space-y-8">
       <SectionTitle sub="Your men, their progress, and the items waiting on your AP initials.">Sponsor Desk</SectionTitle>
 
       <section>
@@ -54,7 +54,7 @@ export default async function SponsorDesk() {
       <section>
         <h2 className="mb-3 text-lg text-gold">Your men</h2>
         {men?.length ? (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {men.map((m) => {
               const quiet = relDays(m.last_active_at) ?? 0;
               return (

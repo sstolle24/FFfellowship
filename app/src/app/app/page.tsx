@@ -25,13 +25,15 @@ export default async function Dashboard() {
 
   if (me.status !== "active") {
     return (
-      <div className="max-w-3xl space-y-6">
+      <div className="space-y-6">
         <SectionTitle>Welcome, {me.first_name}</SectionTitle>
-        <Notice>
-          Your sign-up is waiting for a leader&apos;s approval. You&apos;ll get an email as soon as you&apos;re in. Until then,
-          here&apos;s the meeting schedule — links appear after approval.
-        </Notice>
-        <TodaysMeetings meetings={todays} />
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <Notice>
+            Your sign-up is waiting for a leader&apos;s approval. You&apos;ll get an email as soon as you&apos;re in. Until then,
+            here&apos;s the meeting schedule — links appear after approval.
+          </Notice>
+          <TodaysMeetings meetings={todays} />
+        </div>
         <p className="text-sm text-muted">Struggling right now? <Link href="/get-help" className="text-gold underline">Get help now</Link>.</p>
       </div>
     );
@@ -56,7 +58,7 @@ export default async function Dashboard() {
   const signal = env.signalGroupUrl();
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="space-y-6">
       <SectionTitle sub={STAGE_LABEL[me.stage]}>Welcome back, {me.first_name}</SectionTitle>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -67,7 +69,8 @@ export default async function Dashboard() {
         <PanicButton signalUrl={signal} />
       </div>
 
-      <Card className="flex flex-wrap items-center gap-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <Card className="flex flex-wrap items-center gap-4 max-md:mb-2 md:col-span-2 xl:col-span-1 xl:flex-col xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="text-xs uppercase tracking-widest text-muted">Your next step</div>
           <div className="display mt-1 text-lg text-ink">{next.label}</div>
@@ -75,7 +78,6 @@ export default async function Dashboard() {
         <LinkButton href={next.href}>Go</LinkButton>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <h2 className="text-lg text-gold">Your men</h2>
           <dl className="mt-3 space-y-2 text-sm">

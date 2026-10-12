@@ -20,7 +20,7 @@ export default async function Directory() {
   const sorted = [...groups.entries()].sort(([a], [b]) => (a === "Location not shared" ? 1 : b === "Location not shared" ? -1 : a.localeCompare(b)));
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="space-y-6">
       <SectionTitle sub="Brothers who chose to be listed, grouped by city. Use it to find men near you or in your timezone.">Directory</SectionTitle>
       {!mine?.directory_opt_in && (
         <p className="text-sm text-muted">You&apos;re not listed. <Link href="/app/profile#sharing" className="text-gold underline">Turn it on in Profile &amp; Privacy</Link>.</p>
@@ -28,7 +28,7 @@ export default async function Directory() {
       {sorted.length ? sorted.map(([place, men]) => (
         <section key={place}>
           <h2 className="mb-2 text-gold">{place}</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {(men ?? []).map((m) => (
               <Card key={m.id} className="p-3 text-sm">
                 <div className="display text-ink">{m.display_name || m.first_name}</div>

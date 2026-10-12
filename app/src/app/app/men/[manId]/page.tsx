@@ -23,7 +23,7 @@ export default async function ManProgram({ params }: { params: Promise<{ manId: 
   const program = await loadProgram(db, manId);
   const names = await initialerNames(db, program);
   return (
-    <div className="max-w-4xl">
+    <div>
       <Link href="/app/sponsor-desk" className="text-sm text-muted hover:text-gold">← Sponsor Desk</Link>
       <SectionTitle sub={daysLabel(man.day_count)}>{man.display_name || man.first_name}&apos;s program</SectionTitle>
       <ProgramView man={man as unknown as Profile} program={program} names={names} self={false} />

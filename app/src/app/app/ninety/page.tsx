@@ -20,7 +20,7 @@ export default async function Ninety() {
   const day = Math.min(90, daysBetween(start, todayIn(me.timezone)) + 1);
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="space-y-6">
       <SectionTitle sub={'Key 2 #10 — only "Finally Free" and "SA" support meetings count.'}>90 Meetings in 90 Days</SectionTitle>
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Meetings logged" value={`${Math.min(90, counted.length)}/90`} />

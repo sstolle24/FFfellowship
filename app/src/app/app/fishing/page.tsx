@@ -15,7 +15,7 @@ export default async function Fishing() {
   const past = (all ?? []).filter((c) => c.week_start !== ws);
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="space-y-6">
       <SectionTitle sub={<>&ldquo;Follow me, and I will make you fishers of men.&rdquo; — Mt 4:19. Reach out to 3 men every week.</>}>
         Fishing
       </SectionTitle>

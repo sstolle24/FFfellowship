@@ -21,7 +21,7 @@ export default async function SponsorPage() {
   const open = (reqs ?? []).filter((r) => ["open", "offered", "pending_leader"].includes(r.status));
 
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="space-y-8">
       <SectionTitle sub="Key 2 #16: get an accountability partner and talk daily. #18: have a sponsor or temporary sponsor by day 90.">
         Find a Sponsor / AP
       </SectionTitle>
@@ -29,6 +29,7 @@ export default async function SponsorPage() {
       {open.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg text-gold">Your open requests</h2>
+          <div className="grid gap-3 lg:grid-cols-2">
           {open.map((r) => {
             const mine = (offers ?? []).filter((o) => o.request_id === r.id && o.status === "offered");
             return (
@@ -52,6 +53,7 @@ export default async function SponsorPage() {
               </Card>
             );
           })}
+          </div>
         </section>
       )}
 
@@ -79,7 +81,7 @@ export default async function SponsorPage() {
           <h2 className="mb-1 text-lg text-gold">Sponsor Board</h2>
           <p className="mb-3 text-sm text-muted">Men asking for an AP or sponsor. Offer only if you can talk with him daily.</p>
           {board.length ? (
-            <div className="space-y-2">
+            <div className="grid gap-2 lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
               {board.map((b) => (
                 <Card key={b.request_id} className="flex flex-wrap items-center gap-3 p-4">
                   <span className="display text-ink">{b.first_name}</span>

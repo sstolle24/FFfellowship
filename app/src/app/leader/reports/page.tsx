@@ -12,7 +12,7 @@ const REPORTS: [string, string, string][] = [
 
 export default function Reports() {
   return (
-    <div className="max-w-3xl">
+    <div>
       <SectionTitle sub="CSV downloads. Every export is recorded in the audit log.">Reports</SectionTitle>
       <div className="space-y-3">
         {REPORTS.map(([k, t, d]) => (

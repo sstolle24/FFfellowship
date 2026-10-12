@@ -79,7 +79,7 @@ export function Empty({ children }: { children: ReactNode }) {
   return <p className="rounded-lg border border-dashed border-line p-4 text-sm italic text-muted">{children}</p>;
 }
 
-export function Notice({ tone = "gold", children }: { tone?: "gold" | "orange" | "danger"; children: ReactNode }) {
+export function Notice({ tone = "gold", children, className = "" }: { tone?: "gold" | "orange" | "danger"; children: ReactNode; className?: string }) {
   const t = { gold: "border-gold/40 bg-gold/5", orange: "border-orange/50 bg-orange/10", danger: "border-danger/50 bg-danger/10" }[tone];
-  return <div className={`rounded-lg border p-4 text-sm ${t}`}>{children}</div>;
+  return <div className={`rounded-lg border p-4 text-sm ${t} ${className}`}>{children}</div>;
 }

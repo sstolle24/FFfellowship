@@ -40,7 +40,7 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
   if (sp.status === "locked") {
     const { data: reason } = await db.rpc("step_lock_reason", { p_sp: spId });
     return (
-      <div className="max-w-3xl space-y-5">
+      <div className="space-y-5">
         <Link href={self ? "/app/program" : leader ? `/leader/men/${sp.man_id}` : "/app/sponsor-desk"} className="text-sm text-muted hover:text-gold">← Back</Link>
         <SectionTitle sub={mod?.title}>{step.item_number ? `#${step.item_number} ` : ""}{step.title}</SectionTitle>
         <Notice><strong>Locked.</strong> {(reason as string | null) ?? "This item isn't open yet."}</Notice>
@@ -109,40 +109,48 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
   const due = dueDate(man.program_start_date ?? null, step.due_day);
   const back = self ? "/app/program" : leader ? `/leader/men/${sp.man_id}` : "/app/sponsor-desk";
 
+  // Large screens: reading/worksheet in the main column, status + turn-in + sign-offs in a side panel.
+  // Phones: the columns dissolve (`contents`) and `order` keeps the original single-column sequence.
   return (
-    <div className="max-w-3xl space-y-5">
-      <Link href={back} className="text-sm text-muted hover:text-gold">← Back</Link>
-      <SectionTitle sub={`${mod?.title ?? ""}${self ? "" : ` · ${man.first_name}`}`}>
-        {step.item_number ? `#${step.item_number} ` : ""}{step.title}
-      </SectionTitle>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <StatusBadge step={{ ...step, progress: sp, submissions: [], lockNote: null }} />
-        {step.turn_in && <Badge tone="orange">Turn in</Badge>}
-        {due && <Badge>Due {fmtDate(due)}</Badge>}
-        <div className="ml-auto"><InitialBoxes step={{ ...step, progress: sp, submissions: [], lockNote: null }} names={names} /></div>
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start xl:grid-cols-[minmax(0,1fr)_24rem] xl:gap-8">
+      {/* -mb-5: grid gaps don't collapse with the title's own bottom margin (keeps the old spacing). */}
+      <div className="-mb-5 lg:col-span-2">
+        <Link href={back} className="text-sm text-muted hover:text-gold">← Back</Link>
+        <SectionTitle sub={`${mod?.title ?? ""}${self ? "" : ` · ${man.first_name}`}`}>
+          {step.item_number ? `#${step.item_number} ` : ""}{step.title}
+        </SectionTitle>
       </div>
 
+      <div className="contents lg:col-start-1 lg:block lg:space-y-5">
       {st === "returned" && sp.review_note && (
-        <Notice tone="danger">
+        <Notice tone="danger" className="order-2">
           <strong>Returned by {names[sp.returned_by ?? ""] ?? "a reviewer"}:</strong> {sp.review_note}
           <div className="mt-1 text-xs text-muted">{fmtDateTime(sp.returned_at, me.timezone)}</div>
         </Notice>
       )}
 
-      {self && videosPending && <Notice>Watch the 3 videos first — check each one off in <Link href="/app/program#key_1" className="underline">My Program</Link>, then this worksheet opens.</Notice>}
-      {step.description && <Card className="whitespace-pre-line leading-relaxed">{step.description}</Card>}
-      {helper && <Notice>{helper}</Notice>}
+      {self && videosPending && <Notice className="order-2">Watch the 3 videos first — check each one off in <Link href="/app/program#key_1" className="underline">My Program</Link>, then this worksheet opens.</Notice>}
+      {step.description && <Card className="order-2 whitespace-pre-line leading-relaxed"><div className="max-w-prose">{step.description}</div></Card>}
+      {helper && <Notice className="order-2">{helper}</Notice>}
 
       {isWorksheet && (
-        <Card>
+        <Card className="order-2">
           <h2 className="mb-4 text-lg text-gold">Worksheet</h2>
           <WorksheetForm questions={questions} editable={editable} />
         </Card>
       )}
+      </div>
+
+      <aside className="contents lg:col-start-2 lg:row-start-2 lg:block lg:space-y-5" aria-label="Status and sign-offs">
+      <div className="order-1 flex flex-wrap items-center gap-3 lg:rounded-xl lg:border lg:border-line lg:bg-panel lg:p-4">
+        <StatusBadge step={{ ...step, progress: sp, submissions: [], lockNote: null }} />
+        {step.turn_in && <Badge tone="orange">Turn in</Badge>}
+        {due && <Badge>Due {fmtDate(due)}</Badge>}
+        <div className="ml-auto lg:ml-0 lg:basis-full"><InitialBoxes step={{ ...step, progress: sp, submissions: [], lockNote: null }} names={names} /></div>
+      </div>
 
       {(step.turn_in || step.requires_upload || isWorksheet) && (
-        <Card className="space-y-4">
+        <Card className="order-3 space-y-4">
           <h2 className="text-lg text-gold">{isWorksheet ? "Or upload your paper worksheet" : "Turn in"}</h2>
           {editable && (
             <>
@@ -154,7 +162,7 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
         </Card>
       )}
 
-      <Card className="flex flex-wrap items-center gap-3">
+      <Card className="order-3 flex flex-wrap items-center gap-3">
         {editable && (
           <ActionButton run={initialSelf.bind(null, sp.id)}
             confirm={step.gate_type === "leader" ? "Submit your certification packet for leader review?" : "Initial this item as complete?"}>
@@ -170,7 +178,8 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
         )}
         {!editable && !canAp && !canLeader && <span className="text-sm text-muted">Nothing for you to do on this item right now.</span>}
       </Card>
-      {canReturn && <ReturnForm spId={sp.id} />}
+      {canReturn && <div className="order-3"><ReturnForm spId={sp.id} /></div>}
+      </aside>
     </div>
   );
 }

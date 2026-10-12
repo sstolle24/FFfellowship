@@ -22,7 +22,7 @@ export default async function Pipeline() {
       <SectionTitle sub={pending ? <Link href="/leader/members" className="text-gold underline">{pending} sign-up{pending > 1 ? "s" : ""} waiting for approval →</Link> : "Every active man, by stage."}>
         Pipeline
       </SectionTitle>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {STAGES.map((st) => {
           const col = ((men as Profile[]) ?? []).filter((m) => m.stage === st);
           return (

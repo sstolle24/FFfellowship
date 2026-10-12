@@ -13,7 +13,7 @@ export function WorksheetForm({ questions, editable }: { questions: (WorksheetQu
         <div key={q.id} className="space-y-2">
           <div className="flex gap-2">
             {q.timestamp_label && <span className="shrink-0"><Badge tone="gold">{q.timestamp_label}</Badge></span>}
-            <p className={q.answer_slots ? "text-ink" : "italic text-muted"}>{q.prompt}</p>
+            <p className={`max-w-prose ${q.answer_slots ? "text-ink" : "italic text-muted"}`}>{q.prompt}</p>
           </div>
           {Array.from({ length: q.answer_slots }, (_, i) => (
             <div key={i} className="flex gap-2">

@@ -23,9 +23,9 @@ export default async function Brothers() {
   ]);
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="space-y-6">
       <SectionTitle sub="The men you walk with. Talk to your AP every day.">My Brothers</SectionTitle>
-      {others.length ? others.map(({ r, other }) => {
+      {others.length ? <div className="grid gap-6 lg:grid-cols-2 lg:gap-4 xl:grid-cols-3">{others.map(({ r, other }) => {
         const c = cards?.find((x) => x.id === other);
         const k = contacts?.find((x) => x.id === other);
         const role = r.type === "ap" ? LABEL.ap : r.mentor_id === me.id ? `You are his ${LABEL[r.type as keyof typeof LABEL].toLowerCase()}` : `Your ${LABEL[r.type as keyof typeof LABEL].toLowerCase()}`;
@@ -53,7 +53,7 @@ export default async function Brothers() {
             </div>
           </Card>
         );
-      }) : <Empty>No AP or sponsor yet. <Link href="/app/sponsor" className="text-gold underline">Find one</Link>.</Empty>}
+      })}</div> : <Empty>No AP or sponsor yet. <Link href="/app/sponsor" className="text-gold underline">Find one</Link>.</Empty>}
       <p className="text-xs text-muted">In-app messaging is planned for a later version.</p>
     </div>
   );

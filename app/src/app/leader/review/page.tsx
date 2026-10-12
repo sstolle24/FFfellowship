@@ -47,7 +47,7 @@ export default async function Review() {
       .map((r) => ({ mentor: r.mentor_id, mentee: x.man_id })));
 
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="space-y-8">
       <SectionTitle sub="Oldest first. Your own items never appear here — another leader signs those.">Review Queue</SectionTitle>
 
       {readyKey2.length > 0 && (

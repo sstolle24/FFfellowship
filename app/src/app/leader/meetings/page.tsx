@@ -21,7 +21,7 @@ export default async function MeetingsAdmin() {
   const rows = ((data as Meeting[]) ?? []).map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), me.timezone) }))
     .sort((a, b) => a.slot.dayIndex - b.slot.dayIndex);
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="space-y-6">
       <SectionTitle sub={`Enter times in your timezone (${me.timezone}); members see them in theirs. Links, IDs and passcodes are only ever shown to signed-in members.`}>
         Meetings &amp; Videos
       </SectionTitle>

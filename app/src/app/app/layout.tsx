@@ -37,7 +37,10 @@ export default async function MemberLayout({ children }: { children: React.React
           <form action={logOut}><button className="text-muted hover:text-gold">Log out</button></form>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8">{children}</main>
+      <main className="min-w-0 flex-1 px-4 py-6 md:px-8 md:py-8 xl:px-10">
+        {/* One shared, centered content container (1280px) for every page in this area. */}
+        <div className="mx-auto w-full max-w-7xl">{children}</div>
+      </main>
     </div>
   );
 }
