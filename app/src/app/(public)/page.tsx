@@ -6,11 +6,12 @@ export default function Home() {
   return (
     <>
       <section className="relative overflow-hidden border-b border-line/60">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(201,151,58,0.18),transparent_60%)]" />
+        {/* Hero photo: Eric BARBEAU on Unsplash (Chamonix). Credits: public/hero/CREDITS.md */}
+        <div className="hero-photo pointer-events-none absolute inset-0" aria-hidden="true" />
         <div className="relative mx-auto flex max-w-4xl flex-col items-center px-4 py-20 text-center md:py-28">
           <Logo size={84} glow priority />
           <h1 className="mt-6 text-4xl text-ink md:text-6xl">Finally <span className="text-gold">Free</span></h1>
-          <p className="mt-5 max-w-2xl text-lg text-muted md:text-xl">
+          <p className="mt-5 max-w-2xl text-lg text-ink/80 md:text-xl">
             A Christ-centered, peer-led fellowship of men walking out of sexual addiction — together, every day, with a
             clear path to lasting freedom.
           </p>

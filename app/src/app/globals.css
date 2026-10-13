@@ -1,29 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --color-navy: #0b1426;
-  --color-navy-2: #101c33;
-  --color-panel: #121f38;
-  --color-line: #233558;
-  --color-gold: #c9973a;
-  --color-gold-hi: #e2b864;
-  --color-ink: #ece7dc;
-  --color-muted: #9aa6bb;
-  --color-orange: #e2772b;
-  --color-ok: #5fae7e;
-  --color-danger: #d9534f;
-  --font-display: "Cinzel", Georgia, serif;
-  --font-body: "Lora Variable", Georgia, serif;
+  /* Alpine Sky (light). Token names are legacy: "navy" = page background, "gold" = primary accent. */
+  --color-navy: #f6f8fb;
+  --color-navy-2: #eaf0f6;
+  --color-panel: #ffffff;
+  --color-line: #c9d4e0;
+  --color-gold: #2f5d8a;
+  --color-gold-hi: #234a70;
+  --color-ink: #1e2a38;
+  --color-muted: #56626f;
+  --color-orange: #3f6b4f;
+  --color-ok: #2e7a4f;
+  --color-danger: #c9302c;
+  --font-display: "Bitter", Georgia, serif;
+  --font-body: "Alegreya Sans", Georgia, serif;
 }
 
-html { background: var(--color-navy); color-scheme: dark; }
+html { background: var(--color-navy); color-scheme: light; }
 body {
   background: var(--color-navy);
   color: var(--color-ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
-h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: 0.04em; }
+h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: 0.01em; font-weight: 700; }
 a { text-underline-offset: 3px; }
 ::selection { background: var(--color-gold); color: var(--color-navy); }
 
@@ -48,11 +49,14 @@ label.lbl { display: block; font-size: 0.85rem; color: var(--color-muted); margi
   .print-card { border: 1px solid #000 !important; background: #fff !important; color: #000 !important; }
 }
 
-/* Brand logo: the old site's gold drop-shadow (static in headers, pulsing on the hero). */
-.logo-shadow { filter: drop-shadow(0 0 8px rgba(201, 151, 58, 0.45)); }
-.logo-glow { animation: logo-glow 3s ease-in-out infinite; filter: drop-shadow(0 0 30px rgba(201, 151, 58, 0.5)); }
-@keyframes logo-glow {
-  0%, 100% { filter: drop-shadow(0 0 18px rgba(201, 151, 58, 0.4)); }
-  50% { filter: drop-shadow(0 0 50px rgba(201, 151, 58, 0.9)); }
+/* Brand logo: plain, no glow (Alpine Sky theme). */
+.logo-shadow, .logo-glow { filter: none; animation: none; }
+
+/* Homepage hero photo: Eric BARBEAU / Unsplash (see public/hero/CREDITS.md). */
+.hero-photo {
+  background-image:
+    linear-gradient(180deg, rgba(246, 248, 251, 0.55) 0%, rgba(246, 248, 251, 0.82) 55%, var(--color-navy) 100%),
+    url("/hero/alpine-sky.webp");
+  background-size: cover;
+  background-position: center 35%;
 }
-@media (prefers-reduced-motion: reduce) { .logo-glow { animation: none; } }

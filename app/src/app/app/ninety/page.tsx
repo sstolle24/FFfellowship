@@ -42,7 +42,7 @@ export default async function Ninety() {
           <div><label className="lbl" htmlFor="other_name">Or SA meeting name</label><input id="other_name" name="other_name" className="field" maxLength={120} /></div>
           <div><label className="lbl" htmlFor="location">Location / online</label><input id="location" name="location" className="field" maxLength={120} /></div>
           <div className="sm:col-span-2"><label className="lbl" htmlFor="notes">Notes</label><input id="notes" name="notes" className="field" maxLength={2000} /></div>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="counts_90" defaultChecked className="accent-[#c9973a]" /> Counts toward 90 in 90 (FF or SA)</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="counts_90" defaultChecked className="accent-gold" /> Counts toward 90 in 90 (FF or SA)</label>
           <div className="sm:text-right"><Submit>Log it</Submit></div>
         </ActionForm>
       </Card>

@@ -74,7 +74,7 @@ export default async function Profile() {
               ["share_city", "Share my city and country", cs?.share_city],
               ["directory_opt_in", "List me in the member Directory", cs?.directory_opt_in],
             ].map(([n, l, v]) => (
-              <label key={n as string} className="flex items-center gap-2"><input type="checkbox" name={n as string} defaultChecked={!!v} className="accent-[#c9973a]" /> {l as string}</label>
+              <label key={n as string} className="flex items-center gap-2"><input type="checkbox" name={n as string} defaultChecked={!!v} className="accent-gold" /> {l as string}</label>
             ))}
             <div>
               <label className="lbl" htmlFor="panic">Panic Button recipients (in addition to your AP, sponsor and primary leader). Lists Directory members, the men you walk with, and leaders. Hold Ctrl/⌘ to pick several.</label>
@@ -92,7 +92,7 @@ export default async function Profile() {
         <ActionForm action={saveEmailPrefs} className="space-y-2">
           <input type="hidden" name="keys" value={Object.keys(OPTIONAL_PREFS).join(",")} />
           {Object.entries(OPTIONAL_PREFS).map(([k, l]) => (
-            <label key={k} className="flex items-center gap-2"><input type="checkbox" name={`pref:${k}`} defaultChecked={me.email_prefs?.[k] !== false} className="accent-[#c9973a]" /> {l}</label>
+            <label key={k} className="flex items-center gap-2"><input type="checkbox" name={`pref:${k}`} defaultChecked={me.email_prefs?.[k] !== false} className="accent-gold" /> {l}</label>
           ))}
           <p className="text-xs text-muted">Approvals of your account, returned items, match updates and Panic Button alerts always send.</p>
           <Submit variant="ghost">Save email settings</Submit>

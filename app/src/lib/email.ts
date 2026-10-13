@@ -152,7 +152,7 @@ export const OPTIONAL_PREFS: Record<string, string> = {
 
 function html(text: string) {
   const esc = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const linked = esc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" style="color:#c9973a">$1</a>');
+  const linked = esc.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" style="color:#2f5d8a">$1</a>');
   return `<div style="background:#0b1426;padding:24px;font-family:Georgia,serif;color:#e8e4da">
 <img src="${env.siteUrl}/brand/ff-logo.png" alt="Finally Free" height="48" style="display:block;height:48px;width:auto;margin-bottom:16px;border:0">
 <div style="white-space:pre-wrap;line-height:1.6">${linked}</div>

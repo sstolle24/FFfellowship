@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 // Self-hosted fonts (bundled at build time — no requests to Google).
-import "@fontsource/cinzel/400.css";
-import "@fontsource/cinzel/600.css";
-import "@fontsource/cinzel/700.css";
-import "@fontsource-variable/lora";
+import "@fontsource/bitter/400.css";
+import "@fontsource/bitter/600.css";
+import "@fontsource/bitter/700.css";
+import "@fontsource/alegreya-sans/400.css";
+import "@fontsource/alegreya-sans/500.css";
+import "@fontsource/alegreya-sans/700.css";
+import "@fontsource/alegreya-sans/400-italic.css";
 import "./globals.css";
 import { env } from "@/lib/env";
 
