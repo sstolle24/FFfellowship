@@ -43,6 +43,41 @@ a { text-underline-offset: 3px; }
 .field:focus { outline: 2px solid var(--color-gold); outline-offset: 1px; border-color: transparent; }
 label.lbl { display: block; font-size: 0.85rem; color: var(--color-muted); margin-bottom: 0.3rem; }
 
+/* Date fields and dropdowns drawn the same in every browser. Safari (iPhone in particular) and Firefox
+   otherwise use their own control: different heights, centered dates, and date fields that grow wider
+   than their column and run into the field beside them. */
+.field-control {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 2.75rem;
+  line-height: 1.25rem;
+  text-align: left;
+  font: inherit;
+  /* The body font uses old-style figures; dates read cleaner with full-height, even-width numbers. */
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--color-ink);
+}
+.field-control::-webkit-date-and-time-value { text-align: left; min-height: 1.25rem; }
+.field-control::-webkit-datetime-edit { padding: 0; color: var(--color-ink); }
+/* Chrome greys out the month/year when min/max leave only one choice (e.g. Oct 1 – Oct 27), which made the
+   date look half-disabled. Keep every part of the date in the normal text color. */
+.field-control::-webkit-datetime-edit-month-field,
+.field-control::-webkit-datetime-edit-day-field,
+.field-control::-webkit-datetime-edit-year-field,
+.field-control::-webkit-datetime-edit-text { color: var(--color-ink); }
+select.field-control {
+  padding-right: 2.25rem;
+  text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2356626f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 8l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
 @media print {
   html, body { background: #fff !important; color: #000 !important; }
   .no-print { display: none !important; }

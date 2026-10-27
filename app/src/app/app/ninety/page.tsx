@@ -42,7 +42,7 @@ export default async function Ninety() {
             {/* Field and button share one row and one height. */}
             <div className="flex items-stretch gap-2">
               <input id="ninety_start" name="ninety_start" type="date" required defaultValue={start} min={addDays(today, -90)} max={today}
-                className="field h-11 min-w-0 flex-1" />
+                className="field field-control flex-1" />
               <Submit variant="ghost" className="h-11 shrink-0">Save</Submit>
             </div>
           </ActionForm>
@@ -65,10 +65,10 @@ export default async function Ninety() {
       <Card className="no-print">
         <h2 className="mb-3 text-lg text-gold">Log a meeting</h2>
         <ActionForm action={addMeetingLog} resetOnOk className="grid gap-3 sm:grid-cols-2">
-          <div><label className="lbl" htmlFor="date">Date</label><input id="date" name="date" type="date" required defaultValue={today} min={start} max={today} className="field h-11" /></div>
+          <div><label className="lbl" htmlFor="date">Date</label><input id="date" name="date" type="date" required defaultValue={today} min={start} max={today} className="field field-control" /></div>
           <div>
             <label className="lbl" htmlFor="meeting_id">Finally Free meeting</label>
-            <select id="meeting_id" name="meeting_id" className="field h-11" defaultValue="">
+            <select id="meeting_id" name="meeting_id" className="field field-control" defaultValue="">
               <option value="">— Other (SA) meeting —</option>
               {(meetings ?? []).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
