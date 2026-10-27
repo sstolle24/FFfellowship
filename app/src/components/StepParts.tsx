@@ -25,12 +25,12 @@ export function StatusBadge({ step }: { step: StepView }) {
 export function InitialBoxes({ step, names }: { step: StepView; names: Record<string, string> }) {
   const p = step.progress;
   const cols: [string, string | null | undefined, string | null | undefined][] = [["You", p?.self_initialed_at, null]];
-  if (step.gate_type === "self_ap" || step.gate_type === "triple") cols.push(["AP", p?.ap_initialed_at, p?.ap_initial_by]);
+  if (step.gate_type === "self_ap" || step.gate_type === "triple") cols.push([p?.ap_override ? "AP·LDR" : "AP", p?.ap_initialed_at, p?.ap_initial_by]);
   if (step.gate_type === "triple" || step.gate_type === "leader") cols.push(["Leader", p?.leader_initialed_at, p?.leader_initial_by]);
   return (
     <div className="flex gap-1.5">
       {cols.map(([label, at, by]) => (
-        <div key={label} title={at ? `${label}: ${by ? names[by] ?? "" : ""} ${fmtDate(at)}` : `${label}: not yet`}
+        <div key={label} title={at ? `${label === "AP·LDR" ? "AP (leader override)" : label}: ${by ? names[by] ?? "" : ""} ${fmtDate(at)}` : `${label}: not yet`}
           className={`flex h-9 w-14 flex-col items-center justify-center rounded border text-[10px] leading-tight ${at ? "border-ok/70 bg-ok/10 text-ok" : "border-line text-muted"}`}>
           <span className="uppercase tracking-wider">{label}</span>
           <span className="font-semibold">{at ? (by ? initials(names[by]) : "✓") : "—"}</span>

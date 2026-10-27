@@ -35,6 +35,10 @@ export const TEMPLATES = {
     subject: (v) => `${v.man} needs your AP initials`,
     body: (v) => `${v.man} initialed "${v.step}" and it's waiting for your initials.\n\n${app("/app/sponsor-desk")}`,
   },
+  ap_overridden: {
+    subject: (v) => `${v.leader} signed ${v.man}'s ${v.step} for you`,
+    body: (v) => `${v.leader} gave the AP sign-off on ${v.man}'s "${v.step}" as a leader override.${v.reason ? `\n\nReason: ${v.reason}` : ""}\n\n${app("/app/sponsor-desk")}`,
+  },
   leader_review_needed: {
     subject: (v) => `Ready for leader review: ${v.man} — ${v.step}`,
     body: (v) => `${v.man}'s "${v.step}" is ready for leader initials.\n\n${app("/leader/review")}`,

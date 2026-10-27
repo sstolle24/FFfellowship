@@ -20,6 +20,7 @@ deploys separately from the `app/` folder.
 | `supabase/migrations/0007_sequential_program.sql` | Sequential program: keys in order, assignments in order inside each key, background items, clear "Finish … first" refusals; re-sequences existing progress without undoing anything a man did |
 | `supabase/migrations/0008_videos_reflections.sql` | Video passcodes (leader-entered, readable only for a man's own unlocked videos), Key 3 movie gating, Key 1 one-page reflections, single `save_video` path |
 | `supabase/migrations/0009_ninety_sponsor_path.sql` | His own 90-in-90 start date, meeting Notes / takeaways, outside sponsors (leader-approved), weekly "The Path" commitment |
+| `supabase/migrations/0010_leader_ap_override.sql` | Leaders can override AP sign-off (reason required, marked and audited; two-person rule kept) |
 | `supabase/seed/build_seed.py` → `seed.sql` | Program content generated **verbatim** from the 10-26 source docs (Key 1 worksheet, The 21, Bill's Story Parts 1 & 2) + the current meeting schedule (no Zoom links) |
 | `supabase/tests/` | Security + gate tests against a real Postgres (`npm run test:db`) |
 | `public/brand/`, `scripts/build_brand.py` | Self-hosted FF cross logo (1x/2x PNG + WebP). The script regenerates the logo, favicon, apple-touch-icon and Open Graph image from the source PNG |
@@ -32,7 +33,7 @@ deploys separately from the `app/` folder.
 ## Setup
 
 1. **Supabase project.** In the SQL editor run, in order:
-   `0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`, `0004_security_fixes.sql`, `0005_view_grants.sql`, `0006_function_defaults.sql`, `0007_sequential_program.sql`, `0008_videos_reflections.sql`, `0009_ninety_sponsor_path.sql`, then `seed/seed.sql`.
+   `0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`, `0004_security_fixes.sql`, `0005_view_grants.sql`, `0006_function_defaults.sql`, `0007_sequential_program.sql`, `0008_videos_reflections.sql`, `0009_ninety_sponsor_path.sql`, `0010_leader_ap_override.sql`, then `seed/seed.sql`.
    (Or `supabase db push` with the CLI.) The migrations create the private `submissions` bucket.
 2. **Auth settings** (Supabase → Authentication):
    - Email provider on, "Confirm email" on.
@@ -97,6 +98,9 @@ submissions (rows or storage), an ended sponsor loses access immediately, anon c
   the member area — a box he can't dismiss (Panic Button, Get Help and Log out stay reachable). Committed names lock for the week.
 - **Key 1 reflections**: a one-page reflection (typed and/or uploaded) on each of the 3 videos, required before that video counts as done.
   Visible to him, his active AP/sponsor and leaders (like turn-ins); leaders get the turn-in email. Key 3's Part 1 worksheet waits for the movie.
+- **Leader AP override**: any leader can sign a man's AP column when his AP/sponsor can't (reason required, shown on the item,
+  audited, his AP emailed). The overriding leader can't also give the leader initials — a different leader does. Items waiting on an AP
+  are listed in the Review Queue.
 - **Background items** (`program_steps.helper.background = true`) start when they open and don't hold back the next item:
   Key 2 #2 (pray 30 days), #10 (90 in 90), #12 (service position, day 14), #16 (get an AP), #18 (sponsor by day 90), #19 (sponsor someone, day 30).
   They still need every sign-off before Key 2 completes. Change the list in the Table editor.

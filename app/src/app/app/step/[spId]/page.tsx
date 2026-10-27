@@ -9,7 +9,7 @@ import type { ModuleKey, ProgramStep, StepProgress, Submission, WorksheetQuestio
 import { Badge, Card, Notice, SectionTitle } from "@/components/ui";
 import { InitialBoxes, StatusBadge } from "@/components/StepParts";
 import { ActionButton } from "@/components/forms";
-import { ReturnForm, TextTurnIn, WorksheetForm } from "@/components/StepForms";
+import { OverrideApForm, ReturnForm, TextTurnIn, WorksheetForm } from "@/components/StepForms";
 import { UploadTurnIn } from "@/components/UploadTurnIn";
 import { initialAp, initialLeader, initialSelf, setReadToGroup } from "../../actions";
 
@@ -81,6 +81,8 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
   const canLeader = !self && leader && sp.ap_initial_by !== me.id && (
     (step.gate_type === "triple" && st === "ap_initialed") || (step.gate_type === "leader" && st === "self_initialed"));
   const canReturn = !self && ((st === "self_initialed" && (leader || mentorOfHim)) || (st === "ap_initialed" && leader));
+  // Any leader may sign the AP column for him when his AP/sponsor can't (0010). Not on his own item.
+  const canOverrideAp = !self && leader && !canAp && st === "self_initialed" && ["self_ap", "triple"].includes(step.gate_type);
   const isWorksheet = step.helper?.type === "worksheet";
 
   let questions: (WorksheetQuestion & { answers: string[] })[] = [];
@@ -149,6 +151,13 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
         <div className="ml-auto lg:ml-0 lg:basis-full"><InitialBoxes step={{ ...step, progress: sp, submissions: [], lockNote: null }} names={names} /></div>
       </div>
 
+      {sp.ap_override && sp.ap_initialed_at && (
+        <Notice className="order-1">
+          AP sign-off given by {names[sp.ap_initial_by ?? ""] ?? "a leader"} as a <strong>leader override</strong>
+          {sp.ap_override_reason ? <>: &ldquo;{sp.ap_override_reason}&rdquo;</> : "."}
+        </Notice>
+      )}
+
       {(step.turn_in || step.requires_upload || isWorksheet) && (
         <Card className="order-3 space-y-4">
           <h2 className="text-lg text-gold">{isWorksheet ? "Or upload your paper worksheet" : "Turn in"}</h2>
@@ -176,8 +185,15 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
             {sp.read_to_group ? "Un-mark read to group" : "Mark read to group"}
           </ActionButton>
         )}
-        {!editable && !canAp && !canLeader && <span className="text-sm text-muted">Nothing for you to do on this item right now.</span>}
+        {!editable && !canAp && !canLeader && !canOverrideAp && (
+          <span className="text-sm text-muted">
+            {leader && !self && st === "ap_initialed" && sp.ap_initial_by === me.id
+              ? "You gave the AP sign-off, so a different leader gives the leader initials."
+              : "Nothing for you to do on this item right now."}
+          </span>
+        )}
       </Card>
+      {canOverrideAp && <div className="order-3"><OverrideApForm spId={sp.id} man={man.first_name} /></div>}
       {canReturn && <div className="order-3"><ReturnForm spId={sp.id} /></div>}
       </aside>
     </div>

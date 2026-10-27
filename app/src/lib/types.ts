@@ -44,6 +44,8 @@ export interface ProgramStep {
 export interface StepProgress {
   id: string; man_id: string; step_id: string; status: StepStatus;
   self_initialed_at: string | null; ap_initial_by: string | null; ap_initialed_at: string | null;
+  /** AP column signed by a leader on the AP's behalf (0010), with the required reason. */
+  ap_override?: boolean; ap_override_reason?: string | null;
   leader_initial_by: string | null; leader_initialed_at: string | null;
   returned_at: string | null; returned_by: string | null; review_note: string | null;
   read_to_group: boolean; updated_at: string;

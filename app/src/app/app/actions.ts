@@ -27,6 +27,11 @@ export async function initialLeader(spId: string): Promise<S> {
 export async function returnStep(spId: string, _: S, form: FormData): Promise<S> {
   return done(await callRpc("return_step", { p_sp: spId, p_note: String(form.get("note") ?? "") }), "Returned with your note.");
 }
+/** Leader signs the AP column on the AP's behalf (reason required; another leader gives the leader initials). */
+export async function overrideAp(spId: string, _: S, form: FormData): Promise<S> {
+  return done(await callRpc("leader_override_ap", { p_sp: spId, p_reason: String(form.get("reason") ?? "") }),
+    "AP sign-off given as a leader override. Another leader gives the leader initials.");
+}
 export async function setReadToGroup(spId: string, value: boolean): Promise<S> {
   return done(await callRpc("set_read_to_group", { p_sp: spId, p_value: value }));
 }

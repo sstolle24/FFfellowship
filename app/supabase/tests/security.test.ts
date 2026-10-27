@@ -1032,3 +1032,60 @@ describe("Steven's feedback (0009): 90 in 90, takeaways, outside sponsors, The P
     await expect(as(man, (c) => c.query(`insert into fishing_weeks (man_id, week_start) values ($1, '2020-01-06')`, [man]))).rejects.toThrow(/permission denied/);
   });
 });
+
+describe("leader override of AP authorization (0010)", () => {
+  let man: string, ap: string, item: string;
+  beforeAll(async () => {
+    man = await newUser("Yuri"); ap = await newUser("Yves");
+    for (const x of [man, ap]) await rpc(LEADER, "approve_member", x, LEADER);
+    await rpc(LEADER, "leader_create_relationship", ap, man, "ap");
+    const step = await stepId("key_2", 6);
+    const [r] = await admin(`insert into step_progress (man_id, step_id, status, self_initialed_at) values ($1,$2,'self_initialed',now())
+      on conflict (man_id, step_id) do update set status = 'self_initialed', self_initialed_at = now() returning id`, [man, step]);
+    item = r.id;
+  });
+
+  it("only leaders, with a reason, on someone else's item that's waiting on the AP", async () => {
+    await expect(rpc(ap, "leader_override_ap", item, "busy")).rejects.toThrow(/Leaders only/);
+    await expect(rpc(STRANGER, "leader_override_ap", item, "busy")).rejects.toThrow(/Leaders only/);
+    await expect(rpc(LEADER, "leader_override_ap", item, "   ")).rejects.toThrow(/reason/);
+    const own = await admin(`insert into step_progress (man_id, step_id, status) values ($1,$2,'self_initialed')
+      on conflict (man_id, step_id) do update set status = 'self_initialed' returning id`, [LEADER2, await stepId("key_2", 7)]);
+    await expect(rpc(LEADER2, "leader_override_ap", own[0].id, "x")).rejects.toThrow(/your own item/);
+    const welcome = await sp(man, "welcome", null);
+    await expect(rpc(LEADER, "leader_override_ap", welcome.id, "x")).rejects.toThrow(/no AP column|own initials/);
+  });
+
+  it("signs the AP column as a marked override, tells his AP, and is audited", async () => {
+    const r = await rpc(LEADER, "leader_override_ap", item, "AP traveling for two weeks");
+    expect(r.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: "ap_overridden", man_id: man, leader_id: LEADER, reason: "AP traveling for two weeks" }),
+      expect.objectContaining({ type: "leader_review_needed", man_id: man }),
+    ]));
+    const [s] = await rows(man, `select status, ap_initial_by, ap_override, ap_override_reason from step_progress where id = $1`, [item]);
+    expect(s).toEqual({ status: "ap_initialed", ap_initial_by: LEADER, ap_override: true, ap_override_reason: "AP traveling for two weeks" });
+    expect((await admin(`select count(*)::int n from audit_log where action = 'ap_override' and target_id = $1`, [item]))[0].n).toBe(1);
+    // Members can't set the flag themselves.
+    await expect(rows(man, `update step_progress set ap_override = true where id = $1`, [item])).rejects.toThrow(/permission denied/);
+  });
+
+  it("two-person rule: the overriding leader can't also give leader initials; another leader can", async () => {
+    await expect(rpc(LEADER, "initial_leader", item)).rejects.toThrow(/different leader/);
+    await rpc(LEADER2, "initial_leader", item);
+    expect((await admin(`select status from step_progress where id = $1`, [item]))[0].status).toBe("leader_initialed");
+  });
+
+  it("the override flag clears when the AP column is cleared (returned and re-initialed)", async () => {
+    const step = await stepId("key_2", 8);
+    const [r] = await admin(`insert into step_progress (man_id, step_id, status, self_initialed_at) values ($1,$2,'self_initialed',now())
+      on conflict (man_id, step_id) do update set status = 'self_initialed' returning id`, [man, step]);
+    await rpc(LEADER, "leader_override_ap", r.id, "AP unreachable");
+    await rpc(LEADER2, "return_step", r.id, "Need the receipt for both books");
+    const [s] = await admin(`select status, ap_override, ap_override_reason from step_progress where id = $1`, [r.id]);
+    expect(s).toEqual({ status: "returned", ap_override: false, ap_override_reason: null });
+    // His own AP signs normally next time — no override flag.
+    await rpc(man, "initial_self", r.id);
+    await rpc(ap, "initial_ap", r.id);
+    expect((await admin(`select ap_override from step_progress where id = $1`, [r.id]))[0].ap_override).toBe(false);
+  });
+});

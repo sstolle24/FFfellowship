@@ -1,6 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import { returnStep, saveAnswers, submitText } from "@/app/app/actions";
+import { overrideAp, returnStep, saveAnswers, submitText } from "@/app/app/actions";
 import { FormMessage, Submit } from "@/components/forms";
 import { Badge, Card } from "@/components/ui";
 import type { WorksheetQuestion } from "@/lib/types";
@@ -45,6 +45,27 @@ export function TextTurnIn({ spId }: { spId: string }) {
       <Submit variant="ghost">Turn in typed version</Submit>
       <FormMessage state={state} />
     </form>
+  );
+}
+
+/** Leader override of the AP sign-off (reason required). */
+export function OverrideApForm({ spId, man }: { spId: string; man: string }) {
+  const [state, run] = useActionState(overrideAp.bind(null, spId), undefined);
+  return (
+    <Card>
+      <form action={run} className="space-y-2">
+        <h2 className="text-lg text-gold">Override AP sign-off</h2>
+        <p className="text-sm text-muted">
+          Use when {man}&apos;s AP or sponsor can&apos;t sign. Your name and reason are recorded, his AP is told, and a
+          different leader gives the leader initials.
+        </p>
+        <label className="lbl" htmlFor="override-reason">Reason (required)</label>
+        <textarea id="override-reason" name="reason" required className="field min-h-20" maxLength={500}
+          placeholder="e.g. AP traveling for two weeks; reviewed the work with him myself" />
+        <Submit variant="ghost" confirm={`Sign ${man}'s AP column as a leader override?`}>Sign as leader (override AP)</Submit>
+        <FormMessage state={state} />
+      </form>
+    </Card>
   );
 }
 

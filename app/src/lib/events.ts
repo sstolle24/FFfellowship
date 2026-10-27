@@ -64,6 +64,8 @@ async function handle(e: RpcEvent) {
       if (!to.length) to = await leadersFor(man); // Key 1 fallback: primary leader confirms
       return send(to, "ap_signoff_needed", { man: manName, step });
     }
+    case "ap_overridden":
+      return send(await mentorsOf(man!), "ap_overridden", { man: manName, leader: await nameOf(e.leader_id), step, reason: e.reason as string });
     case "leader_review_needed":
       return send(await leadersFor(man), "leader_review_needed", { man: manName, step });
     case "approved":

@@ -38,6 +38,13 @@ export default async function Review() {
       && !hasMentor(p.man_id) && p.man_id !== me.id && (!m?.primary_leader_id || m.primary_leader_id === me.id);
   });
 
+  // Items waiting on the AP column (his AP/sponsor hasn't signed). A leader can override from the item page.
+  const fallbackIds = new Set(key1Fallback.map((p) => p.id));
+  const waitingOnAp = (prog ?? []).filter((p) => {
+    const s = step.get(p.step_id);
+    return p.man_id !== me.id && p.status === "self_initialed" && s && ["self_ap", "triple"].includes(s.gate_type) && !fallbackIds.has(p.id);
+  }).sort((a, b) => (a.self_initialed_at ?? "").localeCompare(b.self_initialed_at ?? ""));
+
   const k2Count = new Map<string, number>();
   for (const p of prog ?? []) if (p.status === "leader_initialed" && mod(p.step_id)?.key === "key_2") k2Count.set(p.man_id, (k2Count.get(p.man_id) ?? 0) + 1);
   const readyKey2 = [...k2Count.entries()].filter(([id, n]) => n === 21 && id !== me.id
@@ -96,6 +103,28 @@ export default async function Review() {
           {key1Fallback.map((p) => (
             <Link key={p.id} href={`/app/step/${p.id}`} className="mb-2 block"><Card className="p-3 hover:border-gold">{name(p.man_id)} — {step.get(p.step_id)?.title}</Card></Link>
           ))}
+        </section>
+      )}
+
+      {waitingOnAp.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-lg text-gold">Waiting on AP ({waitingOnAp.length})</h2>
+          <p className="mb-2 text-sm text-muted">His AP or sponsor hasn&apos;t signed yet. If they can&apos;t, open the item to override the AP sign-off (reason required).</p>
+          <div className="space-y-2">
+            {waitingOnAp.map((p) => {
+              const s = step.get(p.step_id)!;
+              const days = relDays(p.self_initialed_at) ?? 0;
+              return (
+                <Link key={p.id} href={`/app/step/${p.id}`} className="block">
+                  <Card className="flex flex-wrap items-center gap-x-4 gap-y-1 p-3 hover:border-gold">
+                    <span className="display min-w-0 basis-full break-words text-ink sm:basis-56 sm:shrink-0">{name(p.man_id)}</span>
+                    <span className="min-w-0 flex-1 break-words">{s.item_number ? `#${s.item_number} ` : ""}{s.title}</span>
+                    {days >= 7 ? <Badge tone="danger">{days}d waiting</Badge> : <span className="text-xs text-muted">{days}d waiting</span>}
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
         </section>
       )}
 
