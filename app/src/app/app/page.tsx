@@ -7,6 +7,7 @@ import { Card, LinkButton, Notice, Stat, SectionTitle, Badge } from "@/component
 import { PanicButton } from "@/components/PanicButton";
 import { STAGE_LABEL, type Meeting } from "@/lib/types";
 import { env } from "@/lib/env";
+import { ninetyCount, ninetyStart } from "@/lib/ninety";
 
 export const metadata = { title: "Dashboard" };
 
@@ -51,9 +52,11 @@ export default async function Dashboard() {
   const name = (id: string) => cards?.find((c) => c.id === id)?.first_name ?? "—";
   const ap = myMentors.find((r) => r.type === "ap");
   const sponsor = myMentors.find((r) => r.type !== "ap" && r.mentee_id === me.id);
+  const { data: outside } = sponsor ? { data: null } : await supabase.from("outside_sponsors").select("name, status")
+    .eq("man_id", me.id).in("status", ["approved", "pending"]).maybeSingle();
 
   const days = dayCount(me.sobriety_start_date, tz);
-  const ninety = Math.min(90, (logs.data ?? []).filter((l) => !me.program_start_date || l.date >= me.program_start_date).length);
+  const ninety = ninetyCount(logs.data ?? [], ninetyStart(me));
   const next = nextStep(program);
   const signal = env.signalGroupUrl();
 
@@ -82,9 +85,9 @@ export default async function Dashboard() {
           <h2 className="text-lg text-gold">Your men</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex justify-between"><dt className="text-muted">Accountability partner</dt><dd>{ap ? name(ap.mentee_id === me.id ? ap.mentor_id : ap.mentee_id) : <Link href="/app/sponsor" className="text-gold underline">Find an AP</Link>}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Sponsor</dt><dd>{sponsor ? name(sponsor.mentor_id) : <Link href="/app/sponsor" className="text-gold underline">Find a sponsor</Link>}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Sponsor</dt><dd>{sponsor ? name(sponsor.mentor_id) : outside ? <>{outside.name}{outside.status === "pending" && <span className="text-muted"> (awaiting approval)</span>}</> : <Link href="/app/sponsor" className="text-gold underline">Find a sponsor</Link>}</dd></div>
           </dl>
-          {!sponsor && me.program_start_date && daysBetween(me.program_start_date, today) >= 60 && (
+          {!sponsor && outside?.status !== "approved" && me.program_start_date && daysBetween(me.program_start_date, today) >= 60 && (
             <p className="mt-3 text-sm text-orange">Key 2 #18: you need a sponsor or temporary sponsor by day 90.</p>
           )}
         </Card>

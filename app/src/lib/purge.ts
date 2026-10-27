@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 /** Tables holding a man's own records, removed when his deleted account is purged. */
 export const PURGE_TABLES = [
   "submissions", "worksheet_answers", "journal_entries", "video_progress", "meeting_logs",
-  "fishing_contacts", "panic_events", "match_requests",
+  "fishing_contacts", "panic_events", "match_requests", "fishing_weeks", "outside_sponsors",
 ] as const;
 
 /**

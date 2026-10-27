@@ -4,6 +4,7 @@ import { loadProgram } from "@/lib/program";
 import { initialerNames } from "@/lib/names";
 import { ProgramView } from "@/components/ProgramView";
 import { ProgramSummary } from "@/components/ProgramSummary";
+import { ninetyCount, ninetyStart } from "@/lib/ninety";
 import { SectionTitle } from "@/components/ui";
 
 export const metadata = { title: "My Program" };
@@ -17,7 +18,7 @@ export default async function MyProgram() {
     supabase.from("app_settings").select("value").eq("key", "key2_closing").maybeSingle(),
     supabase.from("meeting_logs").select("date").eq("man_id", me.id).eq("counts_90", true),
   ]);
-  const ninety = Math.min(90, (logs ?? []).filter((l) => !me.program_start_date || l.date >= me.program_start_date).length);
+  const ninety = ninetyCount(logs ?? [], ninetyStart(me));
   return (
     <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_20rem] xl:items-start xl:gap-8">
       <div className="min-w-0">

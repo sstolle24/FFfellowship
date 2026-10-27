@@ -4,7 +4,7 @@ import { requireLeader } from "@/lib/auth";
 import { fmtDateTime, relDays } from "@/lib/time";
 import { ActionButton } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
-import { awardCertifiedAnother, certifyKey2 } from "../actions";
+import { awardCertifiedAnother, certifyKey2, reviewOutsideSponsor } from "../actions";
 
 export const metadata = { title: "Review Queue" };
 
@@ -18,6 +18,8 @@ export default async function Review() {
     db.from("relationships").select("mentor_id, mentee_id, type, mutual, status"),
     db.from("milestones").select("man_id, type, related_man_id"),
   ]);
+  const { data: outsideAll } = await db.from("outside_sponsors").select("*").eq("status", "pending").order("created_at");
+  const outside = (outsideAll ?? []).filter((o) => o.man_id !== me.id); // another leader approves his own
   const step = new Map((steps ?? []).map((s) => [s.id, s]));
   const mod = (id: string) => (step.get(id)?.program_modules as unknown as { key: string; title: string } | null);
   const name = (id: string) => { const m = men?.find((x) => x.id === id); return m?.display_name || m?.first_name || "?"; };
@@ -93,6 +95,23 @@ export default async function Review() {
           <p className="mb-2 text-sm text-muted">These men have no active AP or sponsor, so their primary leader confirms Key 1.</p>
           {key1Fallback.map((p) => (
             <Link key={p.id} href={`/app/step/${p.id}`} className="mb-2 block"><Card className="p-3 hover:border-gold">{name(p.man_id)} — {step.get(p.step_id)?.title}</Card></Link>
+          ))}
+        </section>
+      )}
+
+      {outside.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-lg text-gold">Outside sponsors — approve as an exception</h2>
+          <p className="mb-2 text-sm text-muted">Sponsors who aren&apos;t in Finally Free. Once approved, they count for Key 2 #18.</p>
+          {outside.map((o) => (
+            <Card key={o.id} className="mb-2 flex flex-wrap items-center gap-3 p-3 text-sm">
+              <span className="min-w-0 flex-1 break-words">
+                <Link href={`/leader/men/${o.man_id}`} className="display hover:text-gold">{name(o.man_id)}</Link>
+                <span className="text-muted"> — {o.name}{o.phone ? ` · ${o.phone}` : ""}{o.email ? ` · ${o.email}` : ""}{o.notes ? ` · ${o.notes}` : ""}</span>
+              </span>
+              <ActionButton run={reviewOutsideSponsor.bind(null, o.id, true)} confirm={`Approve ${o.name} as ${name(o.man_id)}'s sponsor?`}>Approve</ActionButton>
+              <ActionButton variant="quiet" run={reviewOutsideSponsor.bind(null, o.id, false)} confirm="Decline this sponsor?">Decline</ActionButton>
+            </Card>
           ))}
         </section>
       )}

@@ -936,3 +936,99 @@ describe("videos and Key 1 reflections (0008)", () => {
     expect((await sp(man, "key_1", null, 1)).status).toBe("open");
   });
 });
+
+describe("Steven's feedback (0009): 90 in 90, takeaways, outside sponsors, The Path", () => {
+  let man: string, ap: string;
+  const day = (offset: number) => {
+    const d = new Date(); d.setUTCDate(d.getUTCDate() + offset); return d.toISOString().slice(0, 10);
+  };
+  beforeAll(async () => {
+    man = await newUser("Xavier"); ap = await newUser("Xan");
+    for (const x of [man, ap]) await rpc(LEADER, "approve_member", x, LEADER);
+    await admin(`update profiles set timezone = 'UTC' where id in ($1, $2)`, [man, ap]);
+    await rpc(LEADER, "leader_create_relationship", ap, man, "ap");
+  });
+
+  it("90 in 90: he sets his own start date, up to 90 days back — never in the future", async () => {
+    await expect(rpc(man, "set_ninety_start", day(1))).rejects.toThrow(/future/);
+    await expect(rpc(man, "set_ninety_start", day(-91))).rejects.toThrow(/90 days back/);
+    await rpc(man, "set_ninety_start", day(-26));
+    expect((await admin(`select ninety_start_date::text d from profiles where id = $1`, [man]))[0].d).toBe(day(-26));
+    // Not editable directly (only through the function).
+    await expect(rows(man, `update profiles set ninety_start_date = $2 where id = $1`, [man, day(-300)])).rejects.toThrow(/permission denied/);
+    await expect(rpc(PENDING, "set_ninety_start", day(-5))).rejects.toThrow(/approved/);
+  });
+
+  it("90 in 90: past meetings can be logged (kept with their real date); future ones can't", async () => {
+    const [m] = await admin(`select id from meetings limit 1`);
+    for (let i = 26; i >= 1; i--) await rpc(man, "log_meeting", day(-i), i % 2 ? m.id : null, i % 2 ? null : "SA Tuesday", null, true, null, null, false);
+    expect(await rows(man, `select * from meeting_logs where man_id = $1 and counts_90`, [man])).toHaveLength(26);
+    await expect(rpc(man, "log_meeting", day(3), m.id, null, null, true, null, null, false)).rejects.toThrow(/future/);
+    await expect(as(man, (c) => c.query(`insert into meeting_logs (man_id, date, other_name) values ($1, $2, 'x')`, [man, day(5)])))
+      .rejects.toThrow(/future/);
+    await expect(rpc(man, "log_meeting", day(0), null, "  ", null, true, null, null, false)).rejects.toThrow(/Pick a Finally Free meeting/);
+    // Logged today for a meeting 20 days ago: the app can show it as "added later".
+    const [r] = await rows(man, `select (created_at::date - date) as late from meeting_logs where man_id = $1 and date = $2`, [man, day(-20)]);
+    expect(r.late).toBe(20);
+  });
+
+  it("Notes / takeaways: logging a meeting can save a linked journal entry (shared → his AP sees it)", async () => {
+    const r = await rpc(man, "log_meeting", day(0), null, "SA Downtown", "Zoom", true, "Honesty is the root.", "Call before, not after", true);
+    const [j] = await rows(man, `select body, key_insight, meeting_log_id, shared_with_mentors from journal_entries where id = $1`, [r.journal_id]);
+    expect(j).toEqual({ body: "Honesty is the root.", key_insight: "Call before, not after", meeting_log_id: r.id, shared_with_mentors: true });
+    expect(await rows(ap, `select id from journal_entries where id = $1`, [r.journal_id])).toHaveLength(1);
+    const p = await rpc(man, "log_meeting", day(0), null, "SA Downtown", null, true, "Private takeaway", null, false);
+    expect(await rows(ap, `select id from journal_entries where id = $1`, [p.journal_id])).toHaveLength(0);
+    expect(await rows(STRANGER, `select id from journal_entries where man_id = $1`, [man])).toHaveLength(0);
+  });
+
+  it("outside sponsor: he enters it, a leader approves; only he and leaders see the contact", async () => {
+    const r = await rpc(man, "submit_outside_sponsor", "Bob (SA)", "555-0142", "", "SA sponsor, 9 years");
+    expect(r.events).toEqual([expect.objectContaining({ type: "outside_sponsor_submitted", man_id: man })]);
+    await expect(rpc(man, "submit_outside_sponsor", "Another", "", "", "")).rejects.toThrow(/already have/);
+    expect((await rows(man, `select status from outside_sponsors where man_id = $1`, [man]))[0].status).toBe("pending");
+    for (const who of [ap, STRANGER]) expect(await rows(who, `select * from outside_sponsors where man_id = $1`, [man]), who).toHaveLength(0);
+    await expect(rows(man, `update outside_sponsors set status = 'approved' where man_id = $1`, [man])).rejects.toThrow(/permission denied/);
+    await expect(rpc(man, "review_outside_sponsor", r.id, true, null)).rejects.toThrow(/Leaders only/);
+    const ev = await rpc(LEADER, "review_outside_sponsor", r.id, true, "OK — SA sponsor");
+    expect(ev.events[0]).toMatchObject({ type: "outside_sponsor_reviewed", man_id: man, approved: true });
+    expect((await rows(LEADER, `select status, reviewed_by from outside_sponsors where id = $1`, [r.id]))[0])
+      .toEqual({ status: "approved", reviewed_by: LEADER });
+    // A leader can't approve his own outside sponsor.
+    const own = await rpc(LEADER2, "submit_outside_sponsor", "Leader's sponsor", "", "", "");
+    await expect(rpc(LEADER2, "review_outside_sponsor", own.id, true, null)).rejects.toThrow(/Another leader/);
+    await rpc(LEADER, "review_outside_sponsor", own.id, false, "Use an FF sponsor");
+    // He can end it and enter another.
+    await rpc(man, "end_outside_sponsor", r.id);
+    await rpc(man, "submit_outside_sponsor", "Bob (SA)", "555-0142", "", "");
+    expect((await rpc(man, "export_my_data")).outside_sponsors).toHaveLength(2);
+  });
+
+  it("The Path: no gate before Key 1 is done; after it, every week until he commits his 3", async () => {
+    expect((await rpc(man, "path_gate")).required).toBe(false); // still in Module 0 / Key 1
+    expect((await rpc(PENDING, "path_gate")).required).toBe(false);
+    await admin(`update profiles set stage = 'key_2' where id = $1`, [man]);
+    const g = await rpc(man, "path_gate");
+    expect(g).toMatchObject({ required: true });
+    expect(new Date(g.week_start + "T12:00:00Z").getUTCDay()).toBe(1); // weeks start on Monday
+    await expect(rpc(man, "commit_fishing_week")).rejects.toThrow(/Name all 3/);
+    await as(man, async (c) => {
+      for (const [slot, name] of [[1, "Tom"], [2, "Rick"]] as const)
+        await c.query(`insert into fishing_contacts (man_id, week_start, slot, name) values ($1, $2, $3, $4)`, [man, g.week_start, slot, name]);
+    });
+    await expect(rpc(man, "commit_fishing_week")).rejects.toThrow(/Name all 3/);
+    await as(man, (c) => c.query(`insert into fishing_contacts (man_id, week_start, slot, name, note) values ($1, $2, 3, 'Harry', 'Coffee Tuesday')`, [man, g.week_start]));
+    await rpc(man, "commit_fishing_week");
+    expect((await rpc(man, "path_gate")).required).toBe(false);
+    // Committed names stay; the plan can still be updated (upsert path included).
+    await expect(as(man, (c) => c.query(`update fishing_contacts set name = 'Someone else' where man_id = $1 and slot = 1`, [man]))).rejects.toThrow(/committed/);
+    await expect(as(man, (c) => c.query(`delete from fishing_contacts where man_id = $1 and slot = 2`, [man]))).rejects.toThrow(/committed/);
+    await as(man, (c) => c.query(`insert into fishing_contacts (man_id, week_start, slot, name, method, note) values ($1, $2, 1, 'Tom', 'Call', 'Call him Wednesday')
+      on conflict (man_id, week_start, slot) do update set method = excluded.method, note = excluded.note`, [man, g.week_start]));
+    expect((await rows(man, `select note from fishing_contacts where man_id = $1 and slot = 1`, [man]))[0].note).toBe("Call him Wednesday");
+    // His AP can see that he committed; strangers can't.
+    expect(await rows(ap, `select * from fishing_weeks where man_id = $1`, [man])).toHaveLength(1);
+    expect(await rows(STRANGER, `select * from fishing_weeks where man_id = $1`, [man])).toHaveLength(0);
+    await expect(as(man, (c) => c.query(`insert into fishing_weeks (man_id, week_start) values ($1, '2020-01-06')`, [man]))).rejects.toThrow(/permission denied/);
+  });
+});

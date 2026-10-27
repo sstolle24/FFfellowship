@@ -58,6 +58,16 @@ export const TEMPLATES = {
     body: () => `A brother has posted on the Sponsor Board.\n\n${app("/app/sponsor")}`,
     pref: "sponsor_board",
   },
+  outside_sponsor_submitted: {
+    subject: (v) => `${v.man} entered a sponsor from outside Finally Free`,
+    body: (v) => `${v.man} recorded a sponsor who isn't in Finally Free. Approve it (or not) in the Review Queue.\n\n${app("/leader/review")}`,
+  },
+  outside_sponsor_reviewed: {
+    subject: (v) => (v.approved === "yes" ? "Your sponsor is approved" : "About the sponsor you entered"),
+    body: (v) => v.approved === "yes"
+      ? `${v.first}, a leader approved the sponsor you entered. It now counts for Key 2 #18.\n\n${app("/app/ninety")}`
+      : `${v.first}, a leader didn't approve the sponsor you entered. Talk with your leader, or find a sponsor in the Fellowship.\n\n${app("/app/sponsor")}`,
+  },
   match_open_7d: {
     subject: (v) => `${v.man}'s ${v.kind} request has been open 7 days`,
     body: () => `This request still needs a match.\n\n${app("/leader/matching")}`,

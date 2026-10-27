@@ -98,22 +98,51 @@ const Log = z.object({
   meeting_id: z.string().uuid().optional().or(z.literal("")),
   other_name: z.string().trim().max(120).optional(),
   location: z.string().trim().max(120).optional(),
-  notes: z.string().trim().max(2000).optional(),
+  takeaway: z.string().trim().max(20000).optional(),
+  key_insight: z.string().trim().max(500).optional(),
 });
+/** Logs a meeting; the optional "Notes / takeaways" become a journal entry linked to it. */
 export async function addMeetingLog(_: S, form: FormData): Promise<S> {
-  const me = await getMe();
-  if (!me) return { error: "Sign in first." };
   const p = Log.safeParse(Object.fromEntries(form));
   if (!p.success) return { error: "Check the date and meeting." };
   if (!p.data.meeting_id && !p.data.other_name) return { error: "Pick a Finally Free meeting or name the SA meeting." };
+  return done(await callRpc("log_meeting", {
+    p_date: p.data.date, p_meeting: p.data.meeting_id || null, p_other: p.data.other_name || null,
+    p_location: p.data.location || null, p_counts: form.get("counts_90") === "on",
+    p_takeaway: p.data.takeaway || null, p_insight: p.data.key_insight || null, p_share: form.get("shared") === "on",
+  }), "Logged.");
+}
+
+/** His own 90-in-90 start date (may be before he joined — up to 90 days back). */
+export async function setNinetyStart(_: S, form: FormData): Promise<S> {
+  return done(await callRpc("set_ninety_start", { p_date: String(form.get("ninety_start") ?? "") || null }), "Start date saved.");
+}
+
+/** Home group, from the 90 in 90 page (Key 2 #10). */
+export async function saveHomeGroup(_: S, form: FormData): Promise<S> {
+  const me = await getMe();
+  if (!me) return { error: "Sign in first." };
   const supabase = await supabaseServer();
-  const { error } = await supabase.from("meeting_logs").insert({
-    man_id: me.id, date: p.data.date, meeting_id: p.data.meeting_id || null,
-    other_name: p.data.other_name || null, location: p.data.location || null, notes: p.data.notes || null,
-    counts_90: form.get("counts_90") === "on",
-  });
+  const home = String(form.get("home_group") ?? "").trim().slice(0, 80) || null;
+  const { error } = await supabase.from("profiles").update({ home_group: home }).eq("id", me.id);
   revalidatePath("/app", "layout");
-  return error ? { error: error.message } : { ok: "Logged." };
+  return error ? { error: error.message } : { ok: home ? "Home group saved." : "Home group cleared." };
+}
+
+/** A sponsor who isn't in Finally Free — counts once a leader approves it. */
+export async function submitOutsideSponsor(_: S, form: FormData): Promise<S> {
+  return done(await callRpc("submit_outside_sponsor", {
+    p_name: String(form.get("name") ?? ""), p_phone: String(form.get("phone") ?? ""),
+    p_email: String(form.get("email") ?? ""), p_notes: String(form.get("notes") ?? ""),
+  }), "Sent to your leaders for approval.");
+}
+export async function endOutsideSponsor(id: string): Promise<S> {
+  return done(await callRpc("end_outside_sponsor", { p_id: id }), "Removed.");
+}
+
+/** "The Path": commit this week's 3 men. */
+export async function commitFishingWeek(): Promise<S> {
+  return done(await callRpc("commit_fishing_week"), "Committed. See you at The Path on Monday night.");
 }
 export async function deleteMeetingLog(id: string): Promise<S> {
   const supabase = await supabaseServer();

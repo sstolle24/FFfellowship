@@ -6,6 +6,7 @@ import { STAGE_LABEL, type Stage } from "@/lib/types";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
 import { acceptOffer, closeRequest, offerMatch, requestMatch } from "../actions";
+import { SponsorStatus } from "@/components/SponsorStatus";
 
 export const metadata = { title: "Find a Sponsor / AP" };
 
@@ -25,6 +26,8 @@ export default async function SponsorPage() {
       <SectionTitle sub="Key 2 #16: get an accountability partner and talk daily. #18: have a sponsor or temporary sponsor by day 90.">
         Find a Sponsor / AP
       </SectionTitle>
+
+      <SponsorStatus manId={me.id} />
 
       {open.length > 0 && (
         <section className="space-y-3">

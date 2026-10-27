@@ -215,7 +215,11 @@ async function helperInfo(db: Db, step: ProgramStep, manId: string, man: { home_
       .or(`mentee_id.eq.${manId},and(mentor_id.eq.${manId},mutual.eq.true)`);
     const match = (data ?? []).filter((r) => (rel === "ap" ? r.type === "ap" : r.type !== "ap" && r.mentee_id === manId));
     const names = await namesFor(db, match.map((r) => (r.mentee_id === manId ? r.mentor_id : r.mentee_id)));
-    const list = Object.values(names).join(", ");
+    let list = Object.values(names).join(", ");
+    if (rel !== "ap") {
+      const { data: outside } = await db.from("outside_sponsors").select("name, status").eq("man_id", manId).in("status", ["approved", "pending"]);
+      for (const o of outside ?? []) list = [list, `${o.name} (outside FF${o.status === "pending" ? ", waiting for a leader's approval" : ", approved"})`].filter(Boolean).join(", ");
+    }
     return list ? `${rel === "ap" ? "AP" : "Sponsor"} on file: ${list}.` : `No active ${rel === "ap" ? "AP" : "sponsor"} yet — use Find a Sponsor / AP.`;
   }
   if (h === "mentee_linked") {

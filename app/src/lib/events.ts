@@ -91,6 +91,10 @@ async function handle(e: RpcEvent) {
       }
       return;
     }
+    case "outside_sponsor_submitted":
+      return send(await leadersFor(man), "outside_sponsor_submitted", { man: manName, man_id: man });
+    case "outside_sponsor_reviewed":
+      return send([man!], "outside_sponsor_reviewed", { approved: e.approved ? "yes" : "no" });
     case "panic": {
       const { data } = await supabaseService().from("profiles").select("phone, contact_sharing(share_phone)").eq("id", man!).single();
       const cs = data?.contact_sharing as unknown as { share_phone: boolean } | null;

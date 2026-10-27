@@ -120,3 +120,9 @@ export async function saveVideoLink(videoId: string, _: S, form: FormData): Prom
   revalidatePath("/app/program");
   return r.ok ? { ok: "Saved." } : { error: r.error };
 }
+
+/** Approve or decline a man's outside (non-FF) sponsor. */
+export async function reviewOutsideSponsor(id: string, approve: boolean): Promise<S> {
+  return done(await callRpc("review_outside_sponsor", { p_id: id, p_approve: approve, p_note: null }),
+    approve ? "Approved — it now counts as his sponsor." : "Declined.");
+}

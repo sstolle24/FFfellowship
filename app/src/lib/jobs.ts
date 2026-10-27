@@ -2,6 +2,7 @@ import "server-only";
 import { supabaseService } from "@/lib/supabase/server";
 import { sendTemplate } from "@/lib/email";
 import { purgeDeletedAccount } from "@/lib/purge";
+import { ninetyCount, ninetyStart } from "@/lib/ninety";
 import { daysBetween, todayIn, weekStart } from "@/lib/time";
 
 const SOBRIETY_MILESTONES = [7, 30, 60, 90, 365];
@@ -9,23 +10,27 @@ const DAY = 86_400_000;
 
 type P = {
   id: string; first_name: string; timezone: string; role: string; status: string; primary_leader_id: string | null;
-  sobriety_start_date: string | null; program_start_date: string | null; last_active_at: string; stage: string;
+  sobriety_start_date: string | null; program_start_date: string | null; ninety_start_date: string | null;
+  last_active_at: string; stage: string;
 };
 
 async function base() {
   const db = supabaseService();
   const [{ data: people }, { data: rels }] = await Promise.all([
-    db.from("profiles").select("id, first_name, timezone, role, status, primary_leader_id, sobriety_start_date, program_start_date, last_active_at, stage")
+    db.from("profiles").select("id, first_name, timezone, role, status, primary_leader_id, sobriety_start_date, program_start_date, ninety_start_date, last_active_at, stage")
       .eq("status", "active").is("deleted_at", null),
     db.from("relationships").select("mentor_id, mentee_id, type, mutual").eq("status", "active"),
   ]);
+  const { data: outside } = await db.from("outside_sponsors").select("man_id").eq("status", "approved");
   const men = (people as P[]) ?? [];
   const leaders = men.filter((p) => ["leader", "admin"].includes(p.role)).map((p) => p.id);
   const leadersFor = (p: P) => (p.primary_leader_id ? [p.primary_leader_id] : leaders);
   const mentorsOf = (id: string) => [...new Set((rels ?? [])
     .filter((r) => r.mentee_id === id || (r.mutual && r.mentor_id === id))
     .map((r) => (r.mentee_id === id ? r.mentor_id : r.mentee_id)))];
-  const hasSponsor = (id: string) => (rels ?? []).some((r) => r.mentee_id === id && r.type !== "ap");
+  // An FF sponsor, or an outside sponsor a leader approved.
+  const hasSponsor = (id: string) => (rels ?? []).some((r) => r.mentee_id === id && r.type !== "ap")
+    || (outside ?? []).some((o) => o.man_id === id);
   return { db, men, leaders, leadersFor, mentorsOf, hasSponsor };
 }
 
@@ -66,8 +71,8 @@ export async function runDaily() {
     }
 
     // 90 in 90 complete.
-    const count = (logs ?? []).filter((l) => l.man_id === p.id && (!p.program_start_date || l.date >= p.program_start_date)).length;
-    if (count >= 90) tick("ninety_complete", await sendTemplate(p.id, "ninety_complete", {}, { dedupeKey: p.program_start_date ?? "x" }));
+    const count = ninetyCount((logs ?? []).filter((l) => l.man_id === p.id), ninetyStart(p));
+    if (count >= 90) tick("ninety_complete", await sendTemplate(p.id, "ninety_complete", {}, { dedupeKey: ninetyStart(p) ?? "x" }));
   }
 
   // Match requests open 7+ days → leaders (once per request).
@@ -105,7 +110,7 @@ export async function runWeeklyMember() {
   let n = 0;
   for (const p of men) {
     const mine = (logs ?? []).filter((l) => l.man_id === p.id);
-    const ninety = mine.filter((l) => l.counts_90 && (!p.program_start_date || l.date >= p.program_start_date)).length;
+    const ninety = ninetyCount(mine, ninetyStart(p));
     const days = p.sobriety_start_date ? daysBetween(p.sobriety_start_date, todayIn(p.timezone)) : "not set";
     const openItems = (prog ?? []).filter((x) => x.man_id === p.id && ["open", "returned"].includes(x.status)).length;
     const ok = await sendTemplate(p.id, "weekly_member_summary", {

@@ -20,6 +20,8 @@ export interface Profile {
   status: Status;
   sobriety_start_date: string | null;
   program_start_date: string | null;
+  /** His own 90-in-90 start (may be before he joined); null = program start. */
+  ninety_start_date: string | null;
   primary_leader_id: string | null;
   stage: Stage;
   home_group: string | null;

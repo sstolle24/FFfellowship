@@ -3,12 +3,21 @@ import { requireUser, isLeader, isSponsorRole } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Logo } from "@/components/ui";
 import { NavLinks } from "@/components/NavLinks";
+import { PathGate } from "@/components/PathGate";
+import { env } from "@/lib/env";
 import { logOut } from "../(public)/auth-actions";
 
 export default async function MemberLayout({ children }: { children: React.ReactNode }) {
   const me = await requireUser();
   const supabase = await supabaseServer();
   await supabase.rpc("touch_activity");
+
+  // "The Path": after Key 1, his 3 men for the week must be named and committed first.
+  const { data: gate } = me.status === "active" ? await supabase.rpc("path_gate") : { data: null };
+  const path = gate as { required: boolean; week_start?: string } | null;
+  const { data: weekContacts } = path?.required
+    ? await supabase.from("fishing_contacts").select("slot, name, method, note").eq("man_id", me.id).eq("week_start", path.week_start!)
+    : { data: null };
 
   const active = me.status === "active";
   const links: [string, string][] = active
@@ -22,7 +31,8 @@ export default async function MemberLayout({ children }: { children: React.React
     : [["/app", "Dashboard"], ["/app/meetings", "Meetings"], ["/app/profile", "Profile & Privacy"]];
 
   return (
-    <div className="min-h-screen md:flex">
+    <>
+    <div className="min-h-screen md:flex" inert={path?.required || undefined}>
       <aside className="no-print border-b border-line bg-navy-2 md:sticky md:top-0 md:h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
         <div className="flex items-center gap-3 p-4">
           <Link href="/"><Logo size={36} priority /></Link>
@@ -42,5 +52,10 @@ export default async function MemberLayout({ children }: { children: React.React
         <div className="mx-auto w-full max-w-7xl">{children}</div>
       </main>
     </div>
+    {path?.required && (
+      <PathGate firstName={me.first_name} weekStart={path.week_start!} contacts={weekContacts ?? []}
+        signalUrl={env.signalGroupUrl()} logOut={logOut} />
+    )}
+    </>
   );
 }

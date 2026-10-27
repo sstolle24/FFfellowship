@@ -14,7 +14,9 @@ export default async function Pipeline() {
     db.from("relationships").select("mentor_id, mentee_id, type, mutual").eq("status", "active"),
     db.from("profiles").select("id", { count: "exact", head: true }).eq("status", "pending").is("deleted_at", null),
   ]);
-  const hasSponsor = (id: string) => (rels ?? []).some((r) => r.mentee_id === id && r.type !== "ap");
+  const { data: outside } = await db.from("outside_sponsors").select("man_id").eq("status", "approved");
+  const hasSponsor = (id: string) => (rels ?? []).some((r) => r.mentee_id === id && r.type !== "ap")
+    || (outside ?? []).some((o) => o.man_id === id);
   const hasAp = (id: string) => (rels ?? []).some((r) => r.type === "ap" && (r.mentee_id === id || r.mentor_id === id));
 
   return (

@@ -10,6 +10,7 @@ import { ProgramView } from "@/components/ProgramView";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, SectionTitle } from "@/components/ui";
 import { addNote, certifyKey2, deleteNote, endRel, setPrimaryLeader, setStatus } from "../../actions";
+import { addedLater, ninetyCount, ninetyStart } from "@/lib/ninety";
 
 export const metadata = { title: "Man detail" };
 
@@ -28,9 +29,11 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
     db.from("profiles").select("id, first_name").in("role", ["leader", "admin"]).eq("status", "active"),
     db.from("audit_log").select("*").eq("target_id", manId).order("at", { ascending: false }).limit(30),
     db.from("sobriety_resets").select("*").eq("man_id", manId).order("created_at", { ascending: false }),
-    db.from("meeting_logs").select("id").eq("man_id", manId).eq("counts_90", true),
+    db.from("meeting_logs").select("id, date, counts_90, created_at").eq("man_id", manId),
     db.from("panic_events").select("created_at").eq("man_id", manId).order("created_at", { ascending: false }).limit(5),
   ]);
+  const { data: outside } = await db.from("outside_sponsors").select("name, phone, status").eq("man_id", manId)
+    .in("status", ["pending", "approved"]).maybeSingle();
   const names = { ...(await initialerNames(db, program)), ...(await namesFor(db, [...new Set((rels ?? []).flatMap((r) => [r.mentor_id, r.mentee_id]))])) };
   const spAudit = await db.from("audit_log").select("*").in("target_id",
     program.modules.flatMap((m) => m.steps.map((s) => s.progress?.id)).filter(Boolean) as string[]).order("at", { ascending: false }).limit(40);
@@ -51,7 +54,9 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
           <p>Day count: <strong>{dayCount(man.sobriety_start_date, man.timezone) ?? "not set"}</strong></p>
           <p>Joined program: {fmtDate(man.program_start_date) || "—"}</p>
           <p>Last active: {relDays(man.last_active_at)}d ago</p>
-          <p>90 in 90: {Math.min(90, logs?.length ?? 0)}/90</p>
+          <p>90 in 90: {ninetyCount(logs ?? [], ninetyStart(man))}/90{man.ninety_start_date && <span className="text-muted"> · his start {fmtDate(man.ninety_start_date)}</span>}
+            {(logs ?? []).some(addedLater) && <span className="text-muted"> · {(logs ?? []).filter(addedLater).length} added later</span>}</p>
+          {outside && <p>Outside sponsor: {outside.name}{outside.phone ? ` · ${outside.phone}` : ""} <span className="text-muted">({outside.status})</span></p>}
           <p>{man.city ? `${man.city}, ` : ""}{man.country ?? ""} · {man.timezone}</p>
           <p className="text-muted">{man.email}{man.phone ? ` · ${man.phone}` : ""}</p>
           <p>Home group: {man.home_group || "—"} · Service: {man.service_position || "—"}</p>

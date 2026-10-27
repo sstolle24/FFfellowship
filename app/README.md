@@ -19,6 +19,7 @@ deploys separately from the `app/` folder.
 | `supabase/migrations/0006_function_defaults.sql` | New functions start with no EXECUTE for anon/authenticated/PUBLIC; each migration grants what it needs |
 | `supabase/migrations/0007_sequential_program.sql` | Sequential program: keys in order, assignments in order inside each key, background items, clear "Finish … first" refusals; re-sequences existing progress without undoing anything a man did |
 | `supabase/migrations/0008_videos_reflections.sql` | Video passcodes (leader-entered, readable only for a man's own unlocked videos), Key 3 movie gating, Key 1 one-page reflections, single `save_video` path |
+| `supabase/migrations/0009_ninety_sponsor_path.sql` | His own 90-in-90 start date, meeting Notes / takeaways, outside sponsors (leader-approved), weekly "The Path" commitment |
 | `supabase/seed/build_seed.py` → `seed.sql` | Program content generated **verbatim** from the 10-26 source docs (Key 1 worksheet, The 21, Bill's Story Parts 1 & 2) + the current meeting schedule (no Zoom links) |
 | `supabase/tests/` | Security + gate tests against a real Postgres (`npm run test:db`) |
 | `public/brand/`, `scripts/build_brand.py` | Self-hosted FF cross logo (1x/2x PNG + WebP). The script regenerates the logo, favicon, apple-touch-icon and Open Graph image from the source PNG |
@@ -31,7 +32,7 @@ deploys separately from the `app/` folder.
 ## Setup
 
 1. **Supabase project.** In the SQL editor run, in order:
-   `0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`, `0004_security_fixes.sql`, `0005_view_grants.sql`, `0006_function_defaults.sql`, `0007_sequential_program.sql`, `0008_videos_reflections.sql`, then `seed/seed.sql`.
+   `0001_schema.sql`, `0002_rls.sql`, `0003_functions.sql`, `0004_security_fixes.sql`, `0005_view_grants.sql`, `0006_function_defaults.sql`, `0007_sequential_program.sql`, `0008_videos_reflections.sql`, `0009_ninety_sponsor_path.sql`, then `seed/seed.sql`.
    (Or `supabase db push` with the CLI.) The migrations create the private `submissions` bucket.
 2. **Auth settings** (Supabase → Authentication):
    - Email provider on, "Confirm email" on.
@@ -89,6 +90,11 @@ submissions (rows or storage), an ended sponsor loses access immediately, anon c
 - **Assignments inside a key are sequential too**: Key 1 is Video 1 → 2 → 3 → Fishing worksheet → AP go-over; Key 2 is #1 → #21; Key 3 is
   Part 1 → Part 2. The next one opens when he has finished *his* part of every earlier one (his initials, which already require any turn-in or
   worksheet answers) — he doesn't wait for AP/leader initials to keep moving. A returned item never re-locks what follows.
+- **90 in 90** counts from his own start date (he can set it up to 90 days back, for a paper log begun before he joined), else
+  his program start. Meetings logged more than 3 days after they happened show "Added later" to him, his AP and leaders. No future dates.
+- **Outside sponsors**: a man can record a sponsor who isn't in Finally Free; it counts for Key 2 #18 (and the day-75 alert) once a leader approves it.
+- **The Path**: once Key 1 is done, each week (Monday–Sunday, his timezone) he names his 3 men on Fishing and commits them before he can use
+  the member area — a box he can't dismiss (Panic Button, Get Help and Log out stay reachable). Committed names lock for the week.
 - **Key 1 reflections**: a one-page reflection (typed and/or uploaded) on each of the 3 videos, required before that video counts as done.
   Visible to him, his active AP/sponsor and leaders (like turn-ins); leaders get the turn-in email. Key 3's Part 1 worksheet waits for the movie.
 - **Background items** (`program_steps.helper.background = true`) start when they open and don't hold back the next item:
