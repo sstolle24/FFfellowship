@@ -1,7 +1,9 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseServer, supabaseService } from "@/lib/supabase/server";
+import { sendTemplate } from "@/lib/email";
+import { env } from "@/lib/env";
 import { callRpc } from "@/lib/rpc";
 import { getMe } from "@/lib/auth";
 
@@ -128,4 +130,55 @@ export async function saveVideoLink(videoId: string, _: S, form: FormData): Prom
 export async function reviewOutsideSponsor(id: string, approve: boolean): Promise<S> {
   return done(await callRpc("review_outside_sponsor", { p_id: id, p_approve: approve, p_note: null }),
     approve ? "Approved — it now counts as his sponsor." : "Declined.");
+}
+
+// ───────────────────────── admin: member sign-in ─────────────────────────
+/**
+ * Changes the email he signs in with. The sign-in account changes first (it
+ * refuses an email another account uses); then his profile, with the admin
+ * check and audit in admin_set_member_email. Both addresses are told.
+ */
+export async function adminSetEmail(manId: string, _: S, form: FormData): Promise<S> {
+  const me = await getMe();
+  if (me?.role !== "admin" || me.status !== "active") return { error: "Only an admin can change a member's email." };
+  const email = z.string().trim().toLowerCase().email().max(254).safeParse(form.get("email"));
+  if (!email.success) return { error: "Enter a valid email address." };
+  const svc = supabaseService();
+  const { data: before } = await svc.auth.admin.getUserById(manId);
+  if (!before?.user) return { error: "Member not found." };
+  if (before.user.email?.toLowerCase() === email.data) return { error: "That is already his email." };
+
+  const { error: authErr } = await svc.auth.admin.updateUserById(manId, { email: email.data, email_confirm: true });
+  if (authErr) return { error: /already|exists|registered/i.test(authErr.message) ? "Another account already uses that email." : authErr.message };
+  const r = await callRpc("admin_set_member_email", { p_man: manId, p_email: email.data });
+  if (!r.ok) {
+    await svc.auth.admin.updateUserById(manId, { email: before.user.email, email_confirm: true });
+    return { error: r.error };
+  }
+  const old = (r.data?.old_email as string | null) ?? before.user.email;
+  await Promise.all([
+    sendTemplate(manId, "email_changed", { to: email.data }).catch(() => false),
+    old ? sendTemplate(manId, "email_changed", { to: email.data }, { toAddress: old }).catch(() => false) : null,
+  ]);
+  revalidatePath(`/leader/men/${manId}`);
+  revalidatePath("/leader/members");
+  return { ok: `Email changed to ${email.data}. He signs in with it now; both addresses were told.` };
+}
+
+/**
+ * Password reset link for him: emailed to him, or returned for the admin to copy
+ * and text. One use, expires in an hour; opening it signs him in to set a new password.
+ */
+export async function adminResetLink(manId: string, how: "emailed" | "copied"): Promise<{ ok?: string; error?: string; link?: string }> {
+  const me = await getMe();
+  if (me?.role !== "admin" || me.status !== "active") return { error: "Only an admin can send a password reset." };
+  const r = await callRpc("admin_password_reset", { p_man: manId, p_how: how });
+  if (!r.ok) return { error: r.error };
+  const { data, error } = await supabaseService().auth.admin.generateLink({ type: "recovery", email: r.data?.email as string });
+  if (error || !data.properties?.hashed_token) return { error: error?.message ?? "Couldn't make a reset link." };
+  const link = `${env.siteUrl}/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=recovery`;
+  revalidatePath(`/leader/men/${manId}`);
+  if (how === "copied") return { ok: "Link ready — copy it and text it to him. It works once and expires in 1 hour.", link };
+  const sent = await sendTemplate(manId, "password_reset", { link }).catch(() => false);
+  return sent ? { ok: "Reset link emailed. It works once and expires in 1 hour." } : { error: "The email didn't send. Use Copy link instead." };
 }

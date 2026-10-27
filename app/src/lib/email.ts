@@ -57,6 +57,14 @@ export const TEMPLATES = {
     body: (v) => `${v.first}, ${v.title} is open.${v.module === "key_3_part_1" ? "\n\nYou have 1 Key left before certification." : ""}\n\n${app("/app/program")}`,
     pref: "progress",
   },
+  password_reset: {
+    subject: () => "Reset your Finally Free password",
+    body: (v) => `${v.first}, an admin sent you a link to set a new password:\n\n${v.link}\n\nIt works once and expires in 1 hour. If you didn't ask for this, you can ignore it — your password stays the same.`,
+  },
+  email_changed: {
+    subject: () => "Your Finally Free sign-in email was changed",
+    body: (v) => `${v.first}, an admin changed the email you sign in with to ${v.to}.\n\nIf you didn't ask for this, reply or contact a leader right away.\n\nSign in: ${app("/login")}`,
+  },
   match_requested: {
     subject: (v) => `${v.man} is looking for ${v.kind === "ap" ? "an accountability partner" : "a sponsor"}`,
     body: () => `A brother has posted on the Sponsor Board.\n\n${app("/app/sponsor")}`,
@@ -182,7 +190,7 @@ export async function sendTemplate(
   toId: string,
   template: TemplateName,
   vars: Vars = {},
-  opts: { dedupeKey?: string; stepId?: string } = {},
+  opts: { dedupeKey?: string; stepId?: string; toAddress?: string } = {},
 ) {
   const db = supabaseService();
   const { data: p } = await db.from("profiles").select("email, first_name, email_prefs, deleted_at, status").eq("id", toId).single();
@@ -201,13 +209,13 @@ export async function sendTemplate(
   const text = tpl.body(v);
   const key = env.resendKey();
   if (key) {
-    const { error } = await new Resend(key).emails.send({ from: env.emailFrom(), to: p.email, subject, text, html: html(text) });
+    const { error } = await new Resend(key).emails.send({ from: env.emailFrom(), to: opts.toAddress ?? p.email, subject, text, html: html(text) });
     if (error) {
       console.error("email failed", template, error.message);
       return false;
     }
   } else {
-    console.info(`[email:dev] → ${p.email} | ${subject}`);
+    console.info(`[email:dev] → ${opts.toAddress ?? p.email} | ${subject}`);
   }
   await db.from("email_log").insert({ to_id: toId, template, meta: emailLogMeta(template, opts) });
   return true;

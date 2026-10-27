@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { OPTIONAL_PREFS } from "@/lib/email";
@@ -50,6 +51,14 @@ export default async function Profile() {
           <div className="sm:col-span-2"><label className="lbl" htmlFor="service_position">Service position (Key 2 #12)</label><input id="service_position" name="service_position" defaultValue={me.service_position ?? ""} className="field" maxLength={120} /></div>
           <div className="sm:col-span-2"><Submit>Save</Submit></div>
         </ActionForm>
+      </Card>
+
+      <Card className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg text-gold">Sign-in</h2>
+          <p className="text-sm text-muted">You sign in as {me.email}. To change that email, ask an admin.</p>
+        </div>
+        <Link href="/app/password" className="rounded-lg border border-line px-3 py-1.5 text-sm hover:border-gold">Change password</Link>
       </Card>
 
       <Card id="sobriety">

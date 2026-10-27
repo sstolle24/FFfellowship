@@ -12,7 +12,7 @@ export function CopyButton({ value, label = "Copy passcode" }: { value: string; 
           setDone(true);
           setTimeout(() => setDone(false), 2000);
         } catch {
-          window.prompt("Copy the passcode:", value);
+          window.prompt("Copy this:", value);
         }
       }}
       className="rounded-lg border border-line px-3 py-1.5 text-sm hover:border-gold">

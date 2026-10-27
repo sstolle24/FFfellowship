@@ -1123,3 +1123,33 @@ describe("temporarily closed meetings (0011)", () => {
     expect(r.zoom_url).toContain("zoom");
   });
 });
+
+describe("admins help members sign in (0012)", () => {
+  it("only an admin can change a member's email, and it's audited", async () => {
+    const [{ email: old }] = await admin(`select email from profiles where id = $1`, [N1]);
+    await expect(rpc(LEADER, "admin_set_member_email", N1, "new@x.org")).rejects.toThrow(/Only an admin/);
+    await expect(rpc(N1, "admin_set_member_email", N1, "new@x.org")).rejects.toThrow(/Only an admin/);
+    await expect(rpc(null, "admin_set_member_email", N1, "new@x.org")).rejects.toThrow(/permission denied/);
+    await expect(rpc(ADMIN, "admin_set_member_email", N1, "not-an-email")).rejects.toThrow(/valid email/);
+    await expect(rpc(ADMIN, "admin_set_member_email", N1, old.toUpperCase())).rejects.toThrow(/already his email/);
+    const [{ email: taken }] = await admin(`select email from profiles where id = $1`, [N2]);
+    await expect(rpc(ADMIN, "admin_set_member_email", N1, taken)).rejects.toThrow(/Another account/);
+
+    const r = await rpc(ADMIN, "admin_set_member_email", N1, "  Nate.New@Example.org ");
+    expect(r.old_email).toBe(old);
+    expect((await admin(`select email from profiles where id = $1`, [N1]))[0].email).toBe("nate.new@example.org");
+    const [a] = await admin(`select actor_id, detail from audit_log where action = 'email_changed' and target_id = $1`, [N1]);
+    expect(a).toEqual({ actor_id: ADMIN, detail: { from: old, to: "nate.new@example.org" } });
+    await admin(`update profiles set email = $2 where id = $1`, [N1, old]);
+  });
+
+  it("only an admin can make a password reset link; it returns his email and is audited", async () => {
+    await expect(rpc(LEADER, "admin_password_reset", N1, "emailed")).rejects.toThrow(/Only an admin/);
+    await expect(rpc(N1, "admin_password_reset", N1, "copied")).rejects.toThrow(/Only an admin/);
+    await expect(rpc(ADMIN, "admin_password_reset", N1, "sms")).rejects.toThrow(/email or copy/);
+    const [{ email }] = await admin(`select email from profiles where id = $1`, [N1]);
+    expect((await rpc(ADMIN, "admin_password_reset", N1, "copied")).email).toBe(email);
+    expect(await admin(`select detail from audit_log where action = 'password_reset_link' and target_id = $1`, [N1]))
+      .toEqual([{ detail: { how: "copied" } }]);
+  });
+});

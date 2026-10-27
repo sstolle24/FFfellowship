@@ -43,6 +43,16 @@ export async function submitText(spId: string, _: S, form: FormData): Promise<S>
   return done(await callRpc("add_submission", { p_sp: spId, p_body: body, p_file_path: null }), "Turned in.");
 }
 
+/** Sets a new password for the signed-in man (after a reset link, or from Profile). */
+export async function setPassword(_: S, form: FormData): Promise<S> {
+  const pw = String(form.get("password") ?? "");
+  if (pw.length < 10) return { error: "Use at least 10 characters." };
+  if (pw !== String(form.get("confirm") ?? "")) return { error: "The two passwords don't match." };
+  const { error } = await (await supabaseServer()).auth.updateUser({ password: pw });
+  if (error) return { error: /different from the old/i.test(error.message) ? "Choose a password different from your old one." : error.message };
+  return { ok: "Password saved. Use it next time you log in." };
+}
+
 /**
  * One-time pass for the browser to upload into his own folder. His session cookie is
  * httpOnly, so the browser can't reach storage as him; the server asks storage instead,

@@ -7,6 +7,7 @@ import { initialerNames, namesFor } from "@/lib/names";
 import { dayCount, fmtDate, fmtDateTime, relDays } from "@/lib/time";
 import { STAGE_LABEL, type Profile } from "@/lib/types";
 import { ProgramView } from "@/components/ProgramView";
+import { AdminAccountCard } from "@/components/AdminAccountCard";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, SectionTitle } from "@/components/ui";
 import { addNote, certifyKey2, deleteNote, endRel, setPrimaryLeader, setStatus } from "../../actions";
@@ -86,6 +87,8 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
             : man.status === "inactive" && <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "active")}>Reactivate</ActionButton>)}
         </Card>
       </div>
+
+      {me.role === "admin" && !man.deleted_at && <AdminAccountCard manId={man.id} email={man.email} first={man.first_name} />}
 
       <Card>
         <h2 className="mb-3 text-gold">Relationships</h2>
