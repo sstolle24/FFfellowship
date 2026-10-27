@@ -138,7 +138,7 @@ describe("meetings", () => {
   it("anon gets the public schedule with no link columns", async () => {
     const r = await rows(null, `select * from meetings_public`);
     expect(r.length).toBe(9);
-    expect(Object.keys(r[0]).sort()).toEqual(["beginner", "day_of_week", "id", "name", "start_time_utc", "tagline"]);
+    expect(Object.keys(r[0]).sort()).toEqual(["beginner", "closed_note", "day_of_week", "id", "name", "start_time_utc", "tagline", "temp_closed"]);
   });
 
   it("H1: pending members get the public schedule only, no links", async () => {
@@ -1087,5 +1087,39 @@ describe("leader override of AP authorization (0010)", () => {
     await rpc(man, "initial_self", r.id);
     await rpc(ap, "initial_ap", r.id);
     expect((await admin(`select ap_override from step_progress where id = $1`, [r.id]))[0].ap_override).toBe(false);
+  });
+});
+
+describe("temporarily closed meetings (0011)", () => {
+  let id: string;
+  beforeAll(async () => {
+    [{ id }] = await admin(`select id from meetings where name = 'Campfire 3 Share'`);
+    await admin(`update meetings set zoom_url = 'https://zoom.example/secret' where id = $1`, [id]);
+  });
+  afterAll(async () => { await admin(`update meetings set temp_closed = false, closed_note = null where id = $1`, [id]); });
+
+  it("a leader can mark a meeting temporarily closed; it stays on the public schedule, flagged", async () => {
+    await rows(LEADER, `update meetings set temp_closed = true, closed_note = 'Back in January' where id = $1`, [id]);
+    const [m] = await rows(null, `select temp_closed, closed_note from meetings_public where id = $1`, [id]);
+    expect(m).toEqual({ temp_closed: true, closed_note: "Back in January" });
+    expect((await rows(null, `select * from meetings_public`)).length).toBe(9);
+  });
+
+  it("members can't join a temporarily closed meeting, and nothing is recorded", async () => {
+    const joins = async () => (await admin(`select * from meeting_link_joins where man_id = $1`, [N1])).length;
+    const before = await joins();
+    await expect(rpc(N1, "join_meeting", id)).rejects.toThrow(/temporarily closed/);
+    expect(await joins()).toBe(before);
+  });
+
+  it("members can't reopen it themselves", async () => {
+    await rows(N1, `update meetings set temp_closed = false where id = $1`, [id]);
+    expect((await admin(`select temp_closed from meetings where id = $1`, [id]))[0].temp_closed).toBe(true);
+  });
+
+  it("unticking reopens it", async () => {
+    await rows(LEADER, `update meetings set temp_closed = false, closed_note = null where id = $1`, [id]);
+    const r = await rpc(N1, "join_meeting", id);
+    expect(r.zoom_url).toContain("zoom");
   });
 });

@@ -7,8 +7,8 @@ export const metadata = { title: "Meetings" };
 
 export default async function Meetings() {
   const supabase = await supabaseServer();
-  // Public view only: name, day, time, tagline, beginner. No links, IDs or passwords.
-  const { data } = await supabase.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner");
+  // Public view only: name, day, time, tagline, beginner, closed status. No links, IDs or passwords.
+  const { data } = await supabase.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner, temp_closed, closed_note");
   return (
     <div className="mx-auto max-w-4xl px-4 py-12">
       <SectionTitle sub="Online meetings every day of the week. Newcomers welcome.">Meetings</SectionTitle>

@@ -57,6 +57,7 @@ export default async function MeetingsAdmin() {
               <span className="w-32">{m.slot.time}</span>
               <span className="display flex-1 text-ink">{m.name}</span>
               {!m.active && <span className="text-xs text-muted">inactive</span>}
+              {m.active && m.temp_closed && <span className="text-xs text-orange">temporarily closed</span>}
               {!m.zoom_url && <span className="text-xs text-orange">no link</span>}
             </summary>
             <div className="mt-4 space-y-3">

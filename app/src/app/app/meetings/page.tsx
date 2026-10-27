@@ -13,7 +13,7 @@ export default async function MemberMeetings() {
   const db = await supabaseServer();
   // Links are for approved members only (RLS on `meetings`); pending men get the public schedule.
   if (me.status !== "active") {
-    const { data: schedule } = await db.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner");
+    const { data: schedule } = await db.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner, temp_closed, closed_note");
     return (
       <div>
         <SectionTitle sub="You're welcome at any of these meetings.">Meetings</SectionTitle>
@@ -42,18 +42,24 @@ export default async function MemberMeetings() {
               <h2 className="mb-2 text-lg text-gold">{d}</h2>
               <div className="space-y-2">
                 {day.map((m) => (
-                  <Card key={m.id} id={m.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
-                    <span className="w-36 font-semibold">{m.slot.time}</span>
+                  <Card key={m.id} id={m.id} className={`flex flex-wrap items-center gap-x-4 gap-y-2 p-4 ${m.temp_closed ? "opacity-70" : ""}`}>
+                    <span className={`w-36 font-semibold ${m.temp_closed ? "line-through decoration-1" : ""}`}>{m.slot.time}</span>
                     <div className="min-w-0 flex-1">
-                      <div className="display flex flex-wrap items-center gap-2 text-ink">{m.name}{m.beginner && <Badge tone="gold">Beginner</Badge>}</div>
+                      <div className="display flex flex-wrap items-center gap-2 text-ink">
+                        {m.name}
+                        {m.temp_closed && <Badge tone="orange">Temporarily closed</Badge>}
+                        {m.beginner && !m.temp_closed && <Badge tone="gold">Beginner</Badge>}
+                      </div>
+                      {m.temp_closed && m.closed_note && <p className="text-sm text-orange">{m.closed_note}</p>}
                       {m.tagline && <p className="text-sm text-muted">{m.tagline}</p>}
                       <p className="mt-1 text-xs text-muted">
-                        {m.zoom_id && <>Meeting ID <span className="text-ink">{m.zoom_id}</span> · </>}
-                        {m.zoom_password && <>Passcode <span className="text-ink">{m.zoom_password}</span> · </>}
+                        {!m.temp_closed && m.zoom_id && <>Meeting ID <span className="text-ink">{m.zoom_id}</span> · </>}
+                        {!m.temp_closed && m.zoom_password && <>Passcode <span className="text-ink">{m.zoom_password}</span> · </>}
                         {m.secretary_first_name && <>Secretary {m.secretary_first_name}</>}
                       </p>
                     </div>
-                    {m.zoom_url ? <JoinButton meetingId={m.id} /> : <span className="text-xs text-muted">Link not set</span>}
+                    {m.temp_closed ? <span className="text-xs text-muted">Closed for now</span>
+                      : m.zoom_url ? <JoinButton meetingId={m.id} /> : <span className="text-xs text-muted">Link not set</span>}
                   </Card>
                 ))}
               </div>

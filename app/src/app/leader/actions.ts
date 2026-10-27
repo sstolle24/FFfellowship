@@ -67,6 +67,7 @@ const Meeting = z.object({
   zoom_id: z.string().trim().max(40).optional(),
   zoom_password: z.string().trim().max(60).optional(),
   secretary_first_name: z.string().trim().max(40).optional(),
+  closed_note: z.string().trim().max(120).optional(),
 });
 /**
  * Leaders enter meeting times in their own timezone; we convert to the UTC
@@ -83,11 +84,13 @@ export async function saveMeeting(id: string | null, _: S, form: FormData): Prom
     zoom_url: p.data.zoom_url || null, zoom_id: p.data.zoom_id || null, zoom_password: p.data.zoom_password || null,
     tagline: p.data.tagline || null, secretary_first_name: p.data.secretary_first_name || null,
     beginner: form.get("beginner") === "on", active: form.get("active") === "on",
+    temp_closed: form.get("temp_closed") === "on", closed_note: p.data.closed_note || null,
   };
   const db = await supabaseServer();
   const { error } = id ? await db.from("meetings").update(row).eq("id", id) : await db.from("meetings").insert(row);
   revalidatePath("/leader/meetings");
   revalidatePath("/meetings");
+  revalidatePath("/app/meetings");
   return error ? { error: error.message } : { ok: "Saved." };
 }
 export async function deleteMeeting(id: string): Promise<S> {

@@ -18,10 +18,10 @@ export default async function Dashboard() {
   const today = todayIn(tz);
 
   // Schedule only (no links) — the same view for pending and approved men.
-  const { data: meetings } = await supabase.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner");
+  const { data: meetings } = await supabase.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner, temp_closed, closed_note");
   const todays = ((meetings as Meeting[]) ?? [])
     .map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), tz) }))
-    .filter((m) => m.slot.localDate === today)
+    .filter((m) => m.slot.localDate === today && !m.temp_closed)
     .sort((a, b) => a.slot.at.getTime() - b.slot.at.getTime());
 
   if (me.status !== "active") {
