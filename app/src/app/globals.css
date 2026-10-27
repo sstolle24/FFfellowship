@@ -53,15 +53,18 @@ label.lbl { display: block; font-size: 0.85rem; color: var(--color-muted); margi
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
+  font: inherit; /* first: the font shorthand also resets line-height */
   height: 2.75rem;
-  line-height: 1.25rem;
+  /* Center the text with line-height, not padding: Safari lays out the inside of date fields differently. */
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: calc(2.75rem - 2px);
   text-align: left;
-  font: inherit;
   /* The body font uses old-style figures; dates read cleaner with full-height, even-width numbers. */
   font-variant-numeric: lining-nums tabular-nums;
   color: var(--color-ink);
 }
-.field-control::-webkit-date-and-time-value { text-align: left; min-height: 1.25rem; }
+.field-control::-webkit-date-and-time-value { text-align: left; line-height: inherit; min-height: calc(2.75rem - 2px); }
 .field-control::-webkit-datetime-edit { padding: 0; color: var(--color-ink); }
 /* Chrome greys out the month/year when min/max leave only one choice (e.g. Oct 1 – Oct 27), which made the
    date look half-disabled. Keep every part of the date in the normal text color. */
