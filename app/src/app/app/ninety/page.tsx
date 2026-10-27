@@ -37,19 +37,26 @@ export default async function Ninety() {
         <Card className="no-print space-y-2">
           <h2 className="text-lg text-gold">When did you start?</h2>
           <p className="text-sm text-muted">Started your 90 in 90 on paper before you joined? Set that date (up to 90 days back) and log those meetings below.</p>
-          <ActionForm action={setNinetyStart} className="flex flex-wrap items-end gap-2">
-            <div><label className="lbl" htmlFor="ninety_start">Start date</label>
-              <input id="ninety_start" name="ninety_start" type="date" required defaultValue={start} min={addDays(today, -90)} max={today} className="field" /></div>
-            <Submit variant="ghost">Save</Submit>
+          <ActionForm action={setNinetyStart}>
+            <label className="lbl" htmlFor="ninety_start">Start date</label>
+            {/* Field and button share one row and one height. */}
+            <div className="flex items-stretch gap-2">
+              <input id="ninety_start" name="ninety_start" type="date" required defaultValue={start} min={addDays(today, -90)} max={today}
+                className="field h-11 min-w-0 flex-1" />
+              <Submit variant="ghost" className="h-11 shrink-0">Save</Submit>
+            </div>
           </ActionForm>
         </Card>
         <Card className="no-print space-y-2">
           <h2 className="text-lg text-gold">Home group</h2>
           <p className="text-sm text-muted">Your &ldquo;tribe&rdquo; — choose one while you do your 90 in 90.</p>
-          <ActionForm action={saveHomeGroup} className="flex flex-wrap items-end gap-2">
-            <div className="min-w-0 flex-1"><label className="lbl" htmlFor="home_group">Home group</label>
-              <input id="home_group" name="home_group" defaultValue={me.home_group ?? ""} placeholder="Still looking" maxLength={80} className="field" /></div>
-            <Submit variant="ghost">Save</Submit>
+          <ActionForm action={saveHomeGroup}>
+            <label className="lbl" htmlFor="home_group">Home group</label>
+            <div className="flex items-stretch gap-2">
+              <input id="home_group" name="home_group" defaultValue={me.home_group ?? ""} placeholder="Still looking" maxLength={80}
+                className="field h-11 min-w-0 flex-1" />
+              <Submit variant="ghost" className="h-11 shrink-0">Save</Submit>
+            </div>
           </ActionForm>
         </Card>
         <div className="no-print"><SponsorStatus manId={me.id} /></div>
@@ -58,16 +65,16 @@ export default async function Ninety() {
       <Card className="no-print">
         <h2 className="mb-3 text-lg text-gold">Log a meeting</h2>
         <ActionForm action={addMeetingLog} resetOnOk className="grid gap-3 sm:grid-cols-2">
-          <div><label className="lbl" htmlFor="date">Date</label><input id="date" name="date" type="date" required defaultValue={today} min={start} max={today} className="field" /></div>
+          <div><label className="lbl" htmlFor="date">Date</label><input id="date" name="date" type="date" required defaultValue={today} min={start} max={today} className="field h-11" /></div>
           <div>
             <label className="lbl" htmlFor="meeting_id">Finally Free meeting</label>
-            <select id="meeting_id" name="meeting_id" className="field" defaultValue="">
+            <select id="meeting_id" name="meeting_id" className="field h-11" defaultValue="">
               <option value="">— Other (SA) meeting —</option>
               {(meetings ?? []).map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
           </div>
-          <div><label className="lbl" htmlFor="other_name">Or SA meeting name</label><input id="other_name" name="other_name" className="field" maxLength={120} /></div>
-          <div><label className="lbl" htmlFor="location">Location / online</label><input id="location" name="location" className="field" maxLength={120} /></div>
+          <div><label className="lbl" htmlFor="other_name">Or SA meeting name</label><input id="other_name" name="other_name" className="field h-11" maxLength={120} /></div>
+          <div><label className="lbl" htmlFor="location">Location / online</label><input id="location" name="location" className="field h-11" maxLength={120} /></div>
           <details className="rounded-lg border border-line p-3 sm:col-span-2">
             <summary className="cursor-pointer text-sm text-gold">Notes / takeaways (optional)</summary>
             <div className="mt-3 space-y-3">
