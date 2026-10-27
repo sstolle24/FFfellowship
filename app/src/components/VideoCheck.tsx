@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { recordReflectionFile, saveVideo } from "@/app/app/actions";
 import { FormMessage, Submit } from "@/components/forms";
 import { Button, Notice } from "@/components/ui";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { uploadOwnFile } from "@/lib/supabase/browser";
 import { TURN_IN_MAX_BYTES, turnInType } from "@/lib/mime";
 
 /**
@@ -62,8 +62,7 @@ function ReflectionUpload({ videoId, manId, current, currentUrl }: { videoId: st
     try {
       const n = (Number(current?.split("/")[2]) || 0) + 1;
       const path = `${manId}/${videoId}/${n}/${f.name.replace(/[^\w.\-]+/g, "_").slice(-80)}`;
-      const { error } = await supabaseBrowser().storage.from("submissions").upload(path, f, { upsert: false, contentType });
-      if (error) throw new Error(error.message);
+      await uploadOwnFile(path, f, contentType);
       const r = await recordReflectionFile(videoId, path);
       if (r?.error) throw new Error(r.error);
       setMsg({ ok: "Reflection uploaded." });

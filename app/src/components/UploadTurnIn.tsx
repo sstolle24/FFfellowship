@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { uploadOwnFile } from "@/lib/supabase/browser";
 import { nextVersion, recordUpload } from "@/app/app/actions";
 import { Button, Notice } from "@/components/ui";
 import { TURN_IN_MAX_BYTES, turnInType } from "@/lib/mime";
@@ -26,8 +26,7 @@ export function UploadTurnIn({ spId, stepId, manId }: { spId: string; stepId: st
       const v = await nextVersion(spId);
       const safe = f.name.replace(/[^\w.\-]+/g, "_").slice(-80);
       const path = `${manId}/${stepId}/${v}/${safe}`;
-      const { error } = await supabaseBrowser().storage.from("submissions").upload(path, f, { upsert: false, contentType });
-      if (error) throw new Error(error.message);
+      await uploadOwnFile(path, f, contentType);
       const r = await recordUpload(spId, path, "");
       if (r?.error) throw new Error(r.error);
       setMsg({ ok: "Uploaded." });

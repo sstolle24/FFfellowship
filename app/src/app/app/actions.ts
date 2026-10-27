@@ -43,6 +43,20 @@ export async function submitText(spId: string, _: S, form: FormData): Promise<S>
   return done(await callRpc("add_submission", { p_sp: spId, p_body: body, p_file_path: null }), "Turned in.");
 }
 
+/**
+ * One-time pass for the browser to upload into his own folder. His session cookie is
+ * httpOnly, so the browser can't reach storage as him; the server asks storage instead,
+ * and storage checks its upload rules (his folder, an open step or video) as him.
+ */
+export async function uploadTicket(path: string): Promise<{ token?: string; error?: string }> {
+  const me = await getMe();
+  if (!me) return { error: "Sign in again, then retry." };
+  if (!path.startsWith(`${me.id}/`)) return { error: "You can only upload to your own folder." };
+  const db = await supabaseServer();
+  const { data, error } = await db.storage.from("submissions").createSignedUploadUrl(path);
+  return error ? { error: error.message } : { token: data.token };
+}
+
 /** Called after the browser uploaded the file into the man's own storage folder. */
 export async function recordUpload(spId: string, path: string, note: string): Promise<S> {
   return done(await callRpc("add_submission", { p_sp: spId, p_body: note || null, p_file_path: path }), "Uploaded.");
