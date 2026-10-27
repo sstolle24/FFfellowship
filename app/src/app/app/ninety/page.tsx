@@ -1,7 +1,7 @@
 import { requireActive } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { addDays, daysBetween, fmtDate, todayIn } from "@/lib/time";
-import { addedLater, countedLogs, ninetyStart } from "@/lib/ninety";
+import { addedLater, countedLogs, earliestNinetyStart, ninetyStart } from "@/lib/ninety";
 import { ActionForm, ActionButton, Submit } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle, Stat } from "@/components/ui";
 import { PrintButton } from "@/components/PrintButton";
@@ -41,10 +41,13 @@ export default async function Ninety() {
             <label className="lbl" htmlFor="ninety_start">Start date</label>
             {/* Field and button share one row and one height. */}
             <div className="flex items-stretch gap-2">
-              <input id="ninety_start" name="ninety_start" type="date" required defaultValue={start} min={addDays(today, -90)} max={today}
+              {/* No min/max: Safari's built-in message ("Value must be greater than or equal to 2026-07-29") confused men;
+                  the server checks the range and explains it in plain English. */}
+              <input id="ninety_start" name="ninety_start" type="date" required defaultValue={start} aria-describedby="ninety_start_hint"
                 className="field field-control flex-1" />
               <Submit variant="ghost" className="h-11 shrink-0">Save</Submit>
             </div>
+            <p id="ninety_start_hint" className="mt-1 text-xs text-muted">Pick a date between {fmtDate(earliestNinetyStart(today))} and today.</p>
           </ActionForm>
         </Card>
         <Card className="no-print space-y-2">
@@ -65,7 +68,7 @@ export default async function Ninety() {
       <Card className="no-print">
         <h2 className="mb-3 text-lg text-gold">Log a meeting</h2>
         <ActionForm action={addMeetingLog} resetOnOk className="grid gap-3 sm:grid-cols-2">
-          <div><label className="lbl" htmlFor="date">Date</label><input id="date" name="date" type="date" required defaultValue={today} min={start} max={today} className="field field-control" /></div>
+          <div><label className="lbl" htmlFor="date">Date</label><input id="date" name="date" type="date" required defaultValue={today} className="field field-control" /></div>
           <div>
             <label className="lbl" htmlFor="meeting_id">Finally Free meeting</label>
             <select id="meeting_id" name="meeting_id" className="field field-control" defaultValue="">

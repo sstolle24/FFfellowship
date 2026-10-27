@@ -27,3 +27,35 @@ export function addedLater(l: Log): boolean {
   const met = Date.UTC(+l.date.slice(0, 4), +l.date.slice(5, 7) - 1, +l.date.slice(8, 10));
   return (logged - met) / 86_400_000 > LATE_AFTER_DAYS;
 }
+
+/** How far back his own start date may go (matches public.set_ninety_start). */
+export const START_MAX_DAYS_BACK = 90;
+
+function shiftDays(iso: string, n: number) {
+  const d = new Date(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10) + n));
+  return d.toISOString().slice(0, 10);
+}
+function pretty(iso: string) {
+  return new Intl.DateTimeFormat("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })
+    .format(new Date(iso + "T12:00:00Z"));
+}
+
+/** Earliest start date he can pick, given his local "today" (YYYY-MM-DD). */
+export function earliestNinetyStart(today: string) {
+  return shiftDays(today, -START_MAX_DAYS_BACK);
+}
+
+/**
+ * Plain-English check for his 90-in-90 start date (instead of the browser's
+ * "Value must be greater than or equal to 2026-07-29"). Null when it's fine.
+ */
+export function ninetyStartProblem(date: string, today: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return "Pick the date you started your 90 in 90.";
+  if (date > today) return "Your start date can't be in the future.";
+  const earliest = earliestNinetyStart(today);
+  if (date < earliest) {
+    return `Your 90 in 90 start date can be at most ${START_MAX_DAYS_BACK} days back — the earliest you can pick is ${pretty(earliest)}. `
+      + "(A 90 in 90 that began before then would already be finished.)";
+  }
+  return null;
+}

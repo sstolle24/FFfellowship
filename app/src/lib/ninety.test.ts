@@ -24,3 +24,20 @@ describe("90 in 90 (Steven's feedback)", () => {
     expect(addedLater({ date: "2026-10-01" })).toBe(false);
   });
 });
+
+describe("90 in 90 start date: plain-English limits (iPad showed 'Value must be ≥ 2026-07-29')", async () => {
+  const { earliestNinetyStart, ninetyStartProblem } = await import("./ninety");
+  it("allows anything from 90 days back through today", () => {
+    expect(earliestNinetyStart("2026-10-27")).toBe("2026-07-29");
+    expect(ninetyStartProblem("2026-10-01", "2026-10-27")).toBeNull(); // Steven's real start
+    expect(ninetyStartProblem("2026-07-29", "2026-10-27")).toBeNull();
+    expect(ninetyStartProblem("2026-10-27", "2026-10-27")).toBeNull();
+  });
+  it("explains a too-early date with a readable earliest date", () => {
+    expect(ninetyStartProblem("2025-12-14", "2026-10-27")).toMatch(/at most 90 days back — the earliest you can pick is Jul 29, 2026/);
+  });
+  it("refuses future dates and junk", () => {
+    expect(ninetyStartProblem("2026-10-28", "2026-10-27")).toMatch(/future/);
+    expect(ninetyStartProblem("", "2026-10-27")).toMatch(/Pick the date/);
+  });
+});

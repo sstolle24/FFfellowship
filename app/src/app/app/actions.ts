@@ -5,7 +5,8 @@ import { z } from "zod";
 import { supabaseServer } from "@/lib/supabase/server";
 import { callRpc } from "@/lib/rpc";
 import { getMe } from "@/lib/auth";
-import { weekStart } from "@/lib/time";
+import { ninetyStartProblem } from "@/lib/ninety";
+import { todayIn, weekStart } from "@/lib/time";
 
 type S = { error?: string; ok?: string } | undefined;
 const done = (r: { ok: boolean; error?: string }, ok?: string, path = "/app"): S => {
@@ -106,6 +107,8 @@ export async function addMeetingLog(_: S, form: FormData): Promise<S> {
   const p = Log.safeParse(Object.fromEntries(form));
   if (!p.success) return { error: "Check the date and meeting." };
   if (!p.data.meeting_id && !p.data.other_name) return { error: "Pick a Finally Free meeting or name the SA meeting." };
+  const me = await getMe();
+  if (me && p.data.date > todayIn(me.timezone)) return { error: "That date is in the future — log meetings you've already been to." };
   return done(await callRpc("log_meeting", {
     p_date: p.data.date, p_meeting: p.data.meeting_id || null, p_other: p.data.other_name || null,
     p_location: p.data.location || null, p_counts: form.get("counts_90") === "on",
@@ -115,7 +118,12 @@ export async function addMeetingLog(_: S, form: FormData): Promise<S> {
 
 /** His own 90-in-90 start date (may be before he joined — up to 90 days back). */
 export async function setNinetyStart(_: S, form: FormData): Promise<S> {
-  return done(await callRpc("set_ninety_start", { p_date: String(form.get("ninety_start") ?? "") || null }), "Start date saved.");
+  const me = await getMe();
+  if (!me) return { error: "Sign in first." };
+  const date = String(form.get("ninety_start") ?? "");
+  const problem = ninetyStartProblem(date, todayIn(me.timezone));
+  if (problem) return { error: problem };
+  return done(await callRpc("set_ninety_start", { p_date: date }), "Start date saved.");
 }
 
 /** Home group, from the 90 in 90 page (Key 2 #10). */
