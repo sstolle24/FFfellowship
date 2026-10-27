@@ -22,8 +22,8 @@ export function MeetingForm({ tz, meeting }: { tz: string; meeting?: Meeting & {
       <div><label className="lbl">Passcode</label><input name="zoom_password" defaultValue={meeting?.zoom_password ?? ""} className="field" maxLength={60} autoComplete="off" /></div>
       <div><label className="lbl">Secretary (first name)</label><input name="secretary_first_name" defaultValue={meeting?.secretary_first_name ?? ""} className="field" maxLength={40} /></div>
       <div className="flex items-end gap-4">
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="beginner" defaultChecked={meeting?.beginner} className="accent-[#c9973a]" /> Beginner</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="active" defaultChecked={meeting?.active ?? true} className="accent-[#c9973a]" /> Active</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="beginner" defaultChecked={meeting?.beginner} className="accent-gold" /> Beginner</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="active" defaultChecked={meeting?.active ?? true} className="accent-gold" /> Active</label>
       </div>
       <div className="sm:col-span-2"><Submit>{meeting ? "Save changes" : "Add meeting"}</Submit></div>
       <div className="sm:col-span-2"><FormMessage state={state} /></div>

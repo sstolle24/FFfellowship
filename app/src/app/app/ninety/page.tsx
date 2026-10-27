@@ -73,11 +73,11 @@ export default async function Ninety() {
             <div className="mt-3 space-y-3">
               <div><label className="lbl" htmlFor="key_insight">Key takeaway</label><input id="key_insight" name="key_insight" className="field" maxLength={500} /></div>
               <div><label className="lbl" htmlFor="takeaway">Notes</label><textarea id="takeaway" name="takeaway" className="field min-h-28" maxLength={20000} placeholder="What did you hear? What will you do with it?" /></div>
-              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="shared" className="accent-[#c9973a]" /> Share with my AP / sponsor</label>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="shared" className="accent-gold" /> Share with my AP / sponsor</label>
               <p className="text-xs text-muted">Saved to your Meeting Journal too. Unshared notes are visible only to you and fellowship leaders.</p>
             </div>
           </details>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="counts_90" defaultChecked className="accent-[#c9973a]" /> Counts toward 90 in 90 (FF or SA)</label>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="counts_90" defaultChecked className="accent-gold" /> Counts toward 90 in 90 (FF or SA)</label>
           <div className="sm:text-right"><Submit>Log it</Submit></div>
         </ActionForm>
       </Card>

@@ -30,7 +30,7 @@ export function VideoCheck({ videoId, manId, watched, notes, reflection, reflect
         )}
         <div className="flex items-center justify-between gap-2">
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="watched" defaultChecked={watched} className="accent-[#c9973a]" />
+            <input type="checkbox" name="watched" defaultChecked={watched} className="accent-gold" />
             I watched it{needsReflection ? " and wrote my reflection" : ""}
           </label>
           <Submit variant="ghost" className="px-3 py-1">Save</Submit>

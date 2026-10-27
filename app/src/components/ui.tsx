@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 /**
  * The Finally Free logo (gold FF with the cross), self-hosted under /brand.
  * `size` is the rendered height in px; width follows the logo's proportions.
- * `glow` adds the pulsing gold halo used on the old site's hero.
+ * `glow` is kept for API compatibility; the Alpine Sky theme renders no halo.
  */
 export function Logo({ size = 40, glow = false, priority = false }: { size?: number; glow?: boolean; priority?: boolean }) {
   return (

@@ -31,7 +31,7 @@ export default async function Journal() {
           </div>
           <div><label className="lbl" htmlFor="body">Entry</label><textarea id="body" name="body" required className="field min-h-32" maxLength={20000} /></div>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="shared" className="accent-[#c9973a]" /> Share with my AP / sponsor</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="shared" className="accent-gold" /> Share with my AP / sponsor</label>
             <Submit>Save entry</Submit>
           </div>
           <p className="text-xs text-muted">Entries you don&apos;t share are visible only to you and fellowship leaders.</p>
