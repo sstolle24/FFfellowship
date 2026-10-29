@@ -31,7 +31,7 @@ function program(progress: { step_id: string; status: string }[], watched: strin
     step("welcome", 1, { gate_type: "self" }),
     step("key_1", 1, { gate_type: "self", helper: { type: "worksheet" }, title: "Fishing worksheet" }),
     step("key_1", 2, { gate_type: "self_ap" }),
-    ...[1, 2, 3, 4].map((n) => step("key_2", n, n === 2 ? { helper: { background: true } } : {})),
+    ...[1, 2, 3, 4].map((n) => step("key_2", n, n === 2 ? { helper: { background: true } } : n === 4 ? { helper: { type: "cover_sheet" } } : {})),
   ];
   return loadProgram(fakeDb({
     program_modules: [mod("welcome", 1), mod("key_1", 2), mod("key_2", 3)],
@@ -62,14 +62,15 @@ describe("My Program lock notes (mirror of app.lock_reason)", () => {
     expect(nextStep(p).label).toBe("Watch Video 2");
   });
 
-  it("Key 2 items: background items don't hold back the next one", async () => {
-    const p = await program([
-      { step_id: "welcome-1", status: "self_initialed" }, { step_id: "key_1-1", status: "self_initialed" },
-      { step_id: "key_1-2", status: "ap_initialed" }, { step_id: "key_2-1", status: "self_initialed" },
-      { step_id: "key_2-2", status: "open" }, { step_id: "key_2-3", status: "open" }, { step_id: "key_2-4", status: "locked" },
-    ], ["v1", "v2", "v3"]);
-    const k2 = p.byKey.key_2.steps;
-    expect(k2.map((s) => s.lockNote)).toEqual([null, null, null, "Finish #3 first."]);
+  it("Key 2 items open together; only the AP review (cover sheet) waits, and background items don't count", async () => {
+    const base = [{ step_id: "welcome-1", status: "self_initialed" }, { step_id: "key_1-1", status: "self_initialed" },
+      { step_id: "key_1-2", status: "ap_initialed" }];
+    const p = await program([...base, { step_id: "key_2-1", status: "open" }, { step_id: "key_2-2", status: "open" },
+      { step_id: "key_2-3", status: "open" }, { step_id: "key_2-4", status: "locked" }], ["v1", "v2", "v3"]);
+    expect(p.byKey.key_2.steps.map((s) => s.lockNote)).toEqual([null, null, null, "Finish your part of #1, #3 first."]);
+    const q = await program([...base, { step_id: "key_2-1", status: "self_initialed" }, { step_id: "key_2-2", status: "open" },
+      { step_id: "key_2-3", status: "returned" }, { step_id: "key_2-4", status: "open" }], ["v1", "v2", "v3"]);
+    expect(q.byKey.key_2.steps.map((s) => s.lockNote)).toEqual([null, null, null, null]);
   });
 
   it("the dashboard's next step links to the real item page (was a 404 → console error)", async () => {

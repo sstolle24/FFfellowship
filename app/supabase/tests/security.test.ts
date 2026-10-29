@@ -279,29 +279,24 @@ describe("matching", () => {
 });
 
 describe("Key 2 — triple gate", () => {
-  it("sequential: only #1 opens with Key 2; the next item opens when he finishes his part", async () => {
-    expect((await sp(N1, "key_2", 1)).status).toBe("open");
-    for (const n of [2, 3, 9, 21]) expect((await sp(N1, "key_2", n)).status, `#${n}`).toBe("locked");
-    const s3 = await sp(N1, "key_2", 3);
-    await expect(rpc(N1, "initial_self", s3.id)).rejects.toThrow(/Finish #1 first/);
-    await expect(rpc(N1, "add_submission", s3.id, "early", null)).rejects.toThrow(/Finish #1 first/);
-    expect(await rpc(N1, "step_lock_reason", s3.id)).toBe("Finish #1 first.");
-    expect(await rpc(STRANGER, "step_lock_reason", s3.id)).toBeNull(); // strangers learn nothing
-    await rpc(N1, "initial_self", (await sp(N1, "key_2", 1)).id);
-    // #2 (30 days of prayer) is a background item: it starts now and #3 opens right behind it.
-    expect((await sp(N1, "key_2", 2)).status).toBe("open");
-    expect((await sp(N1, "key_2", 3)).status).toBe("open");
-    expect((await sp(N1, "key_2", 4)).status).toBe("locked");
+  it("0013: every item opens with Key 2 except the AP review (#20), which waits for his part of the rest", async () => {
+    for (let n = 1; n <= 21; n++) expect((await sp(N1, "key_2", n)).status, `#${n}`).toBe(n === 20 ? "locked" : "open");
+    const s20 = await sp(N1, "key_2", 20);
+    const reason = "Finish your part of #1, #3, #4, #5, #6, #7, #8, #9, #11, #13, #14, #15, #17, #21 first.";
+    expect(await rpc(N1, "step_lock_reason", s20.id)).toBe(reason); // background items (#2, #10, #12, #16, #18, #19) don't count
+    await expect(rpc(N1, "initial_self", s20.id)).rejects.toThrow(/Finish your part of #1, #3/);
+    await expect(rpc(N1, "add_submission", s20.id, "early", null)).rejects.toThrow(/Finish your part/);
+    expect(await rpc(STRANGER, "step_lock_reason", s20.id)).toBeNull(); // strangers learn nothing
   });
 
-  it("items up to #8 in order (his initials alone keep him moving)", async () => {
-    for (let n = 3; n <= 8; n++) {
-      const s = await sp(N1, "key_2", n);
-      expect(s.status, `#${n}`).toBe("open");
-      await rpc(N1, "initial_self", s.id);
+  it("0013: he works them in any order, and his AP isn't emailed item by item", async () => {
+    for (const n of [8, 3, 1, 7, 4, 6, 5]) {
+      const r = await rpc(N1, "initial_self", (await sp(N1, "key_2", n)).id);
+      expect(r.events.map((e: { type: string }) => e.type), `#${n}`).not.toContain("ap_signoff_needed");
+      expect((await sp(N1, "key_2", n)).status, `#${n}`).toBe("self_initialed");
     }
-    expect((await sp(N1, "key_2", 9)).status).toBe("open");
-    expect((await sp(N1, "key_2", 10)).status).toBe("locked");
+    expect(await rpc(N1, "step_lock_reason", (await sp(N1, "key_2", 20)).id))
+      .toBe("Finish your part of #9, #11, #13, #14, #15, #17, #21 first.");
   });
 
   it("orange item can't be initialed without a turn-in", async () => {
@@ -310,7 +305,6 @@ describe("Key 2 — triple gate", () => {
     await expect(rpc(N1, "add_submission", s.id, null, `${N2}/x/1/file.pdf`)).rejects.toThrow(/path/);
     await rpc(N1, "add_submission", s.id, "My steps 1, 2 and 3", null);
     await rpc(N1, "initial_self", s.id);
-    expect((await sp(N1, "key_2", 10)).status).toBe("open");
   });
 
   it("upload paths must be inside his own folder", async () => {
@@ -341,7 +335,8 @@ describe("Key 2 — triple gate", () => {
     await expect(rpc(N1, "initial_self", s.id)).rejects.toThrow(/Turn in/);
     const r = await rpc(N1, "add_submission", s.id, "Steps 1, 2 and 3 — all pages", null);
     expect(r.version).toBe(2);
-    await rpc(N1, "initial_self", s.id);
+    // A fixed item goes straight back to his AP (0013).
+    expect((await rpc(N1, "initial_self", s.id)).events.map((e: { type: string }) => e.type)).toContain("ap_signoff_needed");
     await rpc(N2, "initial_ap", s.id);
     await rpc(LEADER, "initial_leader", s.id);
     expect((await sp(N1, "key_2", 9)).status).toBe("leader_initialed");
@@ -360,14 +355,14 @@ describe("Key 2 — triple gate", () => {
   });
 
   it("background items don't block, but #20 still needs their turn-ins", async () => {
-    // He moves through #11–#19 with his own initials; #10 (90 in 90), #12, #16, #18 and #19 run in the background.
-    for (const n of [11, 13, 14, 15, 17]) {
+    // He finishes the rest with his own initials; #10 (90 in 90), #12, #16, #18 and #19 run in the background.
+    for (const n of [21, 11, 13, 14, 15, 17]) {
       const s = await sp(N1, "key_2", n);
       expect(s.status, `#${n}`).toBe("open");
       if ([11, 13, 14, 15].includes(n)) await rpc(N1, "add_submission", s.id, `item ${n}`, null);
       await rpc(N1, "initial_self", s.id);
     }
-    expect((await sp(N1, "key_2", 20)).status).toBe("open");
+    expect((await sp(N1, "key_2", 20)).status).toBe("open"); // the AP review opens once his part is done
     const s20 = await sp(N1, "key_2", 20);
     await expect(rpc(N1, "initial_self", s20.id)).rejects.toThrow(/missing for items: 10$/);
   });
@@ -376,8 +371,7 @@ describe("Key 2 — triple gate", () => {
     const s5 = await sp(N1, "key_2", 5);
     await rpc(N2, "return_step", s5.id, "Only 12 contacts — need 20");
     expect((await sp(N1, "key_2", 5)).status).toBe("returned");
-    for (const n of [6, 7, 20]) expect((await sp(N1, "key_2", n)).status, `#${n}`).not.toBe("locked");
-    expect((await sp(N1, "key_2", 21)).status).toBe("locked"); // still waiting on #20 (his cover sheet), not on the return
+    for (const n of [6, 7, 20, 21]) expect((await sp(N1, "key_2", n)).status, `#${n}`).not.toBe("locked");
     await rpc(N1, "initial_self", s5.id); // fixed and re-initialed
   });
 
@@ -387,7 +381,9 @@ describe("Key 2 — triple gate", () => {
       if (s.status === "leader_initialed") continue;
       if (s.status === "open" || s.status === "returned") {
         if (n === 10) await rpc(N1, "add_submission", s.id, `item ${n}`, null);
-        await rpc(N1, "initial_self", s.id);
+        const r = await rpc(N1, "initial_self", s.id);
+        // His AP hears once, at the cover sheet ("AP reviews your 21").
+        expect(r.events.some((e: { type: string }) => e.type === "ap_signoff_needed"), `#${n}`).toBe(n === 20);
       }
       await rpc(SPONSOR, "initial_ap", s.id); // sponsor may give AP initials too
       if (n === 13) await expect(rpc(N2, "set_read_to_group", s.id, true)).rejects.toThrow(/Leaders only/);
@@ -687,7 +683,7 @@ describe("independent security test fixes (Oct 2026)", () => {
 
     const man = await activeMan("Otto");
     const open = await stepId("welcome", null);   // open after approval
-    const locked = await stepId("key_2", 9);      // locked for a new man
+    const locked = await stepId("key_2", 9);      // locked for a new man (Key 2 isn't open yet)
     const put = (path: string) => as(man, (c) => c.query(`insert into storage.objects (bucket_id, name) values ('submissions', $1)`, [path]));
     await put(`${man}/${open}/1/ok.pdf`);
     for (const bad of [`${man}/${locked}/1/x.pdf`, `${man}/${open}/one/x.pdf`, `${man}/${open}/1/extra/x.pdf`,
@@ -800,7 +796,7 @@ describe("view privileges (independent retest, Oct 2026)", () => {
 });
 
 describe("sequential program: existing progress (0007)", () => {
-  it("a man partway through Key 2 keeps everything he did; untouched items re-lock in order", async () => {
+  it("a man partway through Key 2 keeps everything he did; the rest stay open (0013), the AP review waits", async () => {
     const man = await newUser("Walt");
     await rpc(LEADER, "approve_member", man, LEADER);
     // Old rules: whole modules opened at once. Recreate that state directly.
@@ -830,16 +826,13 @@ describe("sequential program: existing progress (0007)", () => {
 
     for (const n of [1, 2, 3]) expect(await status(n), `#${n}`).toBe("leader_initialed");
     for (const n of [4, 5, 6, 9]) expect(await status(n), `#${n}`).toBe("self_initialed");
-    expect(await status(7)).toBe("open");     // his next item
-    expect(await status(8)).toBe("locked");   // waits for #7
-    expect(await status(10)).toBe("locked");
-    expect(await status(11)).toBe("open");    // he'd already started it — kept
-    expect(await status(21)).toBe("locked");
+    for (const n of [7, 8, 10, 11, 21]) expect(await status(n), `#${n}`).toBe("open"); // Key 2 items open together
+    expect(await status(20)).toBe("locked");  // the AP review waits for his part of the rest
     expect((await sp(man, "key_1", null, 2)).status).toBe("ap_initialed");
     // Running it again changes nothing.
     await admin(`select app.resequence_progress()`);
-    expect(await status(7)).toBe("open");
-    expect(await status(8)).toBe("locked");
+    expect(await status(8)).toBe("open");
+    expect(await status(20)).toBe("locked");
   });
 });
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireActive, isLeader } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { dueDate } from "@/lib/program";
+import { dueDate, OPENS_TOGETHER } from "@/lib/program";
 import { namesFor } from "@/lib/names";
 import { fmtDate, fmtDateTime } from "@/lib/time";
 import type { ModuleKey, ProgramStep, StepProgress, Submission, WorksheetQuestion } from "@/lib/types";
@@ -145,7 +145,8 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
 
       <aside className="contents lg:col-start-2 lg:row-start-2 lg:block lg:space-y-5" aria-label="Status and sign-offs">
       <div className="order-1 flex flex-wrap items-center gap-3 lg:rounded-xl lg:border lg:border-line lg:bg-panel lg:p-4">
-        <StatusBadge step={{ ...step, progress: sp, submissions: [], lockNote: null }} />
+        <StatusBadge step={{ ...step, progress: sp, submissions: [], lockNote: null,
+          reviewAtEnd: OPENS_TOGETHER.includes(mod?.key ?? "") && step.helper?.type !== "cover_sheet" }} />
         {step.turn_in && <Badge tone="orange">Turn in</Badge>}
         {due && <Badge>Due {fmtDate(due)}</Badge>}
         <div className="ml-auto lg:ml-0 lg:basis-full"><InitialBoxes step={{ ...step, progress: sp, submissions: [], lockNote: null }} names={names} /></div>

@@ -18,6 +18,7 @@ export function StatusBadge({ step }: { step: StepView }) {
   if (step.gate_type === "self" && s === "self_initialed") [label, tone] = ["Done", "ok"];
   if (step.gate_type === "self_ap" && s === "ap_initialed") [label, tone] = ["Done", "ok"];
   if (step.gate_type === "leader" && s === "self_initialed") [label, tone] = ["Submitted — leader review", "gold"];
+  if (step.reviewAtEnd && s === "self_initialed") [label, tone] = ["Done — AP reviews at #20", "ok"];
   return <Badge tone={tone}>{label}</Badge>;
 }
 

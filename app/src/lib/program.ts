@@ -8,6 +8,8 @@ export type StepView = ProgramStep & {
   progress: StepProgress | null; submissions: Submission[];
   /** Why this item is locked ("Finish #3 first."), or null when it's open to him. Mirrors app.lock_reason. */
   lockNote: string | null;
+  /** Key 2: his AP reviews this with the rest at the cover sheet (#20), not item by item. */
+  reviewAtEnd?: boolean;
 };
 export type VideoView = {
   id: string; order_no: number; title: string; watched_at: string | null; notes: string | null;
@@ -32,6 +34,9 @@ export type ModuleView = ProgramModule & {
 const PREV_KEY: Partial<Record<ModuleKey, string>> = {
   key_1: "Module 0", key_2: "Key 1", key_3_part_1: "Key 2", key_3_part_2: "Key 3 Part 1", certification: "Key 3",
 };
+
+/** Keys whose items all open at once (mirrors app.opens_together). */
+export const OPENS_TOGETHER: string[] = ["key_2"];
 
 /** His part of an item is done (a returned item was done once; it never re-locks what follows). */
 export function selfDone(s: StepStatus | undefined) {
@@ -113,6 +118,15 @@ export async function loadProgram(db: SupabaseClient, manId: string, opts: { lin
       }
       if (!blocker && blocksNext(s, p?.status)) blocker = s;
       st.push({ ...s, progress: p, submissions: p ? subsBy.get(p.id) ?? [] : [], lockNote });
+    }
+    // Key 2's items open together; only the AP review (#20 cover sheet) waits for the rest.
+    if (OPENS_TOGETHER.includes(m.key)) {
+      for (const s of st) {
+        s.reviewAtEnd = s.helper?.type !== "cover_sheet";
+        if (s.progress && s.progress.status !== "locked") continue;
+        const todo = st.filter((o) => o.id !== s.id && blocksNext(o, o.progress?.status)).map((o) => `#${o.item_number}`);
+        s.lockNote = s.helper?.type === "cover_sheet" && todo.length ? `Finish your part of ${todo.join(", ")} first.` : null;
+      }
     }
     const questions = ((qs.data as WorksheetQuestion[]) ?? []).filter((q) => q.module_id === m.id)
       .map((q) => ({ ...q, answers: ansBy.get(q.id) ?? [] }));
