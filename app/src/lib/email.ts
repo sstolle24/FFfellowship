@@ -65,6 +65,10 @@ export const TEMPLATES = {
     subject: () => "Your Finally Free sign-in email was changed",
     body: (v) => `${v.first}, an admin changed the email you sign in with to ${v.to}.\n\nIf you didn't ask for this, reply or contact a leader right away.\n\nSign in: ${app("/login")}`,
   },
+  member_denied: {
+    subject: () => "About your Finally Free sign-up",
+    body: (v) => `${v.first}, thank you for reaching out to Finally Free Fellowship.\n\nWe aren't able to approve your account. If you think this is a mistake, reply to this email.\n\nIf you're struggling right now, please don't wait: ${app("/get-help")}`,
+  },
   match_requested: {
     subject: (v) => `${v.man} is looking for ${v.kind === "ap" ? "an accountability partner" : "a sponsor"}`,
     body: () => `A brother has posted on the Sponsor Board.\n\n${app("/app/sponsor")}`,
@@ -190,11 +194,11 @@ export async function sendTemplate(
   toId: string,
   template: TemplateName,
   vars: Vars = {},
-  opts: { dedupeKey?: string; stepId?: string; toAddress?: string } = {},
+  opts: { dedupeKey?: string; stepId?: string; toAddress?: string; evenIfClosed?: boolean } = {},
 ) {
   const db = supabaseService();
   const { data: p } = await db.from("profiles").select("email, first_name, email_prefs, deleted_at, status").eq("id", toId).single();
-  if (!p || p.deleted_at || !p.email) return false;
+  if (!p || (p.deleted_at && !opts.evenIfClosed) || !p.email) return false;
   const tpl: Tpl = TEMPLATES[template];
   if (tpl.pref && p.email_prefs?.[tpl.pref] === false) return false;
 

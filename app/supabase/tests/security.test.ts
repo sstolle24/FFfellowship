@@ -1183,3 +1183,19 @@ describe("admin unlocks Key 2 for a man with no AP (0014)", () => {
     await expect(rpc(ADMIN, "admin_unlock_key2", man)).rejects.toThrow(/already open/);
   });
 });
+
+describe("leaders can deny a sign-up (0015)", () => {
+  it("only leaders; closes the pending account, hides it, and audits the private reason", async () => {
+    const man = await newUser("Spam");
+    await expect(rpc(N1, "deny_member", man, null)).rejects.toThrow(/Leaders only/);
+    await expect(rpc(null, "deny_member", man, null)).rejects.toThrow(/permission denied/);
+    await expect(rpc(LEADER, "deny_member", N1, null)).rejects.toThrow(/No pending sign-up/); // already active
+    await rpc(LEADER, "deny_member", man, "  spam sign-up ");
+    const [p] = await admin(`select status, deleted_at is not null as closed from profiles where id = $1`, [man]);
+    expect(p).toEqual({ status: "inactive", closed: true });
+    expect(await admin(`select actor_id, detail from audit_log where action = 'member_denied' and target_id = $1`, [man]))
+      .toEqual([{ actor_id: LEADER, detail: { note: "spam sign-up" } }]);
+    await expect(rpc(LEADER, "approve_member", man, null)).rejects.toThrow(/No pending sign-up/);
+    await expect(rpc(LEADER, "deny_member", man, null)).rejects.toThrow(/No pending sign-up/);
+  });
+});

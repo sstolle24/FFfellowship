@@ -17,6 +17,12 @@ const done = (r: { ok: boolean; error?: string }, ok = "Done."): S => {
 export async function approveMember(id: string, _: S, form: FormData): Promise<S> {
   return done(await callRpc("approve_member", { p_man: id, p_primary_leader: (form.get("leader") as string) || null }), "Approved — welcome email sent.");
 }
+/** Denies a pending sign-up: closed like a deleted account (purged later). Emailing him is optional. */
+export async function denyMember(id: string, _: S, form: FormData): Promise<S> {
+  const r = await callRpc("deny_member", { p_man: id, p_reason: String(form.get("reason") ?? "") || null });
+  if (r.ok && form.get("notify") === "on") await sendTemplate(id, "member_denied", {}, { evenIfClosed: true }).catch(() => false);
+  return done(r, form.get("notify") === "on" ? "Denied — he was emailed." : "Denied.");
+}
 export async function setRole(id: string, _: S, form: FormData): Promise<S> {
   return done(await callRpc("set_member_role", { p_man: id, p_role: String(form.get("role")) }), "Role updated.");
 }

@@ -5,7 +5,7 @@ import { fmtDate } from "@/lib/time";
 import { ROLE_LABEL, STAGE_LABEL, type Profile, type Role } from "@/lib/types";
 import { ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
-import { approveMember, setRole } from "../actions";
+import { approveMember, denyMember, setRole } from "../actions";
 
 export const metadata = { title: "Members & Roles" };
 
@@ -45,6 +45,17 @@ export default async function Members() {
               </div>
               <Submit>Approve</Submit>
             </ActionForm>
+            <details className="border-t border-line/60 pt-2">
+              <summary className="cursor-pointer text-sm text-muted hover:text-danger">Deny this sign-up</summary>
+              <ActionForm action={denyMember.bind(null, p.id)} className="mt-2 space-y-2">
+                <label className="lbl" htmlFor={`d-${p.id}`}>Reason (optional, leaders only)</label>
+                <input id={`d-${p.id}`} name="reason" className="field" maxLength={500} placeholder="e.g. spam sign-up, not a man, duplicate account" />
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="notify" className="accent-gold" /> Email him a short note that he wasn&apos;t approved
+                </label>
+                <Submit variant="danger" confirm={`Deny ${p.first_name}'s sign-up? His account is closed and removed.`}>Deny</Submit>
+              </ActionForm>
+            </details>
           </Card>
         ))}</div> : <Empty>No one waiting.</Empty>}
       </section>
