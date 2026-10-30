@@ -182,3 +182,8 @@ export async function adminResetLink(manId: string, how: "emailed" | "copied"): 
   const sent = await sendTemplate(manId, "password_reset", { link }).catch(() => false);
   return sent ? { ok: "Reset link emailed. It works once and expires in 1 hour." } : { error: "The email didn't send. Use Copy link instead." };
 }
+
+/** Key 1 with no AP or sponsor: his primary leader (any leader if none) confirms the go-over, which opens Key 2. */
+export async function confirmKey1(spId: string): Promise<S> {
+  return done(await callRpc("initial_ap", { p_sp: spId }), "Key 1 confirmed.");
+}

@@ -62,6 +62,7 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
     ? ((await db.from("relationships").select("id", { count: "exact", head: true }).eq("status", "active")
         .or(`mentee_id.eq.${sp.man_id},and(mentor_id.eq.${sp.man_id},mutual.eq.true)`)).count ?? 0) > 0
     : true;
+  const selfNoMentor = self && !(rels ?? []).some((r) => r.mentee_id === me.id || (r.mutual && r.mentor_id === me.id));
   const key1Fallback = mod?.key === "key_1" && leader && !manHasMentor && (!man.primary_leader_id || man.primary_leader_id === me.id);
 
   // Key 1: the worksheet stays locked until all 3 videos are checked off (enforced by initial_self too).
@@ -151,6 +152,14 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
         {due && <Badge>Due {fmtDate(due)}</Badge>}
         <div className="ml-auto lg:ml-0 lg:basis-full"><InitialBoxes step={{ ...step, progress: sp, submissions: [], lockNote: null }} names={names} /></div>
       </div>
+
+      {selfNoMentor && mod?.key === "key_1" && step.gate_type === "self_ap" && ["open", "returned", "self_initialed"].includes(st) && (
+        <Notice className="order-1">
+          <strong>No AP yet?</strong> {st === "self_initialed"
+            ? "A leader confirms this for you — Key 2 opens as soon as they do."
+            : "Go over your video notes and worksheet with a leader instead, then initial here. A leader confirms it and Key 2 opens."}
+        </Notice>
+      )}
 
       {sp.ap_override && sp.ap_initialed_at && (
         <Notice className="order-1">

@@ -8,6 +8,7 @@ import { dayCount, fmtDate, fmtDateTime, relDays } from "@/lib/time";
 import { STAGE_LABEL, type Profile } from "@/lib/types";
 import { ProgramView } from "@/components/ProgramView";
 import { AdminAccountCard } from "@/components/AdminAccountCard";
+import { Key1Panel } from "@/components/Key1Panel";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, SectionTitle } from "@/components/ui";
 import { addNote, certifyKey2, deleteNote, endRel, setPrimaryLeader, setStatus } from "../../actions";
@@ -43,6 +44,10 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
   const timeline = [...(audit ?? []), ...(spAudit.data ?? [])].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 40);
   const k2 = program.byKey.key_2;
   const readyKey2 = !k2.done && k2.steps.every((s) => s.progress?.status === "leader_initialed");
+  const k1 = program.byKey.key_1;
+  const hasMentor = (rels ?? []).some((r) => r.status === "active" && (r.mentee_id === man.id || (r.mutual && r.mentor_id === man.id)));
+  // Same rule as initial_ap's Key 1 fallback: no AP/sponsor → his primary leader (any leader if none).
+  const canConfirmKey1 = !hasMentor && man.id !== me.id && (!man.primary_leader_id || man.primary_leader_id === me.id);
 
   return (
     <div className="space-y-6">
@@ -87,6 +92,10 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
             : man.status === "inactive" && <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "active")}>Reactivate</ActionButton>)}
         </Card>
       </div>
+
+      {man.status === "active" && k1.unlocked && !k1.done && man.id !== me.id && (
+        <Key1Panel first={man.first_name} key1={k1} hasMentor={hasMentor} canConfirm={canConfirmKey1} />
+      )}
 
       {me.role === "admin" && !man.deleted_at && <AdminAccountCard manId={man.id} email={man.email} first={man.first_name} />}
 

@@ -14,10 +14,12 @@ export default async function Review() {
   const [{ data: prog }, { data: steps }, { data: men }, { data: rels }, { data: ms }] = await Promise.all([
     db.from("step_progress").select("*").in("status", ["self_initialed", "ap_initialed", "leader_initialed"]),
     db.from("program_steps").select("id, title, item_number, gate_type, turn_in, program_modules(key, title)"),
-    db.from("profiles").select("id, first_name, display_name, primary_leader_id").eq("status", "active"),
+    db.from("profiles").select("id, first_name, display_name, primary_leader_id, stage").eq("status", "active"),
     db.from("relationships").select("mentor_id, mentee_id, type, mutual, status"),
     db.from("milestones").select("man_id, type, related_man_id"),
   ]);
+  const { data: prog0 } = await db.from("step_progress").select("id, man_id, step_id, status").in("status", ["open", "returned", "locked"]);
+  const stageOf = new Map((men ?? []).map((m) => [m.id, m.stage as string]));
   const { data: outsideAll } = await db.from("outside_sponsors").select("*").eq("status", "pending").order("created_at");
   const outside = (outsideAll ?? []).filter((o) => o.man_id !== me.id); // another leader approves his own
   const step = new Map((steps ?? []).map((s) => [s.id, s]));
@@ -36,6 +38,14 @@ export default async function Review() {
     const m = men?.find((x) => x.id === p.man_id);
     return s?.gate_type === "self_ap" && mod(p.step_id)?.key === "key_1" && p.status === "self_initialed"
       && !hasMentor(p.man_id) && p.man_id !== me.id && (!m?.primary_leader_id || m.primary_leader_id === me.id);
+  });
+
+  // Men with no AP/sponsor still working toward the Key 1 go-over (not initialed yet): so leaders can find them.
+  const key1NoAp = (prog0 ?? []).filter((p) => {
+    const s = step.get(p.step_id);
+    return s?.gate_type === "self_ap" && mod(p.step_id)?.key === "key_1" && ["open", "returned", "locked"].includes(p.status)
+      && !hasMentor(p.man_id) && p.man_id !== me.id && men?.some((m) => m.id === p.man_id)
+      && (stageOf.get(p.man_id) === "key_1");
   });
 
   // Items waiting on the AP column (his AP/sponsor hasn't signed). A leader can override from the item page.
@@ -101,8 +111,25 @@ export default async function Review() {
           <h2 className="mb-1 text-lg text-gold">Key 1 — no AP yet, needs your confirmation</h2>
           <p className="mb-2 text-sm text-muted">These men have no active AP or sponsor, so their primary leader confirms Key 1.</p>
           {key1Fallback.map((p) => (
-            <Link key={p.id} href={`/app/step/${p.id}`} className="mb-2 block"><Card className="p-3 hover:border-gold">{name(p.man_id)} — {step.get(p.step_id)?.title}</Card></Link>
+            <Link key={p.id} href={`/leader/men/${p.man_id}`} className="mb-2 block"><Card className="p-3 hover:border-gold">{name(p.man_id)} — {step.get(p.step_id)?.title}</Card></Link>
           ))}
+        </section>
+      )}
+
+      {key1NoAp.length > 0 && (
+        <section>
+          <h2 className="mb-1 text-lg text-gold">In Key 1 with no AP ({key1NoAp.length})</h2>
+          <p className="mb-2 text-sm text-muted">Not ready to confirm yet. A leader goes over his video notes and worksheet with him; once he initials, confirm it on his page to open Key 2.</p>
+          <div className="space-y-2">
+            {key1NoAp.map((p) => (
+              <Link key={p.id} href={`/leader/men/${p.man_id}`} className="block">
+                <Card className="flex flex-wrap items-center gap-3 p-3 hover:border-gold">
+                  <span className="display min-w-0 flex-1 break-words text-ink">{name(p.man_id)}</span>
+                  <span className="text-xs text-muted">Waiting on his Key 1 work</span>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 

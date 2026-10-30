@@ -29,6 +29,7 @@ export async function returnStep(spId: string, _: S, form: FormData): Promise<S>
 }
 /** Leader signs the AP column on the AP's behalf (reason required; another leader gives the leader initials). */
 export async function overrideAp(spId: string, _: S, form: FormData): Promise<S> {
+  revalidatePath("/leader", "layout");
   return done(await callRpc("leader_override_ap", { p_sp: spId, p_reason: String(form.get("reason") ?? "") }),
     "AP sign-off given as a leader override. Another leader gives the leader initials.");
 }
