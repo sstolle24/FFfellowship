@@ -1146,3 +1146,40 @@ describe("admins help members sign in (0012)", () => {
       .toEqual([{ detail: { how: "copied" } }]);
   });
 });
+
+describe("admin unlocks Key 2 for a man with no AP (0014)", () => {
+  it("only an admin, only with no AP/sponsor; finishes Module 0 + Key 1 as a recorded override and opens Key 2", async () => {
+    const man = await newUser("Ivan");
+    await rpc(LEADER, "approve_member", man, LEADER);           // still in Module 0
+    await expect(rpc(LEADER, "admin_unlock_key2", man)).rejects.toThrow(/Only an admin/);
+    await expect(rpc(man, "admin_unlock_key2", man)).rejects.toThrow(/Only an admin/);
+    await expect(rpc(ADMIN, "admin_unlock_key2", ADMIN)).rejects.toThrow(/Another admin/);
+    await expect(rpc(ADMIN, "admin_unlock_key2", PENDING)).rejects.toThrow(/Approve his account/);
+
+    // With an AP, his AP signs Key 1.
+    await rpc(LEADER, "leader_create_relationship", SPONSOR, man, "ap");
+    await expect(rpc(ADMIN, "admin_unlock_key2", man)).rejects.toThrow(/He has an AP or sponsor/);
+    const [rel] = await admin(`select id from relationships where mentee_id = $1 and status = 'active'`, [man]);
+    await rpc(LEADER, "end_relationship", rel.id);
+
+    // He'd written his own Video 1 reflection already: it's kept.
+    const [v1] = await admin(`select v.id from videos v join program_modules pm on pm.id = v.module_id where pm.key = 'key_1' order by v.order_no limit 1`);
+    await admin(`update step_progress sp set status = 'self_initialed' from program_steps ps join program_modules pm on pm.id = ps.module_id
+                  where ps.id = sp.step_id and sp.man_id = $1 and pm.key = 'welcome'`, [man]);
+    await admin(`insert into video_progress (man_id, video_id, reflection) values ($1, $2, 'My own words')`, [man, v1.id]);
+    await admin(`update step_progress sp set status = 'open' from program_steps ps join program_modules pm on pm.id = ps.module_id
+                  where ps.id = sp.step_id and sp.man_id = $1 and pm.key = 'welcome'`, [man]);
+
+    const r = await rpc(ADMIN, "admin_unlock_key2", man);
+    expect(r.events.map((e: { module?: string }) => e.module).filter(Boolean)).toEqual(["key_2"]); // no Key 1 email
+    expect((await admin(`select stage from profiles where id = $1`, [man]))[0].stage).toBe("key_2");
+    expect((await sp(man, "key_2", 1)).status).toBe("open");
+    const go = await admin(`select sp.status, sp.ap_override, sp.ap_initial_by from step_progress sp join program_steps ps on ps.id = sp.step_id
+                             join program_modules pm on pm.id = ps.module_id where sp.man_id = $1 and pm.key = 'key_1' and ps.gate_type = 'self_ap'`, [man]);
+    expect(go).toEqual([{ status: "ap_initialed", ap_override: true, ap_initial_by: ADMIN }]);
+    const refl = await admin(`select vp.reflection from video_progress vp join videos v on v.id = vp.video_id where vp.man_id = $1 order by v.order_no`, [man]);
+    expect(refl.map((x) => x.reflection)).toEqual(["My own words", "Admin unlocked Key 2 (no AP).", "Admin unlocked Key 2 (no AP)."]);
+    expect(await admin(`select actor_id from audit_log where action = 'admin_unlock_key2' and target_id = $1`, [man])).toEqual([{ actor_id: ADMIN }]);
+    await expect(rpc(ADMIN, "admin_unlock_key2", man)).rejects.toThrow(/already open/);
+  });
+});

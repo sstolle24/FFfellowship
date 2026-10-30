@@ -187,3 +187,8 @@ export async function adminResetLink(manId: string, how: "emailed" | "copied"): 
 export async function confirmKey1(spId: string): Promise<S> {
   return done(await callRpc("initial_ap", { p_sp: spId }), "Key 1 confirmed.");
 }
+
+/** Admin, man with no AP: finishes Module 0 and Key 1 for him as a recorded override and opens Key 2. */
+export async function unlockKey2(manId: string): Promise<S> {
+  return done(await callRpc("admin_unlock_key2", { p_man: manId }), "Key 2 is open for him.");
+}

@@ -11,7 +11,7 @@ import { AdminAccountCard } from "@/components/AdminAccountCard";
 import { Key1Panel } from "@/components/Key1Panel";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, SectionTitle } from "@/components/ui";
-import { addNote, certifyKey2, deleteNote, endRel, setPrimaryLeader, setStatus } from "../../actions";
+import { addNote, certifyKey2, deleteNote, endRel, setPrimaryLeader, setStatus, unlockKey2 } from "../../actions";
 import { addedLater, ninetyCount, ninetyStart } from "@/lib/ninety";
 
 export const metadata = { title: "Man detail" };
@@ -45,7 +45,8 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
   const k2 = program.byKey.key_2;
   const readyKey2 = !k2.done && k2.steps.every((s) => s.progress?.status === "leader_initialed");
   const k1 = program.byKey.key_1;
-  const hasMentor = (rels ?? []).some((r) => r.status === "active" && (r.mentee_id === man.id || (r.mutual && r.mentor_id === man.id)));
+  // Same rule as app.has_any_mentor.
+  const hasMentor = (rels ?? []).some((r) => r.status === "active" && (r.mentee_id === man.id || (r.type === "ap" && r.mutual && r.mentor_id === man.id)));
   // Same rule as initial_ap's Key 1 fallback: no AP/sponsor → his primary leader (any leader if none).
   const canConfirmKey1 = !hasMentor && man.id !== me.id && (!man.primary_leader_id || man.primary_leader_id === me.id);
 
@@ -86,6 +87,12 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
             </div>
             <Submit variant="ghost">Set</Submit>
           </ActionForm>
+          {me.role === "admin" && man.id !== me.id && man.status === "active" && !k1.done && !hasMentor && (
+            <ActionButton run={unlockKey2.bind(null, man.id)}
+              confirm={`Unlock Key 2 for ${man.first_name}? He has no AP, so Module 0 and Key 1 are marked done as an admin override (recorded), and Key 2 opens.`}>
+              Unlock Key 2 (admin)
+            </ActionButton>
+          )}
           {readyKey2 && man.id !== me.id && <ActionButton run={certifyKey2.bind(null, man.id)} confirm="Certify Detox-21 and open Key 3?">Certify Detox-21</ActionButton>}
           {man.id !== me.id && (man.status === "active"
             ? <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "inactive")} confirm="Mark inactive? He'll lose member access and all his AP/sponsor relationships end.">Mark inactive</ActionButton>
