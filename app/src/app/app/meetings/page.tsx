@@ -46,7 +46,7 @@ export default async function MemberMeetings() {
                 {day.map((m) => (
                   <Card key={m.id} id={m.id} className={`flex flex-wrap items-center gap-x-4 gap-y-2 p-4 ${m.temp_closed ? "opacity-70" : ""}`}>
                     {m.art_path && <MeetingArt url={meetingArtUrl(m.art_path)!} name={m.name} size="md" />}
-                    <span className={`w-36 font-semibold ${m.temp_closed ? "line-through decoration-1" : ""}`}>{m.slot.time}</span>
+                    <span className={`basis-full font-semibold sm:basis-auto sm:w-36 ${m.temp_closed ? "line-through decoration-1" : ""}`}>{m.slot.time}</span>
                     <div className="min-w-0 flex-1">
                       <div className="display flex flex-wrap items-center gap-2 text-ink">
                         {m.name}

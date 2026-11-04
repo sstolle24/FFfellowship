@@ -208,7 +208,7 @@ export async function setMeetingArt(meetingId: string, path: string | null): Pro
   const { data: cur } = await db.from("meetings").select("art_path").eq("id", meetingId).maybeSingle();
   const { error } = await db.from("meetings").update({ art_path: path }).eq("id", meetingId);
   if (error) return { error: error.message };
-  if (cur?.art_path && cur.art_path !== path) await db.storage.from("meeting-art").remove([cur.art_path]);
+  if (cur?.art_path && cur.art_path !== path && !cur.art_path.startsWith("static/")) await db.storage.from("meeting-art").remove([cur.art_path]);
   revalidatePath("/leader/meetings");
   revalidatePath("/meetings");
   revalidatePath("/app/meetings");

@@ -2,6 +2,7 @@ import { requireActive } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { addDays, fmtDate, weekStart } from "@/lib/time";
 import { FishingOutcome } from "@/components/FishingOutcome";
+import { MeetingArt } from "@/components/MeetingArt";
 import { Card, SectionTitle } from "@/components/ui";
 import { PathWeek } from "@/components/PathWeek";
 
@@ -33,6 +34,13 @@ export default async function Fishing() {
           and what are you going to do? We go over them together at <strong>The Path</strong> on Monday night.
         </p>
         <PathWeek weekStart={ws} contacts={thisWeek} committedAt={committedAt} />
+      </Card>
+      <Card className="flex flex-wrap items-center gap-4">
+        <MeetingArt url="/meeting-art/the-path-three-levels.webp" name="Three Levels of Spirituality and Protection from Sin" size="md" />
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg text-gold">The Path: three levels</h2>
+          <p className="text-sm text-muted">Curriculum is good, fellowship is better, ministry — selfless love for others — is best. Tap the picture to see it full size.</p>
+        </div>
       </Card>
       {lastWeek.length > 0 && (
         <Card className="space-y-3">

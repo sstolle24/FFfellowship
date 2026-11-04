@@ -1323,3 +1323,15 @@ describe("What's Happening (0021)", () => {
     expect(await titles(null)).toEqual([]);
   });
 });
+
+describe("meeting artwork shipped with the site (0022)", () => {
+  it("art_path may name a site image; anything else is still refused", async () => {
+    const [m] = await admin(`select id from meetings where name = 'The Space Capsule'`);
+    await rows(LEADER, `update meetings set art_path = 'static/space-capsule.webp' where id = $1`, [m.id]);
+    expect((await rows(null, `select art_path from meetings_public where id = $1`, [m.id]))[0].art_path).toBe("static/space-capsule.webp");
+    for (const bad of ["static/../x.webp", "static/x.png", "/etc/passwd", "static/UP.webp"]) {
+      await expect(rows(LEADER, `update meetings set art_path = $2 where id = $1`, [m.id, bad]), bad).rejects.toThrow(/check/);
+    }
+    await admin(`update meetings set art_path = null where id = $1`, [m.id]);
+  });
+});
