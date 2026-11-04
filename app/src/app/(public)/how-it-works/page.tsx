@@ -30,8 +30,8 @@ export default function HowItWorks() {
         ))}
       </div>
       <p>
-        Each key opens when the one before it is fully signed off, and inside a key each assignment opens as soon as you
-        finish the one before it. Every step happens in community — daily meetings, daily contact with your AP, and
+        The keys go in order. Key 1&apos;s videos come one at a time; Key 2&apos;s 21 items all open together, and your
+        AP reviews them with you at #20. Key 3 opens once you&apos;ve done your part of 16 of the 21. Every step happens in community — daily meetings, daily contact with your AP, and
         brothers a phone call away.
       </p>
     </ProsePage>

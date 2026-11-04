@@ -6,6 +6,7 @@ import { getMe } from "@/lib/auth";
 const NAV = [
   ["/about", "About"],
   ["/how-it-works", "How It Works"],
+  ["/why-stop-now", "Why Stop Now"],
   ["/meetings", "Meetings"],
   ["/faq", "FAQ"],
   ["/pastors-corner", "Pastor's Corner"],
