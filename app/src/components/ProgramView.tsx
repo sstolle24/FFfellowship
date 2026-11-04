@@ -27,7 +27,7 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
             {keyInfoFor(m.key) && <KeyMeaning info={keyInfoFor(m.key)!} />}
             {!m.unlocked ? (
               // Locked key: no instructions, videos or items — just what opens it.
-              <p className="text-sm text-muted">{m.lockNote} It opens once every item there is signed off.</p>
+              <p className="text-sm text-muted">{m.lockNote}{m.key === "key_3_part_1" || m.key === "key_3_part_2" ? "" : " It opens once every item there is signed off."}</p>
             ) : (
               <div className="space-y-3">
                 {m.description && m.key !== "key_3_part_2" && (

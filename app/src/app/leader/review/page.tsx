@@ -77,7 +77,7 @@ export default async function Review() {
               <Card key={id} className="flex items-center gap-3 p-3">
                 <Link href={`/leader/men/${id}`} className="display min-w-0 flex-1 break-words hover:text-gold">{name(id)}</Link>
                 <Badge tone="ok">21/21 signed off</Badge>
-                <ActionButton run={certifyKey2.bind(null, id)} confirm={`Certify ${name(id)} for Detox-21 and open Key 3?`}>Certify</ActionButton>
+                <ActionButton run={certifyKey2.bind(null, id)} confirm={`Certify ${name(id)} for Detox-21?`}>Certify</ActionButton>
               </Card>
             ))}
           </div>

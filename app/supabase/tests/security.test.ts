@@ -388,20 +388,19 @@ describe("Key 2 — triple gate", () => {
       await rpc(SPONSOR, "initial_ap", s.id); // sponsor may give AP initials too
       if (n === 13) await expect(rpc(N2, "set_read_to_group", s.id, true)).rejects.toThrow(/Leaders only/);
       if (n === 13) await rpc(LEADER, "set_read_to_group", s.id, true);
-      // Key 3 stays locked until the very last sign-off and a leader's certification.
+      // Key 3 is already open (0016: 16 of the 21); its worksheet waits for the movie.
       expect((await sp(N1, "key_3_part_1", null)).status).toBe("locked");
       await rpc(LEADER, "initial_leader", s.id);
       s = await sp(N1, "key_2", n);
       expect(s.status, `#${n}`).toBe("leader_initialed");
     }
-    expect((await sp(N1, "key_3_part_1", null)).status).toBe("locked"); // needs leader confirm
     const k3 = await sp(N1, "key_3_part_1", null);
-    expect(await rpc(N1, "step_lock_reason", k3.id)).toBe("Finish Key 2 first.");
-    await expect(rpc(N1, "initial_self", k3.id)).rejects.toThrow(/Finish Key 2 first/);
+    expect(await rpc(N1, "step_lock_reason", k3.id)).toBe('Watch "My Name Is Bill W." first.'); // Key 3 open since 16 of 21
+    expect((await admin(`select stage from profiles where id=$1`, [N1]))[0].stage).toBe("key_3");
     await expect(rpc(N2, "leader_certify_key2", N1)).rejects.toThrow(/Leaders only/);
     const r = await rpc(LEADER, "leader_certify_key2", N1);
-    expect(r.events.map((e: { type: string }) => e.type)).toEqual(expect.arrayContaining(["milestone", "module_unlocked"]));
-    expect(r.events.some((e: { module?: string }) => e.module === "key_3_part_1")).toBe(true);
+    expect(r.events.map((e: { type: string }) => e.type)).toContain("milestone");
+    expect(r.events.some((e: { module?: string }) => e.module === "key_3_part_1")).toBe(false); // announced at 16
     expect((await sp(N1, "key_3_part_1", null)).status).toBe("locked"); // Key 3 is open; its worksheet waits for the movie
     expect((await sp(N1, "key_3_part_2", null)).status).toBe("locked");
     expect((await admin(`select stage from profiles where id=$1`, [N1]))[0].stage).toBe("key_3");
@@ -1197,5 +1196,39 @@ describe("leaders can deny a sign-up (0015)", () => {
       .toEqual([{ actor_id: LEADER, detail: { note: "spam sign-up" } }]);
     await expect(rpc(LEADER, "approve_member", man, null)).rejects.toThrow(/No pending sign-up/);
     await expect(rpc(LEADER, "deny_member", man, null)).rejects.toThrow(/No pending sign-up/);
+  });
+});
+
+describe("Key 3 opens at 16 of the 21 (0016)", () => {
+  it("opens when his part of the 16th Key 2 item is done, emails him once, and the packet still waits for Key 2", async () => {
+    const man = await newUser("Gus");
+    await rpc(ADMIN, "admin_unlock_key2", (await rpc(LEADER, "approve_member", man, LEADER), man));
+    const k3 = await sp(man, "key_3_part_1", null);
+    expect(await rpc(man, "step_lock_reason", k3.id)).toBe("Finish your part of 16 of the 21 Key 2 items first (0 done so far).");
+    // 15 items: the 14 with no turn-in, plus #11 (#20, the AP review, isn't open yet).
+    const plain = (await admin(`select ps.item_number from program_steps ps join program_modules pm on pm.id = ps.module_id
+                                 where pm.key = 'key_2' and not ps.turn_in and ps.helper->>'type' is distinct from 'cover_sheet'
+                                 order by ps.order_no`)).map((x) => x.item_number as number);
+    expect(plain).toHaveLength(14);
+    for (const n of [...plain, 11]) {
+      const s = await sp(man, "key_2", n);
+      if (n === 11) await rpc(man, "add_submission", s.id, "My program page", null);
+      const r = await rpc(man, "initial_self", s.id);
+      expect(r.events.some((e: { module?: string }) => e.module === "key_3_part_1"), `#${n}`).toBe(false);
+    }
+    expect(await rpc(man, "step_lock_reason", k3.id)).toBe("Finish your part of 16 of the 21 Key 2 items first (15 done so far).");
+    expect((await admin(`select stage from profiles where id=$1`, [man]))[0].stage).toBe("key_2");
+    // The 16th: Key 3 opens and he's told.
+    const s9 = await sp(man, "key_2", 9);
+    await rpc(man, "add_submission", s9.id, "Steps 1-3", null);
+    const r = await rpc(man, "initial_self", s9.id);
+    expect(r.events.filter((e: { module?: string }) => e.module === "key_3_part_1")).toHaveLength(1);
+    expect((await admin(`select stage from profiles where id=$1`, [man]))[0].stage).toBe("key_3");
+    expect(await rpc(man, "step_lock_reason", k3.id)).toBe('Watch "My Name Is Bill W." first.');
+    // A returned item doesn't close Key 3 again.
+    await rpc(LEADER, "return_step", s9.id, "Add step 3");
+    expect((await admin(`select stage from profiles where id=$1`, [man]))[0].stage).toBe("key_3");
+    // The certification packet still needs Key 2 certified.
+    expect(await admin(`select app.module_open($1, 'certification') as open`, [man])).toEqual([{ open: false }]);
   });
 });

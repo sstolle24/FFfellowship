@@ -35,6 +35,9 @@ const PREV_KEY: Partial<Record<ModuleKey, string>> = {
   key_1: "Module 0", key_2: "Key 1", key_3_part_1: "Key 2", key_3_part_2: "Key 3 Part 1", certification: "Key 3",
 };
 
+/** Key 3 opens once his part of this many of the 21 Key 2 items is done (mirrors app.key3_opens_at). */
+export const KEY3_OPENS_AT = 16;
+
 /** Keys whose items all open at once (mirrors app.opens_together). */
 export const OPENS_TOGETHER: string[] = ["key_2"];
 
@@ -137,11 +140,19 @@ export async function loadProgram(db: SupabaseClient, manId: string, opts: { lin
         && (m.key !== "key_1" || videos.every((v) => v.watched_at));
     return { ...m, steps: st, videos, questions, unlocked: st.some((s) => s.progress && s.progress.status !== "locked"), done, lockNote: null };
   });
-  // Key 1 opens with its videos (its first step, the worksheet, waits for them).
+  // Key 3 opens at 16 of the 21 (his part), not at Key 2's certification (mirrors app.key3_open).
+  const k1 = modules.find((m) => m.key === "key_1"), k2 = modules.find((m) => m.key === "key_2");
+  const k2Done = k2?.steps.filter((s) => selfDone(s.progress?.status)).length ?? 0;
+  const key3Open = !!k2?.done || (!!k1?.done && k2Done >= KEY3_OPENS_AT);
+  // Key 1 and Key 3 Part 1 open with their videos (their first step waits for them).
   for (const [i, m] of modules.entries()) {
     if (m.key === "key_1" && i > 0 && modules[i - 1].done) m.unlocked = true;
+    if (m.key === "key_3_part_1" && key3Open) m.unlocked = true;
     if (!m.unlocked) {
-      m.lockNote = `Finish ${PREV_KEY[m.key] ?? "the previous key"} first.`;
+      m.lockNote = (m.key === "key_3_part_1" || m.key === "key_3_part_2") && !key3Open
+        ? `Finish your part of ${KEY3_OPENS_AT} of the 21 Key 2 items first (${k2Done} done so far).`
+        : m.key === "certification" && !k2?.done ? "Finish Key 2 (all 21 signed off and certified) and Key 3 first."
+        : `Finish ${PREV_KEY[m.key] ?? "the previous key"} first.`;
       for (const s of m.steps) s.lockNote = m.lockNote;
       for (const v of m.videos) v.lockNote = m.lockNote;
     }
