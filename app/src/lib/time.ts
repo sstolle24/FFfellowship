@@ -1,5 +1,5 @@
-/** Date/time helpers. Meetings are stored as (UTC weekday, UTC time) and always
- *  shown in the viewer's own timezone. */
+/** Date/time helpers. Meetings are stored in their own time zone (weekday + local
+ *  time, e.g. Sunday 17:00 America/Los_Angeles) and always shown in the viewer's. */
 
 export const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -58,9 +58,46 @@ export function nextOccurrence(dayUtc: number, timeUtc: string, from: Date = new
   return d;
 }
 
+/** Milliseconds a time zone is ahead of UTC at a given instant (negative west of UTC). */
+function tzOffsetMs(at: Date, tz: string): number {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
+  }).formatToParts(at).map((x) => [x.type, x.value]));
+  return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute, +p.second) - Math.floor(at.getTime() / 1000) * 1000;
+}
+
+/** The instant a wall-clock date + "HH:MM" happens in a time zone. */
+export function zonedTime(isoDate: string, hhmm: string, tz: string): Date {
+  const [h, m] = hhmm.split(":").map(Number);
+  const guess = Date.UTC(+isoDate.slice(0, 4), +isoDate.slice(5, 7) - 1, +isoDate.slice(8, 10), h, m);
+  let at = guess - tzOffsetMs(new Date(guess), tz);
+  at = guess - tzOffsetMs(new Date(at), tz); // second pass lands on the right side of a DST change
+  return new Date(at);
+}
+
+export type MeetingTime = { local_day: number; local_time: string; timezone: string };
+
+/** The next time a weekly meeting happens: its weekday + local time in its own zone (so 5 pm Pacific stays 5 pm all year). */
+export function nextMeeting(m: MeetingTime, from: Date = new Date()): Date {
+  const tz = safeTz(m.timezone);
+  const today = todayIn(tz, from);
+  const dow = new Date(today + "T12:00:00Z").getUTCDay();
+  let at = zonedTime(addDays(today, (m.local_day - dow + 7) % 7), m.local_time.slice(0, 5), tz);
+  if (at.getTime() < from.getTime() - 90 * 60_000) at = zonedTime(addDays(today, (m.local_day - dow + 7) % 7 + 7), m.local_time.slice(0, 5), tz); // keep "now-ish" meetings for 90 min
+  return at;
+}
+
+/** Weekday index (0 Sun) and "5:00 PM PST" for a meeting, in the viewer's timezone. */
+export function meetingSlot(m: MeetingTime, tz: string, from: Date = new Date()) {
+  return slotAt(nextMeeting(m, from), tz);
+}
+
 /** Weekday index (0 Sun) and "7:00 PM CDT" for a UTC weekly slot, in a timezone. */
 export function localSlot(dayUtc: number, timeUtc: string, tz: string) {
-  const at = nextOccurrence(dayUtc, timeUtc);
+  return slotAt(nextOccurrence(dayUtc, timeUtc), tz);
+}
+
+function slotAt(at: Date, tz: string) {
   const z = safeTz(tz);
   const weekday = new Intl.DateTimeFormat("en-US", { timeZone: z, weekday: "long" }).format(at);
   const time = new Intl.DateTimeFormat("en-US", { timeZone: z, hour: "numeric", minute: "2-digit", timeZoneName: "short" })

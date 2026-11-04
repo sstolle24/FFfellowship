@@ -1,6 +1,6 @@
 import { requireUser } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { DAYS, localSlot } from "@/lib/time";
+import { DAYS, meetingSlot } from "@/lib/time";
 import type { Meeting } from "@/lib/types";
 import { Badge, Card, Notice, SectionTitle } from "@/components/ui";
 import { MeetingSchedule } from "@/components/MeetingSchedule";
@@ -13,7 +13,7 @@ export default async function MemberMeetings() {
   const db = await supabaseServer();
   // Links are for approved members only (RLS on `meetings`); pending men get the public schedule.
   if (me.status !== "active") {
-    const { data: schedule } = await db.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner, temp_closed, closed_note");
+    const { data: schedule } = await db.from("meetings_public").select("id, name, tagline, beginner, temp_closed, closed_note, timezone, local_day, local_time");
     return (
       <div>
         <SectionTitle sub="You're welcome at any of these meetings.">Meetings</SectionTitle>
@@ -26,7 +26,7 @@ export default async function MemberMeetings() {
   }
   const { data } = await db.from("meetings").select("*").eq("active", true);
   const rows = ((data as Meeting[]) ?? [])
-    .map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), me.timezone) }))
+    .map((m) => ({ ...m, slot: meetingSlot(m, me.timezone) }))
     .sort((a, b) => a.slot.at.getTime() - b.slot.at.getTime());
 
   return (

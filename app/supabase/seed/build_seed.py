@@ -223,21 +223,23 @@ def main(k1, k2, k3):
     # Meetings (from the current FF app). Times are true UTC; the old app labelled
     # 00:00 UTC meetings by their US evening day, so those move +1 UTC day here.
     # Zoom links/IDs/passwords are NOT seeded — enter them in Meetings Admin.
+    # Each meeting's own weekday + local time + time zone (5 pm Pacific stays 5 pm all year).
+    pac = "America/Los_Angeles"
     meetings = [
-        (1, "00:00", "Campfire 3 Share", "Scripture drill, FASTER check-in, and journaling. An intimate fellowship discussion.", False, "Anthony"),
-        (2, "00:00", "Conquerors Reloaded", "Beginners meeting on the video series. No subscription required. All welcome.", True, "Frederick"),
-        (3, "00:00", "Topic Tuesday Theatre", "Member-led discussion on addiction and recovery topics. Real Talk. Real Change.", False, "Jacob"),
-        (4, "00:00", "Battle Plan for Purity", "For committed Conquerors. Regular attendance and homework required.", False, "Jared S"),
-        (4, "13:30", "The Singapore Cartel", "Study the Conquerors series and Big Book. Fellowship across Asia.", False, "Nick"),
-        (5, "00:00", "Thursday Night Conquerors", "Committed Conquerors group. Regular attendance and homework required.", False, "Rusty"),
-        (5, "00:00", "Thursday Night Warpath", "Advanced Soul Refiners series. Prerequisite: completion of Conquerors.", False, "Morrison"),
-        (6, "00:00", "The Space Capsule", "Speaker disclosures, birthday celebrations, and sobriety chip meetings.", False, "John K"),
-        (0, "00:00", "The Healing Room", "Trauma. The ten worst and secrets. Therapy-themed healing. You are safe here.", False, "Wayne"),
+        (0, "17:00", pac, "Campfire 3 Share", "Scripture drill, FASTER check-in, and journaling. An intimate fellowship discussion.", False, "Anthony"),
+        (1, "17:00", pac, "Conquerors Reloaded", "Beginners meeting on the video series. No subscription required. All welcome.", True, "Frederick"),
+        (2, "17:00", pac, "Topic Tuesday Theatre", "Member-led discussion on addiction and recovery topics. Real Talk. Real Change.", False, "Jacob"),
+        (3, "17:00", pac, "Battle Plan for Purity", "For committed Conquerors. Regular attendance and homework required.", False, "Jared S"),
+        (4, "21:30", "Asia/Singapore", "The Singapore Cartel", "Study the Conquerors series and Big Book. Fellowship across Asia.", False, "Nick"),
+        (4, "17:00", pac, "Thursday Night Conquerors", "Committed Conquerors group. Regular attendance and homework required.", False, "Rusty"),
+        (4, "17:00", pac, "Thursday Night Warpath", "Advanced Soul Refiners series. Prerequisite: completion of Conquerors.", False, "Morrison"),
+        (5, "17:00", pac, "The Space Capsule", "Speaker disclosures, birthday celebrations, and sobriety chip meetings.", False, "John K"),
+        (6, "17:00", pac, "The Healing Room", "Trauma. The ten worst and secrets. Therapy-themed healing. You are safe here.", False, "Wayne"),
     ]
     w("delete from meetings;")
-    for d, t, name, tag, beg, sec in meetings:
-        w(f"insert into meetings (name, day_of_week, start_time_utc, tagline, beginner, secretary_first_name) "
-          f"values ({q(name)}, {d}, {q(t)}, {q(tag)}, {str(beg).lower()}, {q(sec)});")
+    for d, t, tz, name, tag, beg, sec in meetings:
+        w(f"insert into meetings (name, local_day, local_time, timezone, tagline, beginner, secretary_first_name) "
+          f"values ({q(name)}, {d}, {q(t)}, {q(tz)}, {q(tag)}, {str(beg).lower()}, {q(sec)});")
     w("commit;")
     print("\n".join(o))
     print(f"-- counts: key1 questions {len(k1_qs)}, key2 items {len(k2_items)}, "

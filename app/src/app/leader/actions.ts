@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabaseServer, supabaseService } from "@/lib/supabase/server";
 import { sendTemplate } from "@/lib/email";
 import { env } from "@/lib/env";
+import { safeTz } from "@/lib/time";
 import { callRpc } from "@/lib/rpc";
 import { getMe } from "@/lib/auth";
 
@@ -68,8 +69,9 @@ export async function deleteNote(id: string, manId: string): Promise<S> {
 
 const Meeting = z.object({
   name: z.string().trim().min(1).max(80),
-  day_of_week: z.coerce.number().int().min(0).max(6),
-  start_time_utc: z.string().regex(/^\d{2}:\d{2}$/),
+  local_day: z.coerce.number().int().min(0).max(6),
+  local_time: z.string().regex(/^\d{2}:\d{2}$/),
+  timezone: z.string().trim().min(1).max(60),
   tagline: z.string().trim().max(200).optional(),
   zoom_url: z.string().trim().url().max(500).optional().or(z.literal("")),
   zoom_id: z.string().trim().max(40).optional(),
@@ -78,17 +80,17 @@ const Meeting = z.object({
   closed_note: z.string().trim().max(120).optional(),
 });
 /**
- * Leaders enter meeting times in their own timezone; we convert to the UTC
- * weekday + time the database stores.
+ * A meeting is saved in its own time zone (weekday + local time), so it keeps
+ * the same local time across daylight saving; the database fills in the UTC fields.
  */
 export async function saveMeeting(id: string | null, _: S, form: FormData): Promise<S> {
   const me = await getMe();
   if (!me) return { error: "Sign in." };
   const p = Meeting.safeParse(Object.fromEntries(form));
   if (!p.success) return { error: p.error.issues[0].path.join(".") + ": " + p.error.issues[0].message };
-  const { day, time } = localToUtc(p.data.day_of_week, p.data.start_time_utc, String(form.get("tz") || me.timezone));
+  if (safeTz(p.data.timezone) !== p.data.timezone) return { error: "Choose a time zone from the list." };
   const row = {
-    ...p.data, day_of_week: day, start_time_utc: time,
+    ...p.data,
     zoom_url: p.data.zoom_url || null, zoom_id: p.data.zoom_id || null, zoom_password: p.data.zoom_password || null,
     tagline: p.data.tagline || null, secretary_first_name: p.data.secretary_first_name || null,
     beginner: form.get("beginner") === "on", active: form.get("active") === "on",
@@ -106,20 +108,6 @@ export async function deleteMeeting(id: string): Promise<S> {
   const { error } = await db.from("meetings").delete().eq("id", id);
   revalidatePath("/leader/meetings");
   return error ? { error: error.message } : { ok: "Deleted." };
-}
-
-/** Converts "Sunday 7:00 PM in America/Chicago" to UTC weekday + HH:MM for the coming week. */
-function localToUtc(dow: number, hhmm: string, tz: string) {
-  const [h, m] = hhmm.split(":").map(Number);
-  const now = new Date();
-  // Start from a UTC guess on the requested weekday, then correct by the zone's offset at that instant.
-  const guess = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + ((dow - now.getUTCDay() + 7) % 7), h, m));
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
-    timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
-  }).formatToParts(guess).map((x) => [x.type, x.value]));
-  const asLocal = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute);
-  const utc = new Date(guess.getTime() - (asLocal - guess.getTime()));
-  return { day: utc.getUTCDay(), time: `${String(utc.getUTCHours()).padStart(2, "0")}:${String(utc.getUTCMinutes()).padStart(2, "0")}` };
 }
 
 /** A program video's link and passcode (never stored in the repo). */

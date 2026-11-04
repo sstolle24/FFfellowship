@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadProgram, nextStep } from "@/lib/program";
-import { dayCount, daysBetween, localSlot, todayIn, weekStart } from "@/lib/time";
+import { dayCount, daysBetween, meetingSlot, todayIn, weekStart } from "@/lib/time";
 import { Card, LinkButton, Notice, Stat, SectionTitle, Badge } from "@/components/ui";
 import { PanicButton } from "@/components/PanicButton";
 import { STAGE_LABEL, type Meeting } from "@/lib/types";
@@ -18,9 +18,9 @@ export default async function Dashboard() {
   const today = todayIn(tz);
 
   // Schedule only (no links) — the same view for pending and approved men.
-  const { data: meetings } = await supabase.from("meetings_public").select("id, name, day_of_week, start_time_utc, tagline, beginner, temp_closed, closed_note");
+  const { data: meetings } = await supabase.from("meetings_public").select("id, name, tagline, beginner, temp_closed, closed_note, timezone, local_day, local_time");
   const todays = ((meetings as Meeting[]) ?? [])
-    .map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), tz) }))
+    .map((m) => ({ ...m, slot: meetingSlot(m, tz) }))
     .filter((m) => m.slot.localDate === today && !m.temp_closed)
     .sort((a, b) => a.slot.at.getTime() - b.slot.at.getTime());
 

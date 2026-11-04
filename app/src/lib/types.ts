@@ -62,6 +62,7 @@ export interface Meeting {
   id: string; name: string; day_of_week: number; start_time_utc: string; tagline: string | null;
   beginner: boolean; zoom_url?: string | null; zoom_id?: string | null; zoom_password?: string | null;
   secretary_first_name?: string | null; active?: boolean;
+  timezone: string; local_day: number; local_time: string;
   temp_closed?: boolean; closed_note?: string | null;
 }
 export interface Relationship {

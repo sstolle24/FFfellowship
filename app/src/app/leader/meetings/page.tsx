@@ -1,6 +1,6 @@
 import { requireLeader } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
-import { DAYS, localSlot } from "@/lib/time";
+import { DAYS, meetingSlot } from "@/lib/time";
 import type { Meeting } from "@/lib/types";
 import { ActionButton } from "@/components/forms";
 import { Card, SectionTitle } from "@/components/ui";
@@ -18,11 +18,11 @@ export default async function MeetingsAdmin() {
     db.from("meetings").select("*").order("name"),
     db.rpc("leader_list_videos"),
   ]);
-  const rows = ((data as Meeting[]) ?? []).map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), me.timezone) }))
-    .sort((a, b) => a.slot.dayIndex - b.slot.dayIndex);
+  const rows = ((data as Meeting[]) ?? []).map((m) => ({ ...m, slot: meetingSlot(m, me.timezone) }))
+    .sort((a, b) => a.slot.dayIndex - b.slot.dayIndex || a.slot.at.getTime() - b.slot.at.getTime());
   return (
     <div className="space-y-6">
-      <SectionTitle sub={`Enter times in your timezone (${me.timezone}); members see them in theirs. Links, IDs and passcodes are only ever shown to signed-in members.`}>
+      <SectionTitle sub={`Each meeting keeps its own local time all year; members see it in their time zone (yours: ${me.timezone}). Links, IDs and passcodes are only ever shown to signed-in members.`}>
         Meetings &amp; Videos
       </SectionTitle>
       <Card id="videos">
@@ -61,7 +61,7 @@ export default async function MeetingsAdmin() {
               {!m.zoom_url && <span className="text-xs text-orange">no link</span>}
             </summary>
             <div className="mt-4 space-y-3">
-              <MeetingForm tz={me.timezone} meeting={{ ...m, localDay: m.slot.dayIndex, localTime: hhmm(m.slot.at, me.timezone) }} />
+              <MeetingForm tz={me.timezone} meeting={m} />
               <ActionButton variant="danger" run={deleteMeeting.bind(null, m.id)} confirm={`Delete ${m.name}? Logged meetings keep their history.`}>Delete</ActionButton>
             </div>
           </details>
@@ -72,6 +72,3 @@ export default async function MeetingsAdmin() {
   );
 }
 
-function hhmm(d: Date, tz: string) {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
-}

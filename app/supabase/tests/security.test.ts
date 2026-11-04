@@ -138,7 +138,7 @@ describe("meetings", () => {
   it("anon gets the public schedule with no link columns", async () => {
     const r = await rows(null, `select * from meetings_public`);
     expect(r.length).toBe(9);
-    expect(Object.keys(r[0]).sort()).toEqual(["beginner", "closed_note", "day_of_week", "id", "name", "start_time_utc", "tagline", "temp_closed"]);
+    expect(Object.keys(r[0]).sort()).toEqual(["beginner", "closed_note", "day_of_week", "id", "local_day", "local_time", "name", "start_time_utc", "tagline", "temp_closed", "timezone"]);
   });
 
   it("H1: pending members get the public schedule only, no links", async () => {
@@ -1230,5 +1230,28 @@ describe("Key 3 opens at 16 of the 21 (0016)", () => {
     expect((await admin(`select stage from profiles where id=$1`, [man]))[0].stage).toBe("key_3");
     // The certification packet still needs Key 2 certified.
     expect(await admin(`select app.module_open($1, 'certification') as open`, [man])).toEqual([{ open: false }]);
+  });
+});
+
+describe("meetings keep their local time across daylight saving (0017)", () => {
+  it("local weekday + time + zone are the truth; the UTC fields follow this week's offset", async () => {
+    const [m] = await rows(LEADER, `insert into meetings (name, local_day, local_time, timezone) values ('DST test', 0, '17:00', 'America/Los_Angeles')
+                                     returning id, day_of_week, start_time_utc::text as utc`);
+    // Whatever this week's offset is, Sunday 5 pm Pacific is Monday 00:00 or 01:00 UTC.
+    expect(m.day_of_week).toBe(1);
+    expect(["00:00:00", "01:00:00"]).toContain(m.utc);
+    const [pub] = await rows(null, `select local_day, local_time::text as t, timezone from meetings_public where id = $1`, [m.id]);
+    expect(pub).toEqual({ local_day: 0, t: "17:00:00", timezone: "America/Los_Angeles" });
+    await expect(rows(LEADER, `update meetings set timezone = 'Mars/Olympus' where id = $1`, [m.id])).rejects.toThrow(/time zone/);
+    await admin(`delete from meetings where id = $1`, [m.id]);
+  });
+
+  it("a save from an older copy of the site (UTC only) still works", async () => {
+    const [m] = await admin(`insert into meetings (name, day_of_week, start_time_utc) values ('Legacy save', 3, '15:00')
+                             returning local_day, local_time::text as t, timezone`);
+    expect(m.timezone).toBe("America/Los_Angeles");
+    expect(m.local_day).toBe(3);
+    expect(["07:00:00", "08:00:00"]).toContain(m.t);   // 15:00 UTC = 7 or 8 am Pacific
+    await admin(`delete from meetings where name = 'Legacy save'`);
   });
 });

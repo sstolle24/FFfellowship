@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { DAYS, localSlot } from "@/lib/time";
+import { DAYS, meetingSlot } from "@/lib/time";
 import { Badge } from "@/components/ui";
 
-type Row = { id: string; name: string; day_of_week: number; start_time_utc: string; tagline: string | null; beginner: boolean;
+type Row = { id: string; name: string; local_day: number; local_time: string; timezone: string; tagline: string | null; beginner: boolean;
   temp_closed?: boolean; closed_note?: string | null };
 
 /** Public weekly schedule in the visitor's own timezone. No links, ever. */
@@ -11,7 +11,7 @@ export function MeetingSchedule({ meetings }: { meetings: Row[] }) {
   const [tz, setTz] = useState("UTC");
   useEffect(() => setTz(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"), []);
   const rows = useMemo(
-    () => meetings.map((m) => ({ ...m, slot: localSlot(m.day_of_week, m.start_time_utc.slice(0, 5), tz) }))
+    () => meetings.map((m) => ({ ...m, slot: meetingSlot(m, tz) }))
       .sort((a, b) => a.slot.dayIndex - b.slot.dayIndex || a.slot.at.getUTCHours() * 60 + a.slot.at.getUTCMinutes() - (b.slot.at.getUTCHours() * 60 + b.slot.at.getUTCMinutes())),
     [meetings, tz],
   );

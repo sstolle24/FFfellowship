@@ -5,17 +5,24 @@ import { FormMessage, Submit } from "@/components/forms";
 import { DAYS } from "@/lib/time";
 import type { Meeting } from "@/lib/types";
 
-export function MeetingForm({ tz, meeting }: { tz: string; meeting?: Meeting & { localDay: number; localTime: string } }) {
+const TZS = Intl.supportedValuesOf("timeZone");
+
+/** Times are the meeting's own (e.g. 5:00 PM Pacific), kept across daylight saving; members see them in their zone. */
+export function MeetingForm({ tz, meeting }: { tz: string; meeting?: Meeting }) {
   const [state, run] = useActionState(saveMeeting.bind(null, meeting?.id ?? null), undefined);
   return (
     <form action={run} className="grid gap-3 sm:grid-cols-2">
-      <input type="hidden" name="tz" value={tz} />
       <div className="sm:col-span-2"><label className="lbl">Name</label><input name="name" required defaultValue={meeting?.name} className="field" maxLength={80} /></div>
       <div>
-        <label className="lbl">Day (your time)</label>
-        <select name="day_of_week" defaultValue={meeting?.localDay ?? 0} className="field">{DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}</select>
+        <label className="lbl">Day</label>
+        <select name="local_day" defaultValue={meeting?.local_day ?? 0} className="field">{DAYS.map((d, i) => <option key={d} value={i}>{d}</option>)}</select>
       </div>
-      <div><label className="lbl">Start time (your time)</label><input name="start_time_utc" type="time" required defaultValue={meeting?.localTime} className="field" /></div>
+      <div><label className="lbl">Start time</label><input name="local_time" type="time" required defaultValue={meeting?.local_time?.slice(0, 5)} className="field" /></div>
+      <div className="sm:col-span-2">
+        <label className="lbl">Time zone of the meeting</label>
+        <select name="timezone" defaultValue={meeting?.timezone ?? tz} className="field">{TZS.map((t) => <option key={t}>{t}</option>)}</select>
+        <p className="mt-1 text-xs text-muted">It stays at this local time all year (daylight saving included). Members see it in their own time zone.</p>
+      </div>
       <div className="sm:col-span-2"><label className="lbl">Tagline</label><input name="tagline" defaultValue={meeting?.tagline ?? ""} className="field" maxLength={200} /></div>
       <div className="sm:col-span-2"><label className="lbl">Zoom link (members only)</label><input name="zoom_url" type="url" defaultValue={meeting?.zoom_url ?? ""} className="field" /></div>
       <div><label className="lbl">Meeting ID</label><input name="zoom_id" defaultValue={meeting?.zoom_id ?? ""} className="field" maxLength={40} /></div>
