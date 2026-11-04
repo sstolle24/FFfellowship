@@ -5,6 +5,7 @@ import type { Meeting } from "@/lib/types";
 import { ActionButton } from "@/components/forms";
 import { Card, SectionTitle } from "@/components/ui";
 import { MeetingForm } from "@/components/MeetingForm";
+import { MeetingArtForm } from "@/components/MeetingArtForm";
 import { VideoLinkForm } from "@/components/VideoLinkForm";
 import { deleteMeeting } from "../actions";
 type VideoRow = { id: string; module_title: string; title: string; video_url: string | null; passcode: string | null };
@@ -62,6 +63,7 @@ export default async function MeetingsAdmin() {
             </summary>
             <div className="mt-4 space-y-3">
               <MeetingForm tz={me.timezone} meeting={m} />
+              <MeetingArtForm meetingId={m.id} name={m.name} artPath={m.art_path ?? null} />
               <ActionButton variant="danger" run={deleteMeeting.bind(null, m.id)} confirm={`Delete ${m.name}? Logged meetings keep their history.`}>Delete</ActionButton>
             </div>
           </details>

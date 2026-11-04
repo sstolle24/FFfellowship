@@ -2,9 +2,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { DAYS, meetingSlot } from "@/lib/time";
 import { Badge } from "@/components/ui";
+import { MeetingArt } from "@/components/MeetingArt";
+import { meetingArtUrl } from "@/lib/meeting-art";
 
 type Row = { id: string; name: string; local_day: number; local_time: string; timezone: string; tagline: string | null; beginner: boolean;
-  temp_closed?: boolean; closed_note?: string | null };
+  temp_closed?: boolean; closed_note?: string | null; art_path?: string | null };
 
 /** Public weekly schedule in the visitor's own timezone. No links, ever. */
 export function MeetingSchedule({ meetings }: { meetings: Row[] }) {
@@ -26,13 +28,16 @@ export function MeetingSchedule({ meetings }: { meetings: Row[] }) {
             <h2 className="mb-2 text-lg text-gold">{d}</h2>
             <div className="divide-y divide-line rounded-xl border border-line bg-panel">
               {day.map((m) => (
-                <div key={m.id} className={`flex flex-wrap items-baseline gap-x-4 gap-y-1 p-4 ${m.temp_closed ? "opacity-70" : ""}`}>
+                <div key={m.id} className={`flex gap-3 p-4 ${m.temp_closed ? "opacity-70" : ""}`}>
+                  {m.art_path && <MeetingArt url={meetingArtUrl(m.art_path)!} name={m.name} />}
+                  <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1">
                   <span className={`w-36 shrink-0 font-semibold ${m.temp_closed ? "line-through decoration-1" : ""}`}>{m.slot.time}</span>
                   <span className="display text-ink">{m.name}</span>
                   {m.temp_closed && <Badge tone="orange">Temporarily closed</Badge>}
                   {m.beginner && !m.temp_closed && <Badge tone="gold">Beginner friendly</Badge>}
                   {m.temp_closed && m.closed_note && <span className="basis-full text-sm text-orange sm:ml-40">{m.closed_note}</span>}
                   {m.tagline && <span className="basis-full text-sm text-muted sm:ml-40">{m.tagline}</span>}
+                  </div>
                 </div>
               ))}
             </div>

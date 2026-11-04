@@ -186,3 +186,31 @@ export async function confirmKey1(spId: string): Promise<S> {
 export async function unlockKey2(manId: string): Promise<S> {
   return done(await callRpc("admin_unlock_key2", { p_man: manId }), "Key 2 is open for him.");
 }
+
+// ───────────────────────── meeting artwork ─────────────────────────
+const ART_TYPES: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp" };
+
+/** One-time upload pass for a meeting's image ({meeting}/{file}); storage checks he's a leader. */
+export async function meetingArtTicket(meetingId: string, fileName: string): Promise<{ path?: string; token?: string; type?: string; error?: string }> {
+  const me = await getMe();
+  if (!me || !["leader", "admin"].includes(me.role)) return { error: "Leaders only." };
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  if (!ART_TYPES[ext]) return { error: "Use a JPG, PNG or WebP image." };
+  const safe = fileName.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 60) || "art";
+  const path = `${meetingId}/${Date.now()}-${safe}.${ext}`;
+  const { data, error } = await (await supabaseServer()).storage.from("meeting-art").createSignedUploadUrl(path);
+  return error ? { error: error.message } : { path, token: data.token, type: ART_TYPES[ext] };
+}
+
+/** Sets (or, with null, removes) a meeting's image, and removes the old file. */
+export async function setMeetingArt(meetingId: string, path: string | null): Promise<S> {
+  const db = await supabaseServer();
+  const { data: cur } = await db.from("meetings").select("art_path").eq("id", meetingId).maybeSingle();
+  const { error } = await db.from("meetings").update({ art_path: path }).eq("id", meetingId);
+  if (error) return { error: error.message };
+  if (cur?.art_path && cur.art_path !== path) await db.storage.from("meeting-art").remove([cur.art_path]);
+  revalidatePath("/leader/meetings");
+  revalidatePath("/meetings");
+  revalidatePath("/app/meetings");
+  return { ok: path ? "Image saved." : "Image removed." };
+}

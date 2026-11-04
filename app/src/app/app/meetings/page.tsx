@@ -5,6 +5,8 @@ import type { Meeting } from "@/lib/types";
 import { Badge, Card, Notice, SectionTitle } from "@/components/ui";
 import { MeetingSchedule } from "@/components/MeetingSchedule";
 import { JoinButton } from "@/components/JoinButton";
+import { MeetingArt } from "@/components/MeetingArt";
+import { meetingArtUrl } from "@/lib/meeting-art";
 
 export const metadata = { title: "Meetings & Links" };
 
@@ -13,7 +15,7 @@ export default async function MemberMeetings() {
   const db = await supabaseServer();
   // Links are for approved members only (RLS on `meetings`); pending men get the public schedule.
   if (me.status !== "active") {
-    const { data: schedule } = await db.from("meetings_public").select("id, name, tagline, beginner, temp_closed, closed_note, timezone, local_day, local_time");
+    const { data: schedule } = await db.from("meetings_public").select("id, name, tagline, beginner, temp_closed, closed_note, timezone, local_day, local_time, art_path");
     return (
       <div>
         <SectionTitle sub="You're welcome at any of these meetings.">Meetings</SectionTitle>
@@ -43,6 +45,7 @@ export default async function MemberMeetings() {
               <div className="space-y-2">
                 {day.map((m) => (
                   <Card key={m.id} id={m.id} className={`flex flex-wrap items-center gap-x-4 gap-y-2 p-4 ${m.temp_closed ? "opacity-70" : ""}`}>
+                    {m.art_path && <MeetingArt url={meetingArtUrl(m.art_path)!} name={m.name} size="md" />}
                     <span className={`w-36 font-semibold ${m.temp_closed ? "line-through decoration-1" : ""}`}>{m.slot.time}</span>
                     <div className="min-w-0 flex-1">
                       <div className="display flex flex-wrap items-center gap-2 text-ink">

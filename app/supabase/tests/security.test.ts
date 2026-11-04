@@ -138,7 +138,7 @@ describe("meetings", () => {
   it("anon gets the public schedule with no link columns", async () => {
     const r = await rows(null, `select * from meetings_public`);
     expect(r.length).toBe(9);
-    expect(Object.keys(r[0]).sort()).toEqual(["beginner", "closed_note", "day_of_week", "id", "local_day", "local_time", "name", "start_time_utc", "tagline", "temp_closed", "timezone"]);
+    expect(Object.keys(r[0]).sort()).toEqual(["art_path", "beginner", "closed_note", "day_of_week", "id", "local_day", "local_time", "name", "start_time_utc", "tagline", "temp_closed", "timezone"]);
   });
 
   it("H1: pending members get the public schedule only, no links", async () => {
@@ -1285,5 +1285,23 @@ describe("fishing follow-up (0019)", () => {
       .toEqual([{ name: "Joe", outcome: "Called him, he is coming Friday", reached: true }]);
     expect(await rows(STRANGER, `select * from fishing_contacts where man_id = $1`, [man])).toHaveLength(0);
     await expect(rows(man, `update fishing_contacts set outcome = $2 where man_id = $1`, [man, "x".repeat(501)])).rejects.toThrow(/check/);
+  });
+});
+
+describe("meeting artwork (0020)", () => {
+  it("leaders upload one image per meeting into its folder; it shows on the public schedule; members can't upload", async () => {
+    const [m] = await admin(`select id from meetings where name = 'The Healing Room'`);
+    const put = (who: string, name: string) => as(who, (c) => c.query(`insert into storage.objects (bucket_id, name) values ('meeting-art', $1)`, [name]));
+    await put(LEADER, `${m.id}/1-art.png`);
+    await expect(put(N1, `${m.id}/2-art.png`)).rejects.toThrow(/row-level security/);
+    await expect(put(LEADER, `00000000-0000-0000-0000-000000000000/x.png`)).rejects.toThrow(/row-level security/); // not a meeting
+    await expect(put(LEADER, `${m.id}/deep/x.png`)).rejects.toThrow(/row-level security/);
+    const [b] = await admin(`select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'meeting-art'`);
+    expect(b).toEqual({ public: true, file_size_limit: String(5 * 1024 * 1024), allowed_mime_types: ["image/jpeg", "image/png", "image/webp"] });
+    await rows(LEADER, `update meetings set art_path = $2 where id = $1`, [m.id, `${m.id}/1-art.png`]);
+    expect((await rows(null, `select art_path from meetings_public where id = $1`, [m.id]))[0].art_path).toBe(`${m.id}/1-art.png`);
+    await expect(rows(LEADER, `update meetings set art_path = '../etc/passwd' where id = $1`, [m.id])).rejects.toThrow(/check/);
+    await rows(N1, `update meetings set art_path = null where id = $1`, [m.id]); // not a leader: no effect
+    expect((await admin(`select art_path from meetings where id = $1`, [m.id]))[0].art_path).not.toBeNull();
   });
 });
