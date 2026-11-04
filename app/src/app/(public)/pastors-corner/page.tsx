@@ -1,4 +1,5 @@
 import { ProsePage } from "@/components/Prose";
+import { Scripture } from "@/components/Scripture";
 
 export const metadata = { title: "Pastor's Corner" };
 
@@ -8,7 +9,7 @@ export default function PastorsCorner() {
     <ProsePage title="Pastor's Corner" sub="A word of encouragement for the men of the Fellowship.">
       <blockquote className="border-l-2 border-gold pl-4 italic text-muted">
         &ldquo;Seek ye first the Kingdom of God and his righteousness, and all these things shall be added unto you.&rdquo;
-        — Matthew 6:33
+        — <Scripture text="Matthew 6:33" />
       </blockquote>
       <p>
         Freedom starts with priority. Every man who has walked out of this addiction did it by putting God and his

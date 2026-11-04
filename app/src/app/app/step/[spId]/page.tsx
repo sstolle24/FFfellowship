@@ -11,6 +11,7 @@ import { InitialBoxes, StatusBadge } from "@/components/StepParts";
 import { ActionButton } from "@/components/forms";
 import { OverrideApForm, ReturnForm, TextTurnIn, WorksheetForm } from "@/components/StepForms";
 import { UploadTurnIn } from "@/components/UploadTurnIn";
+import { Scripture } from "@/components/Scripture";
 import { initialAp, initialLeader, initialSelf, setReadToGroup } from "../../actions";
 
 export const metadata = { title: "Program item" };
@@ -133,7 +134,7 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
       )}
 
       {self && videosPending && <Notice className="order-2">Watch the 3 videos first — check each one off in <Link href="/app/program#key_1" className="underline">My Program</Link>, then this worksheet opens.</Notice>}
-      {step.description && <Card className="order-2 whitespace-pre-line leading-relaxed"><div className="max-w-prose">{step.description}</div></Card>}
+      {step.description && <Card className="order-2 whitespace-pre-line leading-relaxed"><div className="max-w-prose"><Scripture text={step.description} /></div></Card>}
       {helper && <Notice className="order-2">{helper}</Notice>}
 
       {isWorksheet && (

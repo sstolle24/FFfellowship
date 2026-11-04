@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Scripture } from "@/components/Scripture";
 import { Logo } from "@/components/ui";
 import { getMe } from "@/lib/auth";
 
@@ -48,7 +49,7 @@ export default async function PublicLayout({ children }: { children: React.React
           <Link href="/get-started" className="hover:text-gold">Get Started</Link>
           <Link href="/privacy" className="hover:text-gold">Privacy</Link>
           <Link href="/get-help" className="hover:text-gold">Get Help Now</Link>
-          <span className="ml-auto italic">&ldquo;If the Son sets you free, you will be free indeed.&rdquo; — John 8:36</span>
+          <span className="ml-auto italic">&ldquo;If the Son sets you free, you will be free indeed.&rdquo; — <Scripture text="John 8:36" above /></span>
         </div>
       </footer>
     </div>
