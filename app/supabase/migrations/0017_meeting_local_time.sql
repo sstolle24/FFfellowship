@@ -52,8 +52,10 @@ update meetings set local_day = local_day;
 alter table meetings alter column local_day set not null;
 alter table meetings alter column local_time set not null;
 
--- New columns go on the end so the view keeps its grants (0005: SELECT only).
-create or replace view meetings_public as
+-- Rebuilt (not replaced) so this runs again safely after later columns were added; SELECT only (0005).
+drop view if exists meetings_public;
+create view meetings_public as
   select id, name, day_of_week, start_time_utc, tagline, beginner, temp_closed, closed_note,
          timezone, local_day, local_time
   from meetings where active;
+grant select on public.meetings_public to anon, authenticated;
