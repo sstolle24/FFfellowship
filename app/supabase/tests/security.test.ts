@@ -1271,3 +1271,19 @@ describe("state / province on profiles (0018)", () => {
     expect((await admin(`select state from profiles where id = $1`, [man]))[0].state).toBe("Oklahoma");
   });
 });
+
+describe("fishing follow-up (0019)", () => {
+  it("he can note how it went and mark reached after the week is committed; names stay locked; his AP can read it", async () => {
+    const man = await newUser("Finn");
+    await rpc(LEADER, "approve_member", man, LEADER);
+    await rpc(LEADER, "leader_create_relationship", SPONSOR, man, "ap");
+    await rows(man, `insert into fishing_contacts (man_id, week_start, slot, name) values ($1, '2026-11-02', 1, 'Joe')`, [man]);
+    await admin(`insert into fishing_weeks (man_id, week_start) values ($1, '2026-11-02')`, [man]);
+    await rows(man, `update fishing_contacts set outcome = 'Called him, he is coming Friday', reached_at = now() where man_id = $1`, [man]);
+    await expect(rows(man, `update fishing_contacts set name = 'Someone else' where man_id = $1`, [man])).rejects.toThrow(/committed/);
+    expect(await rows(SPONSOR, `select name, outcome, reached_at is not null as reached from fishing_contacts where man_id = $1`, [man]))
+      .toEqual([{ name: "Joe", outcome: "Called him, he is coming Friday", reached: true }]);
+    expect(await rows(STRANGER, `select * from fishing_contacts where man_id = $1`, [man])).toHaveLength(0);
+    await expect(rows(man, `update fishing_contacts set outcome = $2 where man_id = $1`, [man, "x".repeat(501)])).rejects.toThrow(/check/);
+  });
+});

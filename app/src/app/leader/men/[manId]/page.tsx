@@ -4,7 +4,7 @@ import { requireLeader } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadProgram } from "@/lib/program";
 import { initialerNames, namesFor } from "@/lib/names";
-import { dayCount, fmtDate, fmtDateTime, relDays } from "@/lib/time";
+import { addDays, dayCount, fmtDate, fmtDateTime, relDays, weekStart } from "@/lib/time";
 import { STAGE_LABEL, type Profile } from "@/lib/types";
 import { ProgramView } from "@/components/ProgramView";
 import { AdminAccountCard } from "@/components/AdminAccountCard";
@@ -34,6 +34,9 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
     db.from("meeting_logs").select("id, date, counts_90, created_at").eq("man_id", manId),
     db.from("panic_events").select("created_at").eq("man_id", manId).order("created_at", { ascending: false }).limit(5),
   ]);
+  const { data: fishing } = await db.from("fishing_contacts").select("id, week_start, slot, name, method, note, outcome, reached_at")
+    .eq("man_id", manId).gte("week_start", addDays(weekStart(man.timezone), -21)).order("week_start", { ascending: false }).order("slot");
+  const fishWeeks = [...new Set((fishing ?? []).map((f) => f.week_start as string))];
   const { data: outside } = await db.from("outside_sponsors").select("name, phone, status").eq("man_id", manId)
     .in("status", ["pending", "approved"]).maybeSingle();
   const names = { ...(await initialerNames(db, program)), ...(await namesFor(db, [...new Set((rels ?? []).flatMap((r) => [r.mentor_id, r.mentee_id]))])) };
@@ -122,6 +125,28 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
       </Card>
 
       <ProgramView man={man} program={program} names={names} self={false} />
+
+      <Card className="space-y-3 text-sm">
+        <h2 className="text-gold">Fishing — last 4 weeks</h2>
+        {fishWeeks.length ? fishWeeks.map((w) => {
+          const rows = (fishing ?? []).filter((f) => f.week_start === w);
+          return (
+            <div key={w}>
+              <p className="mb-1 text-xs text-muted">Week of {fmtDate(w)} · {rows.filter((f) => f.reached_at).length} of {rows.length} reached</p>
+              <ul className="space-y-1">
+                {rows.map((f) => (
+                  <li key={f.id}>
+                    <span className={f.reached_at ? "text-ok" : "text-muted"}>{f.reached_at ? "✓" : "○"}</span>{" "}
+                    <span className="text-ink">{f.name}</span>{f.method && <span className="text-muted"> · {f.method}</span>}
+                    {f.note && <span className="text-muted"> — {f.note}</span>}
+                    {f.outcome && <span className="text-ink"> → {f.outcome}</span>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        }) : <p className="text-muted">No fishing logged in the last 4 weeks.</p>}
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>

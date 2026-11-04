@@ -6,7 +6,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { callRpc } from "@/lib/rpc";
 import { getMe } from "@/lib/auth";
 import { ninetyStartProblem } from "@/lib/ninety";
-import { todayIn, weekStart } from "@/lib/time";
+import { addDays, todayIn, weekStart } from "@/lib/time";
 
 type S = { error?: string; ok?: string } | undefined;
 const done = (r: { ok: boolean; error?: string }, ok?: string, path = "/app"): S => {
@@ -232,6 +232,25 @@ export async function saveFishing(slot: number, _: S, form: FormData): Promise<S
   }
   revalidatePath("/app", "layout");
   return { ok: "Saved." };
+}
+
+/** How it went with one of his 3 (this week or last week — The Path goes over last week's on Monday). */
+export async function saveFishingOutcome(weekStartIso: string, slot: number, _: S, form: FormData): Promise<S> {
+  const me = await getMe();
+  if (!me) return { error: "Sign in first." };
+  const ws = weekStart(me.timezone);
+  if (weekStartIso !== ws && weekStartIso !== addDays(ws, -7)) return { error: "You can update this week and last week only." };
+  const reached = form.get("reached") === "on";
+  const supabase = await supabaseServer();
+  const { data: cur } = await supabase.from("fishing_contacts").select("reached_at")
+    .match({ man_id: me.id, week_start: weekStartIso, slot }).maybeSingle();
+  if (!cur) return { error: "Name him first." };
+  const { error } = await supabase.from("fishing_contacts").update({
+    outcome: String(form.get("outcome") ?? "").trim().slice(0, 500) || null,
+    reached_at: reached ? cur.reached_at ?? new Date().toISOString() : null,
+  }).match({ man_id: me.id, week_start: weekStartIso, slot });
+  revalidatePath("/app", "layout");
+  return error ? { error: error.message } : { ok: "Saved." };
 }
 
 // ───────────────────────── panic ─────────────────────────
