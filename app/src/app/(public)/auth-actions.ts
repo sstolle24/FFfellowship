@@ -44,6 +44,7 @@ const SignUp = z.object({
   timezone: z.string().max(60).default("America/Chicago"),
   country: z.string().trim().max(60).optional(),
   city: z.string().trim().max(60).optional(),
+  state: z.string().trim().max(60).optional(),
   sobriety_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal("")),
   heard_about: z.string().trim().max(200).optional(),
   intake_reason: z.string().trim().max(2000).optional(),

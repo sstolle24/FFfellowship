@@ -16,6 +16,7 @@ export interface Profile {
   timezone: string;
   country: string | null;
   city: string | null;
+  state?: string | null;
   role: Role;
   status: Status;
   sobriety_start_date: string | null;

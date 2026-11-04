@@ -6,22 +6,37 @@ import { Card, Empty, SectionTitle } from "@/components/ui";
 export const metadata = { title: "Directory" };
 
 /** Opt-in only, city-level only, active members only (enforced by the member_contacts view). */
-export default async function Directory() {
+export default async function Directory({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
   const me = await requireActive();
   const db = await supabaseServer();
-  const { data } = await db.from("member_contacts").select("*").eq("directory_opt_in", true).order("first_name");
+  const { state } = await searchParams;
+  const { data: all } = await db.from("member_contacts").select("*").eq("directory_opt_in", true).order("first_name");
+  const states = [...new Set((all ?? []).map((m) => m.state as string | null).filter((x): x is string => !!x))].sort();
+  const data = state ? (all ?? []).filter((m) => m.state === state) : all;
   const { data: mine } = await db.from("contact_sharing").select("directory_opt_in").eq("profile_id", me.id).single();
 
   const groups = new Map<string, typeof data>();
   for (const m of data ?? []) {
-    const key = m.country ? `${m.country}${m.city ? ` — ${m.city}` : ""}` : "Location not shared";
+    const key = m.country || m.state ? [m.country, m.state, m.city].filter(Boolean).join(" — ") : "Location not shared";
     groups.set(key, [...(groups.get(key) ?? []), m]);
   }
   const sorted = [...groups.entries()].sort(([a], [b]) => (a === "Location not shared" ? 1 : b === "Location not shared" ? -1 : a.localeCompare(b)));
 
   return (
     <div className="space-y-6">
-      <SectionTitle sub="Brothers who chose to be listed, grouped by city. Use it to find men near you or in your timezone.">Directory</SectionTitle>
+      <SectionTitle sub="Brothers who chose to be listed, grouped by location. Use it to find men near you or in your timezone.">Directory</SectionTitle>
+      {states.length > 0 && (
+        <form className="flex flex-wrap items-end gap-2" action="/app/directory">
+          <div>
+            <label className="lbl" htmlFor="state">State / province</label>
+            <select id="state" name="state" defaultValue={state ?? ""} className="field">
+              <option value="">All</option>
+              {states.map((s) => <option key={s}>{s}</option>)}
+            </select>
+          </div>
+          <button type="submit" className="rounded-lg border border-line px-3 py-2 text-sm hover:border-gold">Show</button>
+        </form>
+      )}
       {!mine?.directory_opt_in && (
         <p className="text-sm text-muted">You&apos;re not listed. <Link href="/app/profile#sharing" className="text-gold underline">Turn it on in Profile &amp; Privacy</Link>.</p>
       )}

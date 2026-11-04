@@ -18,6 +18,7 @@ export function SignUpForm({ siteKey }: { siteKey: string }) {
         <div><label className="lbl" htmlFor="password">Password (10+ characters)</label><input className="field" id="password" name="password" type="password" minLength={10} required autoComplete="new-password" /></div>
         <div><label className="lbl" htmlFor="sobriety_start_date">Sobriety date (if you have one)</label><input className="field" id="sobriety_start_date" name="sobriety_start_date" type="date" /></div>
         <div><label className="lbl" htmlFor="city">City (optional)</label><input className="field" id="city" name="city" maxLength={60} /></div>
+        <div><label className="lbl" htmlFor="state">State / province (optional)</label><input className="field" id="state" name="state" maxLength={60} /></div>
         <div><label className="lbl" htmlFor="country">Country</label><input className="field" id="country" name="country" maxLength={60} /></div>
       </div>
       <div><label className="lbl" htmlFor="heard_about">How did you hear about us?</label><input className="field" id="heard_about" name="heard_about" maxLength={200} /></div>

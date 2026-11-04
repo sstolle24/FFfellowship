@@ -46,6 +46,7 @@ export default async function Profile() {
             <select id="timezone" name="timezone" defaultValue={me.timezone} className="field">{TZS.map((t) => <option key={t}>{t}</option>)}</select>
           </div>
           <div><label className="lbl" htmlFor="city">City</label><input id="city" name="city" defaultValue={me.city ?? ""} className="field" maxLength={60} /></div>
+          <div><label className="lbl" htmlFor="state">State / province</label><input id="state" name="state" defaultValue={me.state ?? ""} className="field" maxLength={60} /></div>
           <div><label className="lbl" htmlFor="country">Country</label><input id="country" name="country" defaultValue={me.country ?? ""} className="field" maxLength={60} /></div>
           <div><label className="lbl" htmlFor="home_group">Home group (Key 2 #10)</label><input id="home_group" name="home_group" defaultValue={me.home_group ?? ""} className="field" maxLength={80} /></div>
           <div className="sm:col-span-2"><label className="lbl" htmlFor="service_position">Service position (Key 2 #12)</label><input id="service_position" name="service_position" defaultValue={me.service_position ?? ""} className="field" maxLength={120} /></div>
@@ -80,7 +81,7 @@ export default async function Profile() {
             {[
               ["share_phone", "Share my phone number", cs?.share_phone],
               ["share_signal", "Share my Signal", cs?.share_signal],
-              ["share_city", "Share my city and country", cs?.share_city],
+              ["share_city", "Share my city, state and country", cs?.share_city],
               ["directory_opt_in", "List me in the member Directory", cs?.directory_opt_in],
             ].map(([n, l, v]) => (
               <label key={n as string} className="flex items-center gap-2"><input type="checkbox" name={n as string} defaultChecked={!!v} className="accent-gold" /> {l as string}</label>

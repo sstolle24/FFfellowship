@@ -9,8 +9,9 @@ import { approveMember, denyMember, setRole } from "../actions";
 
 export const metadata = { title: "Members & Roles" };
 
-export default async function Members() {
+export default async function Members({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
   const me = await requireLeader();
+  const { state } = await searchParams;
   const db = await supabaseServer();
   const [{ data: all }, { data: intakes }] = await Promise.all([
     db.from("profiles").select("*").is("deleted_at", null).order("created_at", { ascending: false }),
@@ -20,6 +21,8 @@ export default async function Members() {
   const pending = people.filter((p) => p.status === "pending");
   const leaders = people.filter((p) => ["leader", "admin"].includes(p.role) && p.status === "active");
   const admin = me.role === "admin";
+  const states = [...new Set(people.map((p) => p.state).filter((x): x is string => !!x))].sort();
+  const everyone = people.filter((p) => p.status !== "pending" && (!state || p.state === state));
 
   return (
     <div className="space-y-8">
@@ -31,7 +34,7 @@ export default async function Members() {
           <Card key={p.id} className="space-y-2 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <span className="display text-base">{p.first_name}</span>
-              <span className="text-muted">{p.email} · {p.city ? `${p.city}, ` : ""}{p.country ?? ""} · {p.timezone}</span>
+              <span className="text-muted">{p.email} · {[p.city, p.state, p.country].filter(Boolean).join(", ")} · {p.timezone}</span>
               <span className="ml-auto text-xs text-muted">Signed up {fmtDate(p.created_at)}</span>
             </div>
             <p className="whitespace-pre-line text-muted">{intakes?.find((i) => i.profile_id === p.id)?.intake_reason || "No intake reason given."}</p>
@@ -61,16 +64,31 @@ export default async function Members() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-lg text-gold">Everyone</h2>
+        <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
+          <h2 className="text-lg text-gold">Everyone ({everyone.length})</h2>
+          {states.length > 0 && (
+            <form className="flex items-end gap-2" action="/leader/members">
+              <div>
+                <label className="lbl" htmlFor="state">State / province</label>
+                <select id="state" name="state" defaultValue={state ?? ""} className="field py-1">
+                  <option value="">All</option>
+                  {states.map((x) => <option key={x}>{x}</option>)}
+                </select>
+              </div>
+              <button type="submit" className="rounded-lg border border-line px-3 py-1.5 text-sm hover:border-gold">Filter</button>
+            </form>
+          )}
+        </div>
         <div className="overflow-x-auto rounded-xl border border-line">
           <table className="w-full text-sm">
             <thead className="bg-navy-2 text-left text-xs uppercase tracking-wider text-muted">
-              <tr><th className="p-2">Name</th><th className="p-2">Status</th><th className="p-2">Stage</th><th className="p-2">Role</th></tr>
+              <tr><th className="p-2">Name</th><th className="p-2">Location</th><th className="p-2">Status</th><th className="p-2">Stage</th><th className="p-2">Role</th></tr>
             </thead>
             <tbody>
-              {people.filter((p) => p.status !== "pending").map((p) => (
+              {everyone.map((p) => (
                 <tr key={p.id} className="border-t border-line">
                   <td className="p-2"><Link href={`/leader/men/${p.id}`} className="hover:text-gold">{p.display_name || p.first_name}</Link></td>
+                  <td className="p-2 text-muted">{[p.city, p.state, p.country].filter(Boolean).join(", ") || "—"}</td>
                   <td className="p-2"><Badge tone={p.status === "active" ? "ok" : "muted"}>{p.status}</Badge></td>
                   <td className="p-2 text-muted">{STAGE_LABEL[p.stage]}</td>
                   <td className="p-2">

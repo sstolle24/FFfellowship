@@ -267,6 +267,7 @@ const ProfileForm = z.object({
   signal: z.string().trim().max(60).optional(),
   timezone: z.string().trim().max(60),
   city: z.string().trim().max(60).optional(),
+  state: z.string().trim().max(60).optional(),
   country: z.string().trim().max(60).optional(),
   home_group: z.string().trim().max(80).optional(),
   service_position: z.string().trim().max(120).optional(),

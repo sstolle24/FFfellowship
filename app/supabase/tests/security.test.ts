@@ -1255,3 +1255,19 @@ describe("meetings keep their local time across daylight saving (0017)", () => {
     await admin(`delete from meetings where name = 'Legacy save'`);
   });
 });
+
+describe("state / province on profiles (0018)", () => {
+  it("comes from sign-up, he can change it, and others see it only when he shares his location", async () => {
+    const man = await newUser("Tex", { state: "Texas", city: "Austin", country: "USA" });
+    expect((await admin(`select state from profiles where id = $1`, [man]))[0].state).toBe("Texas");
+    await rpc(LEADER, "approve_member", man, LEADER);
+    await rows(man, `update profiles set state = 'Oklahoma' where id = $1`, [man]);
+    expect((await admin(`select state from profiles where id = $1`, [man]))[0].state).toBe("Oklahoma");
+    await admin(`update contact_sharing set directory_opt_in = true, share_city = false where profile_id = $1`, [man]);
+    expect(await rows(N1, `select city, state, country from member_contacts where id = $1`, [man])).toEqual([{ city: null, state: null, country: null }]);
+    await admin(`update contact_sharing set share_city = true where profile_id = $1`, [man]);
+    expect(await rows(N1, `select city, state, country from member_contacts where id = $1`, [man])).toEqual([{ city: "Austin", state: "Oklahoma", country: "USA" }]);
+    await rows(N1, `update profiles set state = 'Hacked' where id = $1`, [man]); // not his row
+    expect((await admin(`select state from profiles where id = $1`, [man]))[0].state).toBe("Oklahoma");
+  });
+});
