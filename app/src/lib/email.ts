@@ -69,6 +69,11 @@ export const TEMPLATES = {
     subject: () => "About your Finally Free sign-up",
     body: (v) => `${v.first}, thank you for reaching out to Finally Free Fellowship.\n\nWe aren't able to approve your account. If you think this is a mistake, reply to this email.\n\nIf you're struggling right now, please don't wait: ${app("/get-help")}`,
   },
+  ninety_reminder: {
+    subject: () => "Did you make a meeting today?",
+    body: (v) => `${v.first}, it's day ${v.day} of your 90 in 90 — ${v.count} of 90 logged so far.\n\nWent to a meeting today? Log it: ${app("/app/ninety")}\n\nNot yet? There may still be one tonight: ${app("/app/meetings")}\n\nKeep coming back.`,
+    pref: "ninety_reminders",
+  },
   match_requested: {
     subject: (v) => `${v.man} is looking for ${v.kind === "ap" ? "an accountability partner" : "a sponsor"}`,
     body: () => `A brother has posted on the Sponsor Board.\n\n${app("/app/sponsor")}`,
@@ -170,6 +175,7 @@ export type TemplateName = keyof typeof TEMPLATES;
 export const OPTIONAL_PREFS: Record<string, string> = {
   progress: "Approvals and newly unlocked modules",
   milestones: "Sobriety and 90-in-90 milestones",
+  ninety_reminders: "Evening reminder to log your 90 in 90 meeting",
   inactivity: "Inactivity nudges",
   weekly_summary: "Sunday weekly summary",
   sponsor_board: "New Sponsor Board requests (AP/sponsors)",

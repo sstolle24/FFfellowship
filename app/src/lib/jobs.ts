@@ -2,7 +2,7 @@ import "server-only";
 import { supabaseService } from "@/lib/supabase/server";
 import { sendTemplate } from "@/lib/email";
 import { purgeDeletedAccount } from "@/lib/purge";
-import { ninetyCount, ninetyStart } from "@/lib/ninety";
+import { ninetyCount, ninetyReminderDue, ninetyStart } from "@/lib/ninety";
 import { daysBetween, todayIn, weekStart } from "@/lib/time";
 
 const SOBRIETY_MILESTONES = [7, 30, 60, 90, 365];
@@ -143,4 +143,22 @@ export async function runWeeklyLeader() {
     if (await sendTemplate(l, "weekly_leader_digest", { pending: pending ?? 0, review, matches: matches ?? 0, inactive, panic: panic ?? 0 }, { dedupeKey: todayIn("UTC") })) n++;
   }
   return { sent: n };
+}
+
+/** Hourly: the 8 pm "did you make a meeting today?" reminder for men in their 90 in 90 (once a day each). */
+export async function runHourly() {
+  const { db, men } = await base();
+  const now = new Date();
+  const since = new Date(now.getTime() - 100 * DAY).toISOString().slice(0, 10);
+  const ids = men.map((m) => m.id);
+  const { data: logs } = ids.length
+    ? await db.from("meeting_logs").select("man_id, date, counts_90").in("man_id", ids).gte("date", since)
+    : { data: [] };
+  let sent = 0;
+  for (const m of men) {
+    const due = ninetyReminderDue(m, (logs ?? []).filter((l) => l.man_id === m.id), now);
+    if (!due) continue;
+    if (await sendTemplate(m.id, "ninety_reminder", { day: due.day, count: due.count }, { dedupeKey: `ninety:${due.today}` })) sent++;
+  }
+  return { sent: { ninety_reminder: sent } };
 }

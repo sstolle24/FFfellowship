@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { env } from "@/lib/env";
-import { runDaily, runWeeklyLeader, runWeeklyMember } from "@/lib/jobs";
+import { runDaily, runHourly, runWeeklyLeader, runWeeklyMember } from "@/lib/jobs";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ job:
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const { job } = await params;
-  const run = { daily: runDaily, "weekly-member": runWeeklyMember, "weekly-leader": runWeeklyLeader }[job];
+  const run = { hourly: runHourly, daily: runDaily, "weekly-member": runWeeklyMember, "weekly-leader": runWeeklyLeader }[job];
   if (!run) return NextResponse.json({ error: "unknown job" }, { status: 404 });
   const result = await run();
   return NextResponse.json({ job, ok: true, ...result });

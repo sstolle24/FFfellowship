@@ -41,3 +41,29 @@ describe("90 in 90 start date: plain-English limits (iPad showed 'Value must be 
     expect(ninetyStartProblem("", "2026-10-27")).toMatch(/Pick the date/);
   });
 });
+
+describe("evening 90-in-90 reminder", async () => {
+  const { ninetyReminderDue } = await import("./ninety");
+  const man = { timezone: "America/Los_Angeles", ninety_start_date: "2026-10-20", program_start_date: "2026-10-01" };
+  const at8pm = new Date("2026-11-05T04:00:00Z");   // Wed Nov 4, 8 pm PST
+  it("goes out at 8 pm his time when he hasn't logged today", () => {
+    expect(ninetyReminderDue(man, [{ date: "2026-11-03" }], at8pm)).toEqual({ day: 16, count: 1, today: "2026-11-04" });
+  });
+  it("not at other hours, or in another man's evening", () => {
+    expect(ninetyReminderDue(man, [], new Date("2026-11-05T03:00:00Z"))).toBeNull(); // 7 pm
+    expect(ninetyReminderDue({ ...man, timezone: "America/New_York" }, [], at8pm)).toBeNull(); // 11 pm there
+  });
+  it("not once he's logged today's meeting", () => {
+    expect(ninetyReminderDue(man, [{ date: "2026-11-04" }], at8pm)).toBeNull();
+  });
+  it("only during his 90 days, and not once he has 90", () => {
+    expect(ninetyReminderDue({ ...man, ninety_start_date: "2026-07-01" }, [], at8pm)).toBeNull();   // day 127
+    expect(ninetyReminderDue({ ...man, ninety_start_date: "2026-11-05" }, [], at8pm)).toBeNull();   // starts tomorrow
+    expect(ninetyReminderDue({ ...man, ninety_start_date: null, program_start_date: null }, [], at8pm)).toBeNull();
+    const ninety = Array.from({ length: 90 }, (_, i) => ({ date: `2026-10-${String(20 + (i % 10)).padStart(2, "0")}` }));
+    expect(ninetyReminderDue(man, ninety, at8pm)).toBeNull();
+  });
+  it("falls back to his program start date", () => {
+    expect(ninetyReminderDue({ ...man, ninety_start_date: null }, [], at8pm)?.day).toBe(35);
+  });
+});

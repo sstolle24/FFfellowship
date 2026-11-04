@@ -1,4 +1,5 @@
 /** 90 in 90 rules, shared by the dashboard, My Program, the 90 in 90 page, leader views and jobs. */
+import { daysBetween, safeTz, todayIn } from "./time";
 
 /** A meeting logged more than this many days after it happened shows as "added later". */
 export const LATE_AFTER_DAYS = 3;
@@ -58,4 +59,26 @@ export function ninetyStartProblem(date: string, today: string): string | null {
       + "(A 90 in 90 that began before then would already be finished.)";
   }
   return null;
+}
+
+/** The local hour the evening "log your meeting" reminder goes out. */
+export const REMINDER_HOUR = 20;
+
+/**
+ * Evening reminder: it's 8 pm where he is, he's within his 90 days (day 1–90),
+ * hasn't reached 90, and hasn't logged a meeting dated today. Returns his day
+ * number and count when it's due, else null.
+ */
+export function ninetyReminderDue(p: WithStart & { timezone: string }, logs: Log[], now: Date = new Date()) {
+  const tz = safeTz(p.timezone);
+  const hour = +new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hourCycle: "h23" }).format(now);
+  if (hour !== REMINDER_HOUR) return null;
+  const start = ninetyStart(p);
+  if (!start) return null;
+  const today = todayIn(tz, now);
+  const day = daysBetween(start, today) + 1;
+  if (day < 1 || day > 90) return null;
+  const count = ninetyCount(logs, start);
+  if (count >= 90 || logs.some((l) => l.date === today)) return null;
+  return { day, count, today };
 }
