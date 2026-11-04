@@ -8,6 +8,7 @@ const NAV = [
   ["/how-it-works", "How It Works"],
   ["/why-stop-now", "Why Stop Now"],
   ["/meetings", "Meetings"],
+  ["/whats-happening", "What's Happening"],
   ["/faq", "FAQ"],
   ["/pastors-corner", "Pastor's Corner"],
   ["/give", "Give"],

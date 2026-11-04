@@ -1305,3 +1305,21 @@ describe("meeting artwork (0020)", () => {
     expect((await admin(`select art_path from meetings where id = $1`, [m.id]))[0].art_path).not.toBeNull();
   });
 });
+
+describe("What's Happening (0021)", () => {
+  it("leaders post; members see all; the public and pending men only see public items", async () => {
+    await expect(rows(N1, `insert into community_events (title, created_by) values ('x', $1)`, [N1])).rejects.toThrow(/row-level security/);
+    await expect(rows(null, `insert into community_events (title) values ('x')`)).rejects.toThrow(/permission denied|row-level/);
+    await rows(LEADER, `insert into community_events (kind, title, starts_at, created_by) values ('event', 'Men''s retreat', now() + interval '7 days', $1)`, [LEADER]);
+    await rows(LEADER, `insert into community_events (kind, title, members_only, created_by) values ('prayer', 'Pray for Joe''s family', true, $1)`, [LEADER]);
+    await expect(rows(LEADER, `insert into community_events (title, link, created_by) values ('bad', 'javascript:alert(1)', $1)`, [LEADER])).rejects.toThrow(/check/);
+    const titles = async (who: string | null) => (await rows(who, `select title from community_events order by title`)).map((r) => r.title);
+    expect(await titles(N1)).toEqual(["Men's retreat", "Pray for Joe's family"]);
+    expect(await titles(null)).toEqual(["Men's retreat"]);
+    expect(await titles(PENDING)).toEqual(["Men's retreat"]);
+    await rows(N1, `delete from community_events`);   // members can't remove anything
+    expect(await titles(N1)).toHaveLength(2);
+    await rows(LEADER, `delete from community_events where title = 'Men''s retreat'`);
+    expect(await titles(null)).toEqual([]);
+  });
+});

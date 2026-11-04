@@ -26,9 +26,9 @@ export default async function MemberLayout({ children }: { children: React.React
         ["/app/ninety", "90 in 90"], ["/app/journal", "Meeting Journal"], ["/app/fishing", "Fishing"],
         ["/app/sponsor", isSponsorRole(me) ? "Sponsor Board" : "Find a Sponsor / AP"], ["/app/brothers", "My Brothers"],
         ["/app/sponsor-desk", "Sponsor Desk"], ["/app/directory", "Directory"],
-        ["/app/profile", "Profile & Privacy"],
+        ["/app/community", "What's Happening"], ["/app/profile", "Profile & Privacy"],
       ]
-    : [["/app", "Dashboard"], ["/app/meetings", "Meetings"], ["/app/profile", "Profile & Privacy"]];
+    : [["/app", "Dashboard"], ["/app/meetings", "Meetings"], ["/app/community", "What's Happening"], ["/app/profile", "Profile & Privacy"]];
 
   return (
     <>

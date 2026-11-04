@@ -4,7 +4,7 @@ import { z } from "zod";
 import { supabaseServer, supabaseService } from "@/lib/supabase/server";
 import { sendTemplate } from "@/lib/email";
 import { env } from "@/lib/env";
-import { safeTz } from "@/lib/time";
+import { safeTz, zonedTime } from "@/lib/time";
 import { callRpc } from "@/lib/rpc";
 import { getMe } from "@/lib/auth";
 
@@ -213,4 +213,51 @@ export async function setMeetingArt(meetingId: string, path: string | null): Pro
   revalidatePath("/meetings");
   revalidatePath("/app/meetings");
   return { ok: path ? "Image saved." : "Image removed." };
+}
+
+// ───────────────────────── What's Happening ─────────────────────────
+const EventForm = z.object({
+  kind: z.enum(["event", "prayer", "service"]),
+  title: z.string().trim().min(1, "Give it a title.").max(120),
+  body: z.string().trim().max(2000).optional(),
+  date: z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/),
+  start: z.string().regex(/^(\d{2}:\d{2})?$/),
+  end: z.string().regex(/^(\d{2}:\d{2})?$/),
+  timezone: z.string().trim().min(1).max(60),
+  location: z.string().trim().max(200).optional(),
+  link: z.string().trim().max(500).optional(),
+});
+
+/** Adds or updates an item. Date + times are entered in the item's own time zone. */
+export async function saveEvent(id: string | null, _: S, form: FormData): Promise<S> {
+  const me = await getMe();
+  if (!me) return { error: "Sign in." };
+  const p = EventForm.safeParse(Object.fromEntries(form));
+  if (!p.success) return { error: p.error.issues[0].message };
+  const d = p.data;
+  if (safeTz(d.timezone) !== d.timezone) return { error: "Choose a time zone from the list." };
+  if (d.link && !/^https:\/\/\S+$/i.test(d.link)) return { error: "The link must start with https://" };
+  if ((d.start || d.end) && !d.date) return { error: "Add the date too." };
+  if (d.end && !d.start) return { error: "Add the start time too." };
+  const starts = d.date ? zonedTime(d.date, d.start || "00:00", d.timezone) : null;
+  const ends = d.date && d.end ? zonedTime(d.date, d.end, d.timezone) : null;
+  if (starts && ends && ends < starts) return { error: "The end time is before the start time." };
+  const row = {
+    kind: d.kind, title: d.title, body: d.body || null, timezone: d.timezone, location: d.location || null, link: d.link || null,
+    starts_at: starts?.toISOString() ?? null, ends_at: ends?.toISOString() ?? null, members_only: form.get("members_only") === "on",
+  };
+  const db = await supabaseServer();
+  const { error } = id ? await db.from("community_events").update(row).eq("id", id)
+    : await db.from("community_events").insert({ ...row, created_by: me.id });
+  revalidatePath("/leader/community");
+  revalidatePath("/app/community");
+  revalidatePath("/whats-happening");
+  return error ? { error: error.message } : { ok: id ? "Saved." : "Posted." };
+}
+export async function deleteEvent(id: string): Promise<S> {
+  const { error } = await (await supabaseServer()).from("community_events").delete().eq("id", id);
+  revalidatePath("/leader/community");
+  revalidatePath("/app/community");
+  revalidatePath("/whats-happening");
+  return error ? { error: error.message } : { ok: "Removed." };
 }
