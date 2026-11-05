@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ProsePage } from "@/components/Prose";
 import { Card } from "@/components/ui";
 import { KeyMeaning } from "@/components/KeyMeaning";
@@ -17,6 +18,11 @@ export default function HowItWorks() {
   return (
     <ProsePage title="How the Program Works" sub={'Finally Free\'s "3 Keys to Freedom."'}>
       <p className="text-lg text-ink">{PROGRAM_PROMISE}</p>
+      <a href="/brand/3-keys-to-freedom.webp" target="_blank" rel="noopener noreferrer" className="block !no-underline" aria-label="Finally Free's 3 Keys to Freedom — open full size">
+        <Image src="/brand/3-keys-to-freedom.webp" width={1280} height={960} priority sizes="(min-width: 768px) 720px, 100vw"
+          className="h-auto w-full rounded-xl border border-line shadow-sm"
+          alt="Finally Free's 3 Keys to Freedom. Key 1: watch 3 Zoom videos and do the worksheet — in the Kingdom, real repentance. Key 2: complete the 21 detox worksheets — putting on the full armour. Key 3: watch Bill's movie and do the questionnaire — preparing for the harvest. The program gets you sober now, can be done in as little as 2–4 weeks, and works with Conquerors and all 12-step programs." />
+      </a>
       <div className="space-y-4">
         {STEPS.map(([t, d, info], i) => (
           <Card key={t} className="flex gap-4">
