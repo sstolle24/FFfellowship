@@ -12,7 +12,7 @@ alter table meetings add constraint meetings_art_path_check check (
 update meetings set art_path = v.path
   from (values
     ('static/campfire-3-share.webp',      array['%campfire%']),
-    ('static/the-path-three-levels.webp', array['the path', '%reloaded%']),
+    ('static/the-path.webp',              array['the path', '%reloaded%']),
     ('static/topic-tuesday-theater.webp', array['%topic tuesday%']),
     ('static/detox-group-room-1.webp',    array['%detox group 1%', '%battle plan%']),
     ('static/detox-group-room-2.webp',    array['%detox group meeting 2%', '%detox group 2%', '%thursday night conquerors%']),
