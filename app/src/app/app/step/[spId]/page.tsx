@@ -12,7 +12,7 @@ import { ActionButton } from "@/components/forms";
 import { OverrideApForm, ReturnForm, TextTurnIn, WorksheetForm } from "@/components/StepForms";
 import { UploadTurnIn } from "@/components/UploadTurnIn";
 import { Scripture } from "@/components/Scripture";
-import { initialAp, initialLeader, initialSelf, setReadToGroup } from "../../actions";
+import { initialAp, initialLeader, initialSelf, removeSubmission, setReadToGroup, withdrawInitial } from "../../actions";
 
 export const metadata = { title: "Program item" };
 
@@ -178,7 +178,11 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
               <UploadTurnIn spId={sp.id} stepId={step.id} manId={me.id} />
             </>
           )}
-          <SubmissionList files={files} tz={me.timezone} />
+          <SubmissionList files={files} tz={me.timezone}
+            removable={(f) => editable && f.man_id === me.id && !f.body_text?.startsWith("[{") && (st !== "returned" || !sp.returned_at || f.created_at > sp.returned_at)} />
+          {self && st === "self_initialed" && (step.turn_in || step.requires_upload) && (
+            <p className="text-xs text-muted">Turned in the wrong thing? Undo your initials below, then remove it and turn in the right one.</p>
+          )}
         </Card>
       )}
 
@@ -189,6 +193,10 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
             {step.gate_type === "leader" ? "Submit packet" : "Initial (mine)"}
           </ActionButton>
         )}
+        {self && st === "self_initialed" && (
+          <ActionButton variant="ghost" run={withdrawInitial.bind(null, sp.id)}
+            confirm="Undo your initials? The item opens again so you can fix it — then initial it again.">Undo my initials</ActionButton>
+        )}
         {canAp && <ActionButton run={initialAp.bind(null, sp.id)} confirm={`Give your AP initials for ${man.first_name}?`}>Initial as AP</ActionButton>}
         {canLeader && <ActionButton run={initialLeader.bind(null, sp.id)} confirm="Give leader initials?">{step.gate_type === "leader" ? "Approve packet" : "Initial as leader"}</ActionButton>}
         {leader && !self && mod?.key === "key_2" && step.item_number && step.item_number >= 13 && step.item_number <= 15 && (
@@ -196,7 +204,7 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
             {sp.read_to_group ? "Un-mark read to group" : "Mark read to group"}
           </ActionButton>
         )}
-        {!editable && !canAp && !canLeader && !canOverrideAp && (
+        {!editable && !canAp && !canLeader && !canOverrideAp && !(self && st === "self_initialed") && (
           <span className="text-sm text-muted">
             {leader && !self && st === "ap_initialed" && sp.ap_initial_by === me.id
               ? "You gave the AP sign-off, so a different leader gives the leader initials."
@@ -211,7 +219,9 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
   );
 }
 
-function SubmissionList({ files, tz }: { files: (Submission & { url: string | null })[]; tz: string }) {
+function SubmissionList({ files, tz, removable }: {
+  files: (Submission & { url: string | null })[]; tz: string; removable?: (f: Submission) => boolean;
+}) {
   if (!files.length) return <p className="text-sm text-muted">Nothing turned in yet.</p>;
   return (
     <ul className="space-y-3">
@@ -221,6 +231,10 @@ function SubmissionList({ files, tz }: { files: (Submission & { url: string | nu
           {f.url && <a href={f.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-gold underline">{f.file_path?.split("/").pop()}</a>}
           {f.body_text && !f.body_text.startsWith("[{") && <p className="mt-1 whitespace-pre-line">{f.body_text}</p>}
           {f.body_text?.startsWith("[{") && <p className="mt-1 italic text-muted">Worksheet answers snapshot (shown above / in the packet).</p>}
+          {removable?.(f) && (
+            <div className="mt-2"><ActionButton variant="quiet" run={removeSubmission.bind(null, f.id)}
+              confirm={`Remove version ${f.version}${f.file_path ? ` (${f.file_path.split("/").pop()})` : ""}? This can't be undone.`}>Remove</ActionButton></div>
+          )}
         </li>
       ))}
     </ul>

@@ -1335,3 +1335,49 @@ describe("meeting artwork shipped with the site (0022)", () => {
     await admin(`update meetings set art_path = null where id = $1`, [m.id]);
   });
 });
+
+describe("members fix their own turn-ins (0024)", () => {
+  it("remove a turn-in while open; undo initials before the AP signs; what the AP returned stays", async () => {
+    const man = await newUser("Rex");
+    await rpc(LEADER, "approve_member", man, LEADER);
+    await rpc(ADMIN, "admin_unlock_key2", man);
+    await rpc(LEADER, "leader_create_relationship", SPONSOR, man, "ap");
+    const s = await sp(man, "key_2", 13);
+    const wrong = await rpc(man, "add_submission", s.id, "the wrong thing", null);
+    const [w] = await admin(`select id from submissions where step_progress_id = $1 and version = $2`, [s.id, wrong.version]);
+    await expect(rpc(STRANGER, "remove_submission", w.id)).rejects.toThrow(/Not your turn-in/);
+    await expect(rpc(SPONSOR, "remove_submission", w.id)).rejects.toThrow(/Not your turn-in/);
+    await rpc(man, "remove_submission", w.id);
+    expect(await admin(`select * from submissions where step_progress_id = $1`, [s.id])).toHaveLength(0);
+    await expect(rpc(man, "initial_self", s.id)).rejects.toThrow(/Turn in/); // nothing left to initial with
+
+    // Initialed with the wrong file: undo, remove, turn in the right one.
+    await rpc(man, "add_submission", s.id, "wrong again", null);
+    await rpc(man, "initial_self", s.id);
+    const [w2] = await admin(`select id from submissions where step_progress_id = $1`, [s.id]);
+    await expect(rpc(man, "remove_submission", w2.id)).rejects.toThrow(/Undo your initials first/);
+    await expect(rpc(STRANGER, "withdraw_initial", s.id)).rejects.toThrow(/your own initials/);
+    await rpc(man, "withdraw_initial", s.id);
+    expect((await sp(man, "key_2", 13)).status).toBe("open");
+    await rpc(man, "remove_submission", w2.id);
+    await rpc(man, "add_submission", s.id, "My time commitment statement", null);
+    await rpc(man, "initial_self", s.id);
+
+    // Once his AP signs, he can't undo.
+    await rpc(SPONSOR, "initial_ap", s.id);
+    await expect(rpc(man, "withdraw_initial", s.id)).rejects.toThrow(/AP already signed/);
+
+    // Returned: the version the AP returned stays; anything new can go.
+    const s14 = await sp(man, "key_2", 14);
+    await rpc(man, "add_submission", s14.id, "first try", null);
+    await rpc(man, "initial_self", s14.id);
+    await rpc(SPONSOR, "return_step", s14.id, "Say more");
+    const [old] = await admin(`select id from submissions where step_progress_id = $1`, [s14.id]);
+    await expect(rpc(man, "remove_submission", old.id)).rejects.toThrow(/your AP returned/);
+    const n = await rpc(man, "add_submission", s14.id, "second try", null);
+    const [fresh] = await admin(`select id from submissions where step_progress_id = $1 and version = $2`, [s14.id, n.version]);
+    await rpc(man, "remove_submission", fresh.id);
+    expect(await admin(`select action from audit_log where action in ('submission_removed','initial_withdrawn') and target_id in ($1, $2, $3)`, [w.id, w2.id, s.id]))
+      .toHaveLength(3);
+  });
+});

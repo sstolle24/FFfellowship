@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseServer, supabaseService } from "@/lib/supabase/server";
 import { callRpc } from "@/lib/rpc";
 import { getMe } from "@/lib/auth";
 import { ninetyStartProblem } from "@/lib/ninety";
@@ -66,6 +66,19 @@ export async function uploadTicket(path: string): Promise<{ token?: string; erro
   const db = await supabaseServer();
   const { data, error } = await db.storage.from("submissions").createSignedUploadUrl(path);
   return error ? { error: error.message } : { token: data.token };
+}
+
+/** Removes one of his turn-ins (open item; on a returned item only what he added since). Deletes its file too. */
+export async function removeSubmission(subId: string): Promise<S> {
+  const r = await callRpc("remove_submission", { p_sub: subId });
+  if (!r.ok) return { error: r.error };
+  const path = r.data?.file_path as string | null;
+  if (path) await supabaseService().storage.from("submissions").remove([path]).catch(() => null);
+  return done(r, "Removed.");
+}
+/** Takes back his initials while his AP hasn't signed, so he can fix the item. */
+export async function withdrawInitial(spId: string): Promise<S> {
+  return done(await callRpc("withdraw_initial", { p_sp: spId }), "Your initials are removed — fix it and initial again.");
 }
 
 /** Called after the browser uploaded the file into the man's own storage folder. */
