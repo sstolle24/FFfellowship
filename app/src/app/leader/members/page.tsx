@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StageTag } from "@/components/StageTag";
 import { requireLeader } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { fmtDate } from "@/lib/time";
@@ -87,7 +88,7 @@ export default async function Members({ searchParams }: { searchParams: Promise<
             <tbody>
               {everyone.map((p) => (
                 <tr key={p.id} className="border-t border-line">
-                  <td className="p-2"><Link href={`/leader/men/${p.id}`} className="hover:text-gold">{p.display_name || p.first_name}</Link></td>
+                  <td className="p-2"><span className="flex flex-wrap items-center gap-2"><Link href={`/leader/men/${p.id}`} className="hover:text-gold">{p.display_name || p.first_name}</Link><StageTag stage={p.stage} /></span></td>
                   <td className="p-2 text-muted">{[p.city, p.state, p.country].filter(Boolean).join(", ") || "—"}</td>
                   <td className="p-2"><Badge tone={p.status === "active" ? "ok" : "muted"}>{p.status}</Badge></td>
                   <td className="p-2 text-muted">{STAGE_LABEL[p.stage]}</td>

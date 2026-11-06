@@ -1,8 +1,8 @@
 import Link from "next/link";
+import { StageTag } from "@/components/StageTag";
 import { requireActive } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { daysLabel, relDays } from "@/lib/time";
-import { STAGE_LABEL, type Stage } from "@/lib/types";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
 
 export const metadata = { title: "Sponsor Desk" };
@@ -61,10 +61,11 @@ export default async function SponsorDesk() {
                 <Card key={m.id} id={m.id} className="space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="display text-lg">{m.display_name || m.first_name}</span>
+                    <StageTag stage={m.stage} />
                     {(m.my_roles ?? "").split(",").map((r: string) => <Badge key={r} tone="gold">{r === "ap" ? "AP" : r.replace("_", " ")}</Badge>)}
                     {quiet >= 3 && <Badge tone={quiet >= 7 ? "danger" : "orange"}>Quiet {quiet} days</Badge>}
                   </div>
-                  <p className="text-sm text-muted">{daysLabel(m.day_count)} · {STAGE_LABEL[m.stage as Stage]} · Key 2: {k2(m.id)}/21</p>
+                  <p className="text-sm text-muted">{daysLabel(m.day_count)} · Key 2: {k2(m.id)}/21</p>
                   <Link href={`/app/men/${m.id}`} className="text-sm text-gold underline">Open his program</Link>
                 </Card>
               );

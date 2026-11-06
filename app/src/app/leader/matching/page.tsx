@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { StageTag } from "@/components/StageTag";
 import { supabaseServer } from "@/lib/supabase/server";
 import { dayCount, daysBetween, daysLabel, fmtDate, relDays, todayIn } from "@/lib/time";
-import { STAGE_LABEL, type Stage } from "@/lib/types";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
 import { confirmRelationship, createRelationship } from "../actions";
@@ -51,12 +51,13 @@ export default async function Matching() {
                 <Card key={r.id} className="space-y-1 p-4 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link href={`/leader/men/${r.requester_id}`} className="display text-base hover:text-gold">{name(r.requester_id)}</Link>
+                    {m && <StageTag stage={m.stage} />}
                     <Badge tone="gold">{r.type === "ap" ? "AP" : "Sponsor"}</Badge>
                     <Badge>{r.status.replace("_", " ")}</Badge>
                     {age >= 7 && <Badge tone="danger">Open {age} days</Badge>}
                     <span className="ml-auto text-xs text-muted">{fmtDate(r.created_at)}</span>
                   </div>
-                  {m && <p className="text-muted">{daysLabel(dayCount(m.sobriety_start_date, m.timezone))} · {STAGE_LABEL[m.stage as Stage]} · {r.timezone}</p>}
+                  {m && <p className="text-muted">{daysLabel(dayCount(m.sobriety_start_date, m.timezone))} · {r.timezone}</p>}
                   <p className="text-muted">Best times: {r.best_times || "—"} · Contact: {r.contact_pref || "—"}</p>
                   {r.notes && <p className="whitespace-pre-line">Notes: {r.notes}</p>}
                   {os.length > 0 && <p>Offers from: {os.map((o) => name(o.offerer_id)).join(", ")}</p>}

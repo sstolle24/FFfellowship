@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StageTag } from "@/components/StageTag";
 import { requireActive } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Card, Empty, SectionTitle } from "@/components/ui";
@@ -13,6 +14,8 @@ export default async function Directory({ searchParams }: { searchParams: Promis
   const { data: all } = await db.from("member_contacts").select("*").eq("directory_opt_in", true).order("first_name");
   const states = [...new Set((all ?? []).map((m) => m.state as string | null).filter((x): x is string => !!x))].sort();
   const data = state ? (all ?? []).filter((m) => m.state === state) : all;
+  const { data: cards } = await db.from("member_cards").select("id, stage").in("id", (all ?? []).map((m) => m.id).concat("00000000-0000-0000-0000-000000000000"));
+  const stageOf = new Map((cards ?? []).map((c) => [c.id as string, c.stage as string]));
   const { data: mine } = await db.from("contact_sharing").select("directory_opt_in").eq("profile_id", me.id).single();
 
   const groups = new Map<string, typeof data>();
@@ -46,7 +49,7 @@ export default async function Directory({ searchParams }: { searchParams: Promis
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {(men ?? []).map((m) => (
               <Card key={m.id} className="p-3 text-sm">
-                <div className="display text-ink">{m.display_name || m.first_name}</div>
+                <div className="flex flex-wrap items-center gap-2"><span className="display text-ink">{m.display_name || m.first_name}</span><StageTag stage={stageOf.get(m.id)} /></div>
                 <div className="mt-1 flex flex-wrap gap-3 text-muted">
                   {m.phone && <a className="text-gold underline" href={`tel:${m.phone.replace(/[^\d+]/g, "")}`}>{m.phone}</a>}
                   {m.signal && <span>Signal: {m.signal}</span>}

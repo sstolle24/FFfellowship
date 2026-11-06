@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StageTag } from "@/components/StageTag";
 import { notFound } from "next/navigation";
 import { requireLeader } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
@@ -65,7 +66,7 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
   return (
     <div className="space-y-6">
       <Link href="/leader" className="text-sm text-muted hover:text-gold">← Pipeline</Link>
-      <SectionTitle sub={`${STAGE_LABEL[man.stage]} · ${man.role.replace("_", "/")} · ${man.status}`}>{man.display_name || man.first_name}</SectionTitle>
+      <SectionTitle sub={<span className="flex flex-wrap items-center gap-2"><StageTag stage={man.stage} />{`${STAGE_LABEL[man.stage]} · ${man.role.replace("_", "/")} · ${man.status}`}</span>}>{man.display_name || man.first_name}</SectionTitle>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="space-y-1 text-sm">
