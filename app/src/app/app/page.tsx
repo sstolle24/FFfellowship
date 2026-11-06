@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BadgeShelf } from "@/components/BadgeShelf";
 import { requireUser } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { loadProgram, nextStep } from "@/lib/program";
@@ -71,6 +72,8 @@ export default async function Dashboard() {
         <Stat label="Fishing" value={`${fishing.data?.length ?? 0}/3`} hint={<Link className="underline" href="/app/fishing">This week</Link>} />
         <PanicButton signalUrl={signal} />
       </div>
+
+      <BadgeShelf program={program} stage={me.stage} sobrietyStart={me.sobriety_start_date} timezone={tz} self />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       <Card className="flex flex-wrap items-center gap-4 max-md:mb-2 md:col-span-2 xl:col-span-1 xl:flex-col xl:items-start xl:justify-between">

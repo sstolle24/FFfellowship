@@ -10,6 +10,7 @@ import { ProgramView } from "@/components/ProgramView";
 import { AdminAccountCard } from "@/components/AdminAccountCard";
 import { Key1Panel } from "@/components/Key1Panel";
 import { BulkSignOff } from "@/components/BulkSignOff";
+import { BadgeShelf } from "@/components/BadgeShelf";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, SectionTitle } from "@/components/ui";
 import { addNote, certifyKey2, deleteNote, endRel, setPrimaryLeader, setStatus, unlockKey2 } from "../../actions";
@@ -110,6 +111,8 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
             : man.status === "inactive" && <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "active")}>Reactivate</ActionButton>)}
         </Card>
       </div>
+
+      <BadgeShelf program={program} stage={man.stage} sobrietyStart={man.sobriety_start_date} timezone={man.timezone} self={false} />
 
       {man.status === "active" && <BulkSignOff manId={man.id} first={man.first_name} ready={bulkReady} waitingAp={bulkAp} />}
 
