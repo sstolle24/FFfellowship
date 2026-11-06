@@ -232,6 +232,30 @@ export async function saveTakeaway(logId: string, _: S, form: FormData): Promise
   return { ok: !insight && !body ? "Takeaway removed." : "Takeaway saved." };
 }
 
+/** A note not tied to a meeting (something he read or heard elsewhere): add one, or change or clear it. */
+export async function saveNote(entryId: string | null, _: S, form: FormData): Promise<S> {
+  const me = await getMe();
+  if (!me) return { error: "Sign in first." };
+  const insight = String(form.get("key_insight") ?? "").trim().slice(0, 500);
+  const body = String(form.get("takeaway") ?? "").trim().slice(0, 20000);
+  const shared = form.get("shared") === "on";
+  const supabase = await supabaseServer();
+  let error;
+  if (!insight && !body) {
+    if (!entryId) return { error: "Write something first." };
+    ({ error } = await supabase.from("journal_entries").delete().eq("id", entryId).eq("man_id", me.id));
+  } else {
+    const row = { key_insight: insight || null, body: body || insight, shared_with_mentors: shared };
+    ({ error } = entryId
+      ? await supabase.from("journal_entries").update(row).eq("id", entryId).eq("man_id", me.id)
+      : await supabase.from("journal_entries").insert({ ...row, man_id: me.id }));
+  }
+  revalidatePath("/app/journal");
+  revalidatePath("/app/ninety");
+  if (error) return { error: error.message };
+  return { ok: !insight && !body ? "Removed." : entryId ? "Saved." : "Note added." };
+}
+
 export async function toggleJournalShare(id: string, shared: boolean): Promise<S> {
   const supabase = await supabaseServer();
   await supabase.from("journal_entries").update({ shared_with_mentors: shared }).eq("id", id);
