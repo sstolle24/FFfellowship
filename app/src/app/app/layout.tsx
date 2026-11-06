@@ -23,7 +23,7 @@ export default async function MemberLayout({ children }: { children: React.React
   const links: [string, string][] = active
     ? [
         ["/app", "Dashboard"], ["/app/program", "My Program"], ["/app/meetings", "Meetings & Links"],
-        ["/app/ninety", "90 in 90"], ["/app/journal", "Meeting Journal"], ["/app/fishing", "Fishing"],
+        ["/app/ninety", "90 in 90"], ["/app/fishing", "Fishing"],
         ["/app/sponsor", isSponsorRole(me) ? "Sponsor Board" : "Find a Sponsor / AP"], ["/app/brothers", "My Brothers"],
         ["/app/sponsor-desk", "Sponsor Desk"], ["/app/directory", "Directory"],
         ["/app/community", "What's Happening"], ["/app/profile", "Profile & Privacy"],

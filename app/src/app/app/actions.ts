@@ -202,29 +202,48 @@ export async function deleteMeetingLog(id: string): Promise<S> {
   return { ok: "Removed." };
 }
 
-export async function addJournal(_: S, form: FormData): Promise<S> {
+/**
+ * The takeaway for one logged meeting (one per meeting): add, change, or clear it.
+ * Takeaways live with the meeting in the 90 in 90 log; "My takeaways" lists them (Key 2 #11).
+ */
+export async function saveTakeaway(logId: string, _: S, form: FormData): Promise<S> {
   const me = await getMe();
   if (!me) return { error: "Sign in first." };
-  const body = String(form.get("body") ?? "").trim();
-  if (!body) return { error: "Write something first." };
   const supabase = await supabaseServer();
-  const { error } = await supabase.from("journal_entries").insert({
-    man_id: me.id, body: body.slice(0, 20000), key_insight: String(form.get("key_insight") ?? "").slice(0, 500) || null,
-    meeting_id: (form.get("meeting_id") as string) || null, shared_with_mentors: form.get("shared") === "on",
-  });
+  const { data: log } = await supabase.from("meeting_logs").select("id, meeting_id").eq("id", logId).eq("man_id", me.id).maybeSingle();
+  if (!log) return { error: "That meeting isn't in your log." };
+  const insight = String(form.get("key_insight") ?? "").trim().slice(0, 500);
+  const body = String(form.get("takeaway") ?? "").trim().slice(0, 20000);
+  const shared = form.get("shared") === "on";
+  const { data: cur } = await supabase.from("journal_entries").select("id").eq("man_id", me.id).eq("meeting_log_id", logId)
+    .order("created_at").limit(1).maybeSingle();
+  let error;
+  if (!insight && !body) {
+    if (cur) ({ error } = await supabase.from("journal_entries").delete().eq("id", cur.id));
+  } else {
+    const row = { key_insight: insight || null, body: body || insight, shared_with_mentors: shared };
+    ({ error } = cur
+      ? await supabase.from("journal_entries").update(row).eq("id", cur.id)
+      : await supabase.from("journal_entries").insert({ ...row, man_id: me.id, meeting_log_id: logId, meeting_id: log.meeting_id }));
+  }
+  revalidatePath("/app/ninety");
   revalidatePath("/app/journal");
-  return error ? { error: error.message } : { ok: "Saved." };
+  if (error) return { error: error.message };
+  return { ok: !insight && !body ? "Takeaway removed." : "Takeaway saved." };
 }
+
 export async function toggleJournalShare(id: string, shared: boolean): Promise<S> {
   const supabase = await supabaseServer();
   await supabase.from("journal_entries").update({ shared_with_mentors: shared }).eq("id", id);
   revalidatePath("/app/journal");
+  revalidatePath("/app/ninety");
   return { ok: "Updated." };
 }
 export async function deleteJournal(id: string): Promise<S> {
   const supabase = await supabaseServer();
   await supabase.from("journal_entries").delete().eq("id", id);
   revalidatePath("/app/journal");
+  revalidatePath("/app/ninety");
   return { ok: "Deleted." };
 }
 

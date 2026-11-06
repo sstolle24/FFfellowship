@@ -136,6 +136,11 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
       {self && videosPending && <Notice className="order-2">Watch the 3 videos first — check each one off in <Link href="/app/program#key_1" className="underline">My Program</Link>, then this worksheet opens.</Notice>}
       {step.description && <Card className="order-2 whitespace-pre-line leading-relaxed"><div className="max-w-prose"><Scripture text={step.description} /></div></Card>}
       {helper && <Notice className="order-2">{helper}</Notice>}
+      {mod?.key === "key_2" && step.item_number === 11 && (
+        <Notice className="order-2">
+          Your takeaways from meetings are the base for this page. {self ? <>See them in <Link href="/app/journal" className="text-gold underline">My takeaways</Link>, and add one to any meeting on the <Link href="/app/ninety" className="text-gold underline">90 in 90 page</Link>.</> : "He adds them to meetings in his 90 in 90 log."}
+        </Notice>
+      )}
 
       {isWorksheet && (
         <Card className="order-2">

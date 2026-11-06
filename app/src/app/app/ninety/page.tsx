@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { requireActive } from "@/lib/auth";
+import { TakeawayEditor } from "@/components/TakeawayEditor";
 import { supabaseServer } from "@/lib/supabase/server";
 import { addDays, daysBetween, fmtDate, todayIn } from "@/lib/time";
 import { addedLater, countedLogs, earliestNinetyStart, ninetyStart } from "@/lib/ninety";
@@ -84,7 +86,7 @@ export default async function Ninety() {
               <div><label className="lbl" htmlFor="key_insight">Key takeaway</label><input id="key_insight" name="key_insight" className="field" maxLength={500} /></div>
               <div><label className="lbl" htmlFor="takeaway">Notes</label><textarea id="takeaway" name="takeaway" className="field min-h-28" maxLength={20000} placeholder="What did you hear? What will you do with it?" /></div>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="shared" className="accent-gold" /> Share with my AP / sponsor</label>
-              <p className="text-xs text-muted">Saved to your Meeting Journal too. Unshared notes are visible only to you and fellowship leaders.</p>
+              <p className="text-xs text-muted">Saved with this meeting and listed in My takeaways (Key 2 #11). Unshared notes are visible only to you and fellowship leaders.</p>
             </div>
           </details>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="counts_90" defaultChecked className="accent-gold" /> Counts toward 90 in 90 (FF or SA)</label>
@@ -94,7 +96,10 @@ export default async function Ninety() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg text-gold">Your log</h2>
-        <PrintButton />
+        <span className="flex items-center gap-3">
+          <Link href="/app/journal" className="no-print text-sm text-gold underline">My takeaways →</Link>
+          <PrintButton />
+        </span>
       </div>
       {logs?.length ? (
         <div className="print-card divide-y divide-line rounded-xl border border-line bg-panel">
@@ -109,9 +114,11 @@ export default async function Ninety() {
                   {t && (
                     <span className="mt-1 block border-l-2 border-gold/50 pl-2 text-muted">
                       {t.key_insight && <strong className="block text-ink">{t.key_insight}</strong>}
-                      <span className="whitespace-pre-line">{t.body}</span>
+                      {t.body && t.body.trim() !== t.key_insight?.trim() && <span className="whitespace-pre-line">{t.body}</span>}
+                      {t.shared_with_mentors && <span className="block text-xs">Shared with your AP / sponsor</span>}
                     </span>
                   )}
+                  <TakeawayEditor logId={l.id} insight={t?.key_insight ?? null} body={t?.body ?? null} shared={!!t?.shared_with_mentors} />
                 </span>
                 {!l.counts_90 && <span className="text-xs text-muted">not counted</span>}
                 {l.counts_90 && l.date < start && <span className="text-xs text-muted">before your start date — not counted</span>}
