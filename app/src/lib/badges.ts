@@ -2,7 +2,7 @@
 import { addDays, daysBetween } from "./time";
 
 export type ProgramBadge = { id: "key1" | "key2" | "key3" | "certified" | "ministry"; label: string; earned: boolean; hint: string };
-export type TimeCoin = { id: string; label: string; short: string; on: string; earned: boolean };
+export type TimeCoin = { id: string; label: string; short: string; on: string; earned: boolean; color: TagColor };
 
 type Progress = {
   key1Done: boolean; key2Done: boolean; key3Done: boolean;
@@ -33,20 +33,41 @@ function addMonths(iso: string, n: number): string {
   return new Date(Date.UTC(y, m, Math.min(d, last))).toISOString().slice(0, 10);
 }
 
-/** Recovery-chip coins: 30, 60, 90 days, 6 and 9 months, then every year (through 5, or the next one ahead). */
+/** Key-tag colors (classic recovery key tags). */
+export type TagColor = "white" | "gold" | "orange" | "green" | "red" | "blue" | "yellow" | "glow" | "gray" | "black";
+
+/**
+ * Sobriety key tags: Just For Today, 1 and 2 weeks, 21/30/60/90 days, 6 and 9
+ * months, 1 year, 18 months, then every year (through 3, or the next one ahead).
+ */
 export function timeCoins(start: string | null, today: string): TimeCoin[] {
   if (!start) return [];
+  const t = (id: string, label: string, short: string, on: string, color: TagColor) => ({ id, label, short, on, color, earned: false });
   const coins: TimeCoin[] = [
-    { id: "d30", label: "30 days", short: "30", on: addDays(start, 30), earned: false },
-    { id: "d60", label: "60 days", short: "60", on: addDays(start, 60), earned: false },
-    { id: "d90", label: "90 days", short: "90", on: addDays(start, 90), earned: false },
-    { id: "m6", label: "6 months", short: "6", on: addMonths(start, 6), earned: false },
-    { id: "m9", label: "9 months", short: "9", on: addMonths(start, 9), earned: false },
+    t("jft", "Just For Today", "JFT", start, "white"),
+    t("w1", "1 week", "1 Week", addDays(start, 7), "gold"),
+    t("w2", "2 weeks", "2 Weeks", addDays(start, 14), "gold"),
+    t("d21", "21 days", "21 Days", addDays(start, 21), "orange"),
+    t("d30", "30 days", "30 Days", addDays(start, 30), "orange"),
+    t("d60", "60 days", "60 Days", addDays(start, 60), "green"),
+    t("d90", "90 days", "90 Days", addDays(start, 90), "red"),
+    t("m6", "6 months", "6 Months", addMonths(start, 6), "blue"),
+    t("m9", "9 months", "9 Months", addMonths(start, 9), "yellow"),
+    t("y1", "1 year", "1 Year", addMonths(start, 12), "glow"),
+    t("m18", "18 months", "18 Months", addMonths(start, 18), "gray"),
   ];
-  let y = 1;
+  let y = 2;
   while (addMonths(start, 12 * y) <= today) y++;
-  for (let n = 1; n <= Math.max(5, y); n++) coins.push({ id: `y${n}`, label: `${n} year${n > 1 ? "s" : ""}`, short: String(n), on: addMonths(start, 12 * n), earned: false });
+  for (let n = 2; n <= Math.max(3, y); n++) coins.push(t(`y${n}`, `${n} years`, `${n} Years`, addMonths(start, 12 * n), "black"));
   return coins.map((c) => ({ ...c, earned: c.on <= today }));
+}
+
+/** How far along he is toward a tag (0–1), from the tag before it. */
+export function tagProgress(coins: TimeCoin[], today: string): { id: string; pct: number } | null {
+  const i = coins.findIndex((c) => !c.earned);
+  if (i < 1) return null;
+  const from = coins[i - 1].on, to = coins[i].on;
+  return { id: coins[i].id, pct: Math.max(0, Math.min(1, daysBetween(from, today) / Math.max(1, daysBetween(from, to)))) };
 }
 
 /** "4 months, 21 days" / "2 years, 3 months" — the length of time clean in words. */

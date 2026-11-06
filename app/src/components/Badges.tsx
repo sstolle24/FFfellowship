@@ -77,31 +77,75 @@ export function ProgramBadges({ badges }: { badges: ProgramBadge[] }) {
   );
 }
 
-/** A recovery-chip style coin: 30 / 60 / 90 days, 6 / 9 months, years. */
-function Coin({ c }: { c: TimeCoin }) {
-  const g = "badge-gold-coin", p = paint(c.earned, g);
-  const unit = c.id.startsWith("d") ? "DAYS" : c.id.startsWith("m") ? "MONTHS" : c.short === "1" ? "YEAR" : "YEARS";
+/** Classic recovery key-tag colors: [top, base, edge, text]. */
+const TAG: Record<TimeCoin["color"], [string, string, string, string]> = {
+  white:  ["#ffffff", "#e9e7e0", "#c9c4b4", "#7a5410"],
+  gold:   ["#f1cf74", "#c9962e", "#9b6d14", "#4a3005"],
+  orange: ["#ff8a63", "#f2401c", "#c42d0f", "#ffe7a3"],
+  green:  ["#6fe38a", "#1fb84a", "#13873a", "#fff3b8"],
+  red:    ["#e2484d", "#b3141c", "#7f0c12", "#ffe1a0"],
+  blue:   ["#4b6cf0", "#1532c9", "#0d2290", "#ffe7a3"],
+  yellow: ["#fff27a", "#e5cd12", "#b39f06", "#6b4a06"],
+  glow:   ["#ffffff", "#e3f2e1", "#b9d8b4", "#7a5410"],
+  gray:   ["#a3a6ad", "#6f737b", "#4f535a", "#fff3c4"],
+  black:  ["#3a3a3f", "#141416", "#000000", "#f1cf74"],
+};
+
+/** A sobriety key tag with the FF logo: ring, eyelet, stitched edge, the milestone in gold. */
+function KeyTag({ c }: { c: TimeCoin }) {
+  const [top, base, edge, text] = TAG[c.color];
+  const g = `tag-${c.color}`;
+  const words = c.label === "Just For Today" ? ["Just For", "Today"] : [c.short];
+  // Rounded triangle, wider at the bottom, like a real key tag.
+  const body = "M50 34 C67 34 77 46 83 66 C90 90 95 116 89 133 C84 145 68 148 50 148 C32 148 16 145 11 133 C5 116 10 90 17 66 C23 46 33 34 50 34 Z";
+  const inner = "M50 42 C63 42 71 52 76 69 C82 91 87 114 82 128 C78 138 66 141 50 141 C34 141 22 138 18 128 C13 114 18 91 24 69 C29 52 37 42 50 42 Z";
   return (
-    <svg viewBox="0 0 64 64" className="h-14 w-14" aria-hidden="true">
-      <Gold id={g} />
-      <circle cx="32" cy="32" r="29" {...p} />
-      <circle cx="32" cy="32" r="23" fill="none" stroke={c.earned ? "#8a5f12" : "currentColor"} strokeWidth="1.2" opacity="0.7" />
-      <text x="32" y="36" textAnchor="middle" fontSize={c.short.length > 1 ? 19 : 22} fontWeight="800" fontFamily="Georgia, serif" fill={ink(c.earned)}>{c.short}</text>
-      <text x="32" y="47" textAnchor="middle" fontSize="7" fontWeight="700" letterSpacing="1" fill={ink(c.earned)}>{unit}</text>
+    <svg viewBox="0 0 100 150" className="h-28 w-auto sm:h-32" aria-hidden="true">
+      <defs>
+        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={top} /><stop offset="0.65" stopColor={base} /></linearGradient>
+        {c.color === "glow" && <filter id="tag-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3" /></filter>}
+      </defs>
+      <rect x="42" y="22" width="16" height="18" rx="4" fill={base} stroke={edge} strokeWidth="1.5" />
+      <circle cx="50" cy="15" r="12" fill="none" stroke="#c5c9cf" strokeWidth="5" />
+      <circle cx="50" cy="15" r="12" fill="none" stroke="#ffffff" strokeWidth="1.5" opacity="0.7" />
+      {c.color === "glow" && <path d={body} fill="#c8f5c0" filter="url(#tag-glow)" opacity="0.9" />}
+      <path d={body} fill={`url(#${g})`} stroke={edge} strokeWidth="2" />
+      <path d={inner} fill="none" stroke={edge} strokeWidth="1.2" strokeDasharray="3 2.5" opacity="0.55" />
+      <circle cx="50" cy="46" r="3.6" fill="#d9b04a" stroke="#7a5410" strokeWidth="1.2" />
+      <image href="/brand/ff-logo.webp" x="39" y="56" width="22" height="29" />
+      {words.map((w, i) => (
+        <text key={w} x="50" y={(words.length > 1 ? 103 : 110) + i * 13} textAnchor="middle" fontSize={w.length > 8 ? 11.5 : 13}
+          fontWeight="700" fontFamily="Georgia, 'Times New Roman', serif" letterSpacing="0.6" fill={text}
+          style={{ fontVariant: "small-caps" }}>{w}</text>
+      ))}
     </svg>
   );
 }
 
-export function TimeCoins({ coins }: { coins: TimeCoin[] }) {
+/** His key tags: earned ones in color with a check; the next one with a progress bar; later ones faded with their date. */
+export function TimeCoins({ coins, progress }: { coins: TimeCoin[]; progress?: { id: string; pct: number } | null }) {
   return (
-    <ul className="flex flex-wrap gap-3">
-      {coins.map((c) => (
-        <li key={c.id} className={`flex w-16 flex-col items-center text-center ${c.earned ? "text-gold" : "text-muted/50"}`}>
-          <Coin c={c} />
-          <span className="mt-0.5 text-[11px] leading-tight text-muted">{c.earned ? c.label : fmtDate(c.on)}</span>
-          <span className="sr-only">{c.earned ? `${c.label} earned` : `${c.label} on ${fmtDate(c.on)}`}</span>
-        </li>
-      ))}
+    <ul className="grid grid-cols-3 gap-x-2 gap-y-4 sm:grid-cols-5 lg:grid-cols-7">
+      {coins.map((c) => {
+        const next = progress?.id === c.id;
+        return (
+          <li key={c.id} className="flex flex-col items-center text-center">
+            <div className={`relative ${c.earned ? "" : next ? "opacity-60" : "opacity-30 grayscale-[40%]"}`}>
+              <KeyTag c={c} />
+              {c.earned && (
+                <span className="absolute -bottom-1 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-ok text-xs font-bold text-white shadow ring-2 ring-white" aria-hidden="true">✓</span>
+              )}
+            </div>
+            {next && (
+              <div className="mt-1 h-1.5 w-20 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={Math.round(progress!.pct * 100)} aria-valuemin={0} aria-valuemax={100} aria-label={`Progress to ${c.label}`}>
+                <div className="h-full rounded-full bg-gold" style={{ width: `${Math.round(progress!.pct * 100)}%` }} />
+              </div>
+            )}
+            <span className="mt-1 text-[11px] leading-tight text-muted">{c.earned ? "Earned" : fmtDate(c.on)}</span>
+            <span className="sr-only">{c.earned ? `${c.label} earned` : `${c.label} on ${fmtDate(c.on)}`}</span>
+          </li>
+        );
+      })}
     </ul>
   );
 }

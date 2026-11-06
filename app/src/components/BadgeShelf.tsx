@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Program } from "@/lib/program";
-import { programBadges, stageBadge, timeClean, timeCoins } from "@/lib/badges";
+import { programBadges, stageBadge, tagProgress, timeClean, timeCoins } from "@/lib/badges";
 import { daysBetween, fmtDate, todayIn } from "@/lib/time";
 import { Badge, Card } from "@/components/ui";
 import { ProgramBadges, TimeCoins } from "@/components/Badges";
 
-/** His badges: the 3 Keys, Certified, Ministry — and time clean with recovery coins. */
+/** His badges: the 3 Keys, Certified, Ministry — and time clean with sobriety key tags. */
 export function BadgeShelf({ program, stage, sobrietyStart, timezone, self }: {
   program: Program; stage: string; sobrietyStart: string | null; timezone: string; self: boolean;
 }) {
@@ -37,11 +37,11 @@ export function BadgeShelf({ program, stage, sobrietyStart, timezone, self }: {
                 Next: <strong className="text-ink">{next.label}</strong> on {fmtDate(next.on)} — {daysBetween(today, next.on)} day{daysBetween(today, next.on) === 1 ? "" : "s"} to go.
               </p>
             )}
-            <TimeCoins coins={coins} />
+            <TimeCoins coins={coins} progress={tagProgress(coins, today)} />
           </>
         ) : (
           <p className="text-sm text-muted">
-            {self ? <>No sobriety date yet. <Link href="/app/profile#sobriety" className="text-gold underline">Add it in Profile</Link> to start your coins.</> : "No sobriety date set."}
+            {self ? <>No sobriety date yet. <Link href="/app/profile#sobriety" className="text-gold underline">Add it in Profile</Link> to start your key tags.</> : "No sobriety date set."}
           </p>
         )}
       </div>
