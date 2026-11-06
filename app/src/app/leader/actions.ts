@@ -6,6 +6,9 @@ import { sendTemplate } from "@/lib/email";
 import { env } from "@/lib/env";
 import { safeTz, zonedTime } from "@/lib/time";
 import { callRpc } from "@/lib/rpc";
+import { dispatchEvents } from "@/lib/events";
+import { mergeBulkEvents } from "@/lib/bulk";
+import type { RpcEvent, RpcResult } from "@/lib/types";
 import { getMe } from "@/lib/auth";
 
 type S = { error?: string; ok?: string } | undefined;
@@ -260,4 +263,48 @@ export async function deleteEvent(id: string): Promise<S> {
   revalidatePath("/app/community");
   revalidatePath("/whats-happening");
   return error ? { error: error.message } : { ok: "Removed." };
+}
+
+// ───────────────────────── bulk sign-off ─────────────────────────
+type Bulk = { ok?: string; error?: string; skipped?: { item: string; why: string }[] };
+
+/**
+ * Runs one gate (leader initials, or the AP override) over several of a man's
+ * items. Each goes through the same function and rules as signing it alone;
+ * anything refused is skipped with its reason. Emails are combined per person.
+ */
+async function bulk(manId: string, spIds: string[], fn: "initial_leader" | "leader_override_ap", args: Record<string, unknown> = {}): Promise<Bulk> {
+  const me = await getMe();
+  if (!me || !["leader", "admin"].includes(me.role) || me.status !== "active") return { error: "Leaders only." };
+  if (!spIds.length) return { error: "Select at least one item." };
+  if (spIds.length > 60) return { error: "Select at most 60 items at a time." };
+  const db = await supabaseServer();
+  const { data: items } = await db.from("step_progress").select("id, man_id, program_steps(item_number, title)").in("id", spIds);
+  const label = (id: string) => {
+    const s = (items ?? []).find((x) => x.id === id)?.program_steps as unknown as { item_number: number | null; title: string } | null;
+    return s ? (s.item_number ? `#${s.item_number}` : s.title) : "item";
+  };
+  const events: RpcEvent[] = [];
+  const skipped: { item: string; why: string }[] = [];
+  let done = 0;
+  for (const id of spIds) {
+    if ((items ?? []).find((x) => x.id === id)?.man_id !== manId) { skipped.push({ item: label(id), why: "Not his item." }); continue; }
+    const { data, error } = await db.rpc(fn, { p_sp: id, ...args });
+    if (error) { skipped.push({ item: label(id), why: error.message }); continue; }
+    done++;
+    // actor: he isn't emailed about his own sign-offs (e.g. "ready for leader review" on items he can't initial).
+    events.push(...(((data as RpcResult)?.events ?? []) as RpcEvent[]).map((e) => ({ ...e, actor: me.id })));
+  }
+  await dispatchEvents(mergeBulkEvents(events));
+  revalidatePath("/leader", "layout");
+  revalidatePath("/app", "layout");
+  const what = fn === "initial_leader" ? "Leader initials given on" : "AP sign-off given (override) on";
+  return { ok: done ? `${what} ${done} item${done === 1 ? "" : "s"}.` : undefined, error: done ? undefined : "Nothing was signed.", skipped };
+}
+export async function bulkLeaderInitial(manId: string, spIds: string[]): Promise<Bulk> {
+  return bulk(manId, spIds, "initial_leader");
+}
+export async function bulkOverrideAp(manId: string, spIds: string[], reason: string): Promise<Bulk> {
+  if (!reason.trim()) return { error: "Give a reason for overriding the AP sign-off." };
+  return bulk(manId, spIds, "leader_override_ap", { p_reason: reason.trim().slice(0, 500) });
 }

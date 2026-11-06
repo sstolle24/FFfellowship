@@ -9,6 +9,7 @@ import { STAGE_LABEL, type Profile } from "@/lib/types";
 import { ProgramView } from "@/components/ProgramView";
 import { AdminAccountCard } from "@/components/AdminAccountCard";
 import { Key1Panel } from "@/components/Key1Panel";
+import { BulkSignOff } from "@/components/BulkSignOff";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, SectionTitle } from "@/components/ui";
 import { addNote, certifyKey2, deleteNote, endRel, setPrimaryLeader, setStatus, unlockKey2 } from "../../actions";
@@ -50,6 +51,13 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
   const k1 = program.byKey.key_1;
   // Same rule as app.has_any_mentor.
   const hasMentor = (rels ?? []).some((r) => r.status === "active" && (r.mentee_id === man.id || (r.type === "ap" && r.mutual && r.mentor_id === man.id)));
+  // Bulk sign-off: what a leader could sign now (his own items never; the two-person rule is checked again per item).
+  const signable = man.id === me.id ? [] : program.modules.flatMap((m) => m.steps.map((s) => ({ s, key: m.key, title: m.title })));
+  const label = (x: (typeof signable)[number]) => `${x.key === "key_2" ? "Key 2 " : `${x.title.split(" — ")[0]} · `}${x.s.item_number ? `#${x.s.item_number} ` : ""}${x.s.title}`;
+  const bulkReady = signable.filter((x) => x.s.gate_type === "triple" && x.s.progress?.status === "ap_initialed" && x.s.progress.ap_initial_by !== me.id)
+    .map((x) => ({ id: x.s.progress!.id, label: label(x) }));
+  const bulkAp = signable.filter((x) => ["self_ap", "triple"].includes(x.s.gate_type) && x.s.progress?.status === "self_initialed")
+    .map((x) => ({ id: x.s.progress!.id, label: label(x) }));
   // Same rule as initial_ap's Key 1 fallback: no AP/sponsor → his primary leader (any leader if none).
   const canConfirmKey1 = !hasMentor && man.id !== me.id && (!man.primary_leader_id || man.primary_leader_id === me.id);
 
@@ -102,6 +110,8 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
             : man.status === "inactive" && <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "active")}>Reactivate</ActionButton>)}
         </Card>
       </div>
+
+      {man.status === "active" && <BulkSignOff manId={man.id} first={man.first_name} ready={bulkReady} waitingAp={bulkAp} />}
 
       {man.status === "active" && k1.unlocked && !k1.done && man.id !== me.id && (
         <Key1Panel first={man.first_name} key1={k1} hasMentor={hasMentor} canConfirm={canConfirmKey1} />
