@@ -3,17 +3,31 @@ import { StageTag } from "@/components/StageTag";
 import { requireActive } from "@/lib/auth";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Card, Empty, SectionTitle } from "@/components/ui";
+import { WorldMap, type Pin } from "@/components/WorldMap";
+import { placeFor } from "@/lib/places";
 
 export const metadata = { title: "Directory" };
 
-/** Opt-in only, city-level only, active members only (enforced by the member_contacts view). */
-export default async function Directory({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
+/** Opt-in only, city-level only, active members only (enforced by the member_contacts view). The map pins state or country, never city. */
+export default async function Directory({ searchParams }: { searchParams: Promise<{ state?: string; place?: string }> }) {
   const me = await requireActive();
   const db = await supabaseServer();
-  const { state } = await searchParams;
+  const { state, place } = await searchParams;
   const { data: all } = await db.from("member_contacts").select("*").eq("directory_opt_in", true).order("first_name");
   const states = [...new Set((all ?? []).map((m) => m.state as string | null).filter((x): x is string => !!x))].sort();
-  const data = state ? (all ?? []).filter((m) => m.state === state) : all;
+  // Map pins: state or country only (member_contacts already hides location unless he shares it).
+  const placeOf = new Map((all ?? []).map((m) => [m.id as string, placeFor(m.country, m.state)]));
+  const pinBy = new Map<string, Pin>();
+  for (const pl of placeOf.values()) {
+    if (!pl) continue;
+    const pin = pinBy.get(pl.key) ?? { ...pl, count: 0 };
+    pin.count++;
+    pinBy.set(pl.key, pin);
+  }
+  const pins = [...pinBy.values()];
+  const activePin = place ? pinBy.get(place) : undefined;
+  const data = activePin ? (all ?? []).filter((m) => placeOf.get(m.id)?.key === activePin.key)
+    : state ? (all ?? []).filter((m) => m.state === state) : all;
   const { data: cards } = await db.from("member_cards").select("id, stage").in("id", (all ?? []).map((m) => m.id).concat("00000000-0000-0000-0000-000000000000"));
   const stageOf = new Map((cards ?? []).map((c) => [c.id as string, c.stage as string]));
   const { data: mine } = await db.from("contact_sharing").select("directory_opt_in").eq("profile_id", me.id).single();
@@ -28,7 +42,14 @@ export default async function Directory({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-6">
       <SectionTitle sub="Brothers who chose to be listed, grouped by location. Use it to find men near you or in your timezone.">Directory</SectionTitle>
-      {states.length > 0 && (
+      {pins.length > 0 && (
+        <WorldMap pins={pins} active={activePin?.key} total={pins.reduce((n, p) => n + p.count, 0)}
+          hidden={(all ?? []).length - pins.reduce((n, p) => n + p.count, 0)} />
+      )}
+      {activePin && (
+        <p className="text-sm">Showing brothers in <strong>{activePin.label}</strong>. <Link href="/app/directory" className="text-gold underline">Show everyone</Link></p>
+      )}
+      {states.length > 0 && !activePin && (
         <form className="flex flex-wrap items-end gap-2" action="/app/directory">
           <div>
             <label className="lbl" htmlFor="state">State / province</label>
