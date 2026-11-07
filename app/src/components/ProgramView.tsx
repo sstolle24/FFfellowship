@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Scripture } from "@/components/Scripture";
 import type { Program } from "@/lib/program";
-import { dueDate } from "@/lib/program";
+import { dueDate, KEY3_OPENS_AT } from "@/lib/program";
 import type { Profile } from "@/lib/types";
 import { StepRow } from "@/components/StepParts";
 import { Badge, Card, Notice } from "@/components/ui";
@@ -36,6 +36,20 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
                     <summary className="cursor-pointer text-muted">Read the instructions</summary>
                     <div className="mt-3 max-w-prose whitespace-pre-line leading-relaxed"><Scripture text={m.description} /></div>
                   </details>
+                )}
+                {m.key === "key_2" && !m.done && (
+                  <div role="note" className="rounded-xl border border-amber-500/70 bg-amber-50 p-4 text-sm leading-relaxed text-amber-950">
+                    <span aria-hidden="true" className="mr-1">⚠</span><strong>Heads up:</strong> Key 3 opens once {self ? "you've" : "he's"} done {self ? "your" : "his"} part of {KEY3_OPENS_AT} of the 21 (about 75%).
+                    Opening Key 3 early does <strong>not</strong> mean {self ? "you're" : "he's"} certified. Every one of the 21 still has to be completed and
+                    signed off, and Key 2 certified, before the certification packet opens. Finish as many of the 21 as {self ? "you" : "he"} can before
+                    moving on — they&apos;re the foundation of {self ? "your" : "his"} program.
+                  </div>
+                )}
+                {m.key === "key_3_part_1" && !program.byKey.key_2.done && (
+                  <div role="note" className="rounded-xl border border-amber-500/70 bg-amber-50 p-4 text-sm leading-relaxed text-amber-950">
+                    <span aria-hidden="true" className="mr-1">⚠</span><strong>Key 2 isn&apos;t finished yet</strong> — {program.byKey.key_2.steps.filter((s) => s.progress?.status === "leader_initialed").length} of 21 signed off.
+                    Keep working the 21 alongside Key 3. Certification waits for all 21 to be signed off and Key 2 certified.
+                  </div>
                 )}
 
                 {m.videos.length > 0 && (
