@@ -4,6 +4,7 @@ import { eventWhen, KIND_LABEL, type CommunityEvent } from "@/lib/community";
 import { ActionButton } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
 import { EventForm } from "@/components/EventForm";
+import { EventVideoForm } from "@/components/EventVideoForm";
 import { deleteEvent } from "../actions";
 
 export const metadata = { title: "What's Happening" };
@@ -29,6 +30,7 @@ export default async function CommunityAdmin() {
             </summary>
             <div className="mt-4 space-y-3">
               <EventForm tz={me.timezone} event={e} />
+              <EventVideoForm eventId={e.id} title={e.title} videoPath={e.video_path ?? null} membersOnly={e.members_only} />
               <ActionButton variant="danger" run={deleteEvent.bind(null, e.id)} confirm={`Remove "${e.title}"?`}>Remove</ActionButton>
             </div>
           </details>

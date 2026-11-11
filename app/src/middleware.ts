@@ -17,7 +17,8 @@ export async function middleware(req: NextRequest) {
     `img-src 'self' data: blob: ${supa}`,
     `font-src 'self'`,
     `connect-src 'self' ${supa} ${supa.replace("https://", "wss://")}`,
-    `frame-src https://challenges.cloudflare.com`,
+    // YouTube (privacy-enhanced) and Vimeo players for What's Happening videos.
+    `frame-src https://challenges.cloudflare.com https://www.youtube-nocookie.com https://player.vimeo.com`,
     `media-src 'self' ${supa}`,
     `object-src 'none'`,
     `base-uri 'self'`,

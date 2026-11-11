@@ -35,7 +35,15 @@ export function EventForm({ tz, event }: { tz: string; event?: CommunityEvent })
         <select name="timezone" defaultValue={zone} className="field">{TZS.map((t) => <option key={t}>{t}</option>)}</select></div>
       <div><label className="lbl">Where (optional)</label><input name="location" maxLength={200} defaultValue={event?.location ?? ""} className="field" placeholder="e.g. Zoom, or the church address" /></div>
       <div className="sm:col-span-2"><label className="lbl">Link (optional)</label><input name="link" type="url" maxLength={500} defaultValue={event?.link ?? ""} className="field" placeholder="https://" /></div>
+      <div className="sm:col-span-2">
+        <label className="lbl">Video link (optional — YouTube or Vimeo)</label>
+        <input name="video_url" type="url" maxLength={300} defaultValue={event?.video_url ?? ""} className="field" placeholder="https://youtu.be/… or https://vimeo.com/…" />
+        <p className="mt-1 text-xs text-muted">To upload a video file instead, post the item first, then use &ldquo;Upload a video&rdquo; on it below.</p>
+      </div>
       <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="members_only" defaultChecked={event?.members_only} className="accent-gold" /> Members only (not on the public site)</label>
+      <p className="rounded-lg border border-amber-500/60 bg-amber-50 p-2 text-xs text-amber-950 sm:col-span-2">
+        ⚠ Meeting videos: our meetings are anonymous. Only post a video if everyone shown or heard agreed, and keep it <strong>Members only</strong> unless it&apos;s meant for the public.
+      </p>
       <div className="sm:col-span-2"><Submit>{event ? "Save changes" : "Post it"}</Submit></div>
       <div className="sm:col-span-2"><FormMessage state={state} /></div>
     </form>

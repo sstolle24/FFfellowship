@@ -1381,3 +1381,26 @@ describe("members fix their own turn-ins (0024)", () => {
       .toHaveLength(3);
   });
 });
+
+describe("What's Happening videos (0025)", () => {
+  it("leaders upload into the item's folder; viewers can watch only what they can see; links must be YouTube/Vimeo", async () => {
+    const [pub] = await rows(LEADER, `insert into community_events (title, created_by) values ('Tuesday highlights', $1) returning id`, [LEADER]);
+    const [priv] = await rows(LEADER, `insert into community_events (title, members_only, created_by) values ('Members highlights', true, $1) returning id`, [LEADER]);
+    const put = (who: string, name: string) => as(who, (c) => c.query(`insert into storage.objects (bucket_id, name) values ('community-video', $1)`, [name]));
+    await put(LEADER, `${pub.id}/1-clip.mp4`);
+    await put(LEADER, `${priv.id}/1-clip.mp4`);
+    await expect(put(N1, `${pub.id}/2-clip.mp4`)).rejects.toThrow(/row-level security/);
+    await expect(put(LEADER, `00000000-0000-0000-0000-000000000000/x.mp4`)).rejects.toThrow(/row-level security/);
+    await rows(LEADER, `update community_events set video_path = $2 where id = $1`, [pub.id, `${pub.id}/1-clip.mp4`]);
+    await rows(LEADER, `update community_events set video_path = $2 where id = $1`, [priv.id, `${priv.id}/1-clip.mp4`]);
+    const seen = async (who: string | null) => (await rows(who, `select name from storage.objects where bucket_id = 'community-video' order by name`)).map((r) => r.name.split("/")[0]);
+    expect(await seen(null)).toEqual([pub.id]);                 // visitors: the public item only
+    expect((await seen(N1)).sort()).toEqual([pub.id, priv.id].sort()); // members: both
+    expect(await seen(PENDING)).toEqual([pub.id]);              // not yet approved: public only
+    const [b] = await admin(`select public from storage.buckets where id = 'community-video'`);
+    expect(b.public).toBe(false);
+    await rows(LEADER, `update community_events set video_url = 'https://youtu.be/dQw4w9WgXcQ' where id = $1`, [pub.id]);
+    await expect(rows(LEADER, `update community_events set video_url = 'https://evil.example/v.mp4' where id = $1`, [pub.id])).rejects.toThrow(/check/);
+    await admin(`delete from community_events where id in ($1, $2)`, [pub.id, priv.id]);
+  });
+});

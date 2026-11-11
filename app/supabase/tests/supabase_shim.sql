@@ -33,6 +33,7 @@ create table storage.objects (
 );
 alter table storage.objects enable row level security;
 grant select, insert, update, delete on storage.objects to authenticated;
+grant select on storage.objects to anon;  -- as on Supabase; RLS decides what anon sees
 create or replace function storage.foldername(name text) returns text[]
 language sql immutable as $$ select (string_to_array(name, '/'))[1:array_length(string_to_array(name,'/'),1)-1] $$;
 grant execute on function storage.foldername(text) to anon, authenticated;

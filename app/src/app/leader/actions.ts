@@ -5,6 +5,7 @@ import { supabaseServer, supabaseService } from "@/lib/supabase/server";
 import { sendTemplate } from "@/lib/email";
 import { env } from "@/lib/env";
 import { safeTz, zonedTime } from "@/lib/time";
+import { videoEmbedUrl } from "@/lib/video";
 import { callRpc } from "@/lib/rpc";
 import { dispatchEvents } from "@/lib/events";
 import { mergeBulkEvents } from "@/lib/bulk";
@@ -229,6 +230,7 @@ const EventForm = z.object({
   timezone: z.string().trim().min(1).max(60),
   location: z.string().trim().max(200).optional(),
   link: z.string().trim().max(500).optional(),
+  video_url: z.string().trim().max(300).optional(),
 });
 
 /** Adds or updates an item. Date + times are entered in the item's own time zone. */
@@ -240,6 +242,7 @@ export async function saveEvent(id: string | null, _: S, form: FormData): Promis
   const d = p.data;
   if (safeTz(d.timezone) !== d.timezone) return { error: "Choose a time zone from the list." };
   if (d.link && !/^https:\/\/\S+$/i.test(d.link)) return { error: "The link must start with https://" };
+  if (d.video_url && !videoEmbedUrl(d.video_url)) return { error: "The video link must be a YouTube or Vimeo link (https://…)." };
   if ((d.start || d.end) && !d.date) return { error: "Add the date too." };
   if (d.end && !d.start) return { error: "Add the start time too." };
   const starts = d.date ? zonedTime(d.date, d.start || "00:00", d.timezone) : null;
@@ -248,6 +251,7 @@ export async function saveEvent(id: string | null, _: S, form: FormData): Promis
   const row = {
     kind: d.kind, title: d.title, body: d.body || null, timezone: d.timezone, location: d.location || null, link: d.link || null,
     starts_at: starts?.toISOString() ?? null, ends_at: ends?.toISOString() ?? null, members_only: form.get("members_only") === "on",
+    video_url: d.video_url || null,
   };
   const db = await supabaseServer();
   const { error } = id ? await db.from("community_events").update(row).eq("id", id)
@@ -307,4 +311,32 @@ export async function bulkLeaderInitial(manId: string, spIds: string[]): Promise
 export async function bulkOverrideAp(manId: string, spIds: string[], reason: string): Promise<Bulk> {
   if (!reason.trim()) return { error: "Give a reason for overriding the AP sign-off." };
   return bulk(manId, spIds, "leader_override_ap", { p_reason: reason.trim().slice(0, 500) });
+}
+
+// ───────────────────────── What's Happening videos ─────────────────────────
+const VIDEO_TYPES: Record<string, string> = { mp4: "video/mp4", m4v: "video/mp4", mov: "video/quicktime", webm: "video/webm" };
+
+/** One-time upload pass for an item's video ({item}/{file}); storage checks he's a leader. */
+export async function eventVideoTicket(eventId: string, fileName: string): Promise<{ path?: string; token?: string; type?: string; error?: string }> {
+  const me = await getMe();
+  if (!me || !["leader", "admin"].includes(me.role)) return { error: "Leaders only." };
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  if (!VIDEO_TYPES[ext]) return { error: "Use an MP4, MOV or WebM video." };
+  const safe = fileName.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 60) || "video";
+  const path = `${eventId}/${Date.now()}-${safe}.${ext}`;
+  const { data, error } = await (await supabaseServer()).storage.from("community-video").createSignedUploadUrl(path);
+  return error ? { error: error.message } : { path, token: data.token, type: VIDEO_TYPES[ext] };
+}
+
+/** Sets (or, with null, removes) an item's uploaded video, and deletes the old file. */
+export async function setEventVideo(eventId: string, path: string | null): Promise<S> {
+  const db = await supabaseServer();
+  const { data: cur } = await db.from("community_events").select("video_path").eq("id", eventId).maybeSingle();
+  const { error } = await db.from("community_events").update({ video_path: path }).eq("id", eventId);
+  if (error) return { error: error.message };
+  if (cur?.video_path && cur.video_path !== path) await db.storage.from("community-video").remove([cur.video_path]);
+  revalidatePath("/leader/community");
+  revalidatePath("/app/community");
+  revalidatePath("/whats-happening");
+  return { ok: path ? "Video saved." : "Video removed." };
 }
