@@ -234,7 +234,8 @@ const EventForm = z.object({
 });
 
 /** Adds or updates an item. Date + times are entered in the item's own time zone. */
-export async function saveEvent(id: string | null, _: S, form: FormData): Promise<S> {
+type EventSaved = { error?: string; ok?: string; newId?: string; title?: string; membersOnly?: boolean } | undefined;
+export async function saveEvent(id: string | null, _: EventSaved, form: FormData): Promise<EventSaved> {
   const me = await getMe();
   if (!me) return { error: "Sign in." };
   const p = EventForm.safeParse(Object.fromEntries(form));
@@ -254,12 +255,14 @@ export async function saveEvent(id: string | null, _: S, form: FormData): Promis
     video_url: d.video_url || null,
   };
   const db = await supabaseServer();
-  const { error } = id ? await db.from("community_events").update(row).eq("id", id)
-    : await db.from("community_events").insert({ ...row, created_by: me.id });
+  const { data: made, error } = id ? await db.from("community_events").update(row).eq("id", id).select("id").maybeSingle()
+    : await db.from("community_events").insert({ ...row, created_by: me.id }).select("id").single();
   revalidatePath("/leader/community");
   revalidatePath("/app/community");
   revalidatePath("/whats-happening");
-  return error ? { error: error.message } : { ok: id ? "Saved." : "Posted." };
+  if (error) return { error: error.message };
+  // A new item: hand back its id so the form can offer the video upload right away.
+  return id ? { ok: "Saved." } : { ok: "Posted.", newId: made?.id as string, title: row.title, membersOnly: row.members_only };
 }
 export async function deleteEvent(id: string): Promise<S> {
   const { error } = await (await supabaseServer()).from("community_events").delete().eq("id", id);

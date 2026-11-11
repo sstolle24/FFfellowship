@@ -30,9 +30,14 @@ export default async function CommunityAdmin() {
             </summary>
             <div className="mt-4 space-y-3">
               <EventForm tz={me.timezone} event={e} />
-              <EventVideoForm eventId={e.id} title={e.title} videoPath={e.video_path ?? null} membersOnly={e.members_only} />
               <ActionButton variant="danger" run={deleteEvent.bind(null, e.id)} confirm={`Remove "${e.title}"?`}>Remove</ActionButton>
             </div>
+          </details>
+          <details className="mt-3" open={!!e.video_path}>
+            <summary className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-gold hover:border-gold">
+              {e.video_path || e.video_url ? "Video ✓ — change" : "Add video"}
+            </summary>
+            <div className="mt-3"><EventVideoForm eventId={e.id} title={e.title} videoPath={e.video_path ?? null} membersOnly={e.members_only} /></div>
           </details>
         </Card>
       )) : <Empty>Nothing posted yet.</Empty>}
