@@ -15,6 +15,7 @@ export function BulkSignOff({ manId, first, ready, waitingAp }: { manId: string;
   const [pickReady, setPickReady] = useState<string[]>([]);
   const [pickAp, setPickAp] = useState<string[]>([]);
   const [reason, setReason] = useState("");
+  const [alsoLeader, setAlsoLeader] = useState(true);
   if (!ready.length && !waitingAp.length && !res) return null;
 
   const run = (f: () => Promise<Result>, confirmText: string) => {
@@ -48,10 +49,14 @@ export function BulkSignOff({ manId, first, ready, waitingAp }: { manId: string;
             <textarea id="bulk-reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500}
               className="field min-h-16" placeholder="e.g. Went over all of these with him myself; his AP is away" />
             <Button type="button" variant="ghost" disabled={pending || !pickAp.length || !reason.trim()}
-              onClick={() => run(() => bulkOverrideAp(manId, pickAp, reason), `Sign the AP column on ${pickAp.length} item(s) for ${first} as a leader override?`)}>
+              onClick={() => run(() => bulkOverrideAp(manId, pickAp, reason, alsoLeader),
+                `Sign the AP column${alsoLeader ? " and leader initials" : ""} on ${pickAp.length} item(s) for ${first} as a leader override?`)}>
               Override AP for selected
             </Button>
-            <p className="text-xs text-muted">Items you override need a different leader for the leader initials (two-person rule).</p>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={alsoLeader} onChange={(e) => setAlsoLeader(e.target.checked)} className="accent-gold" />
+              Also give my leader initials (where the item needs them)
+            </label>
           </div>
         </Group>
       )}

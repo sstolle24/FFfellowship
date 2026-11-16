@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { supabaseServer, supabaseService } from "@/lib/supabase/server";
 import { callRpc } from "@/lib/rpc";
+import { dispatchEvents } from "@/lib/events";
+import type { RpcEvent, RpcResult } from "@/lib/types";
 import { getMe } from "@/lib/auth";
 import { ninetyStartProblem } from "@/lib/ninety";
 import { addDays, todayIn, weekStart } from "@/lib/time";
@@ -27,11 +29,41 @@ export async function initialLeader(spId: string): Promise<S> {
 export async function returnStep(spId: string, _: S, form: FormData): Promise<S> {
   return done(await callRpc("return_step", { p_sp: spId, p_note: String(form.get("note") ?? "") }), "Returned with your note.");
 }
-/** Leader signs the AP column on the AP's behalf (reason required; another leader gives the leader initials). */
+/**
+ * Leader signs the AP column on the AP's behalf (reason required). With "also
+ * leader" ticked he gives the leader initials too (0026), and the other leaders
+ * aren't told the item is waiting on them.
+ */
 export async function overrideAp(spId: string, _: S, form: FormData): Promise<S> {
   revalidatePath("/leader", "layout");
-  return done(await callRpc("leader_override_ap", { p_sp: spId, p_reason: String(form.get("reason") ?? "") }),
-    "AP sign-off given as a leader override. Another leader gives the leader initials.");
+  const reason = String(form.get("reason") ?? "");
+  if (form.get("also_leader") !== "on") {
+    return done(await callRpc("leader_override_ap", { p_sp: spId, p_reason: reason }),
+      "AP sign-off given as a leader override. You or another leader can now give the leader initials.");
+  }
+  const r = await overrideThenLeader(spId, reason);
+  revalidatePath("/app", "layout");
+  return r.error ? { error: r.error } : { ok: r.ok };
+}
+
+/** Override then leader initials on one item; emails sent once for both. */
+async function overrideThenLeader(spId: string, reason: string): Promise<{ ok?: string; error?: string }> {
+  const db = await supabaseServer();
+  const o = await db.rpc("leader_override_ap", { p_sp: spId, p_reason: reason });
+  if (o.error) return { error: o.error.message };
+  let events = ((o.data as RpcResult)?.events ?? []) as RpcEvent[];
+  if (!events.some((e) => e.type === "leader_review_needed")) {
+    await dispatchEvents(events);
+    return { ok: "AP sign-off given as a leader override. This item needs no leader initials." };
+  }
+  const l = await db.rpc("initial_leader", { p_sp: spId });
+  if (l.error) {
+    await dispatchEvents(events);
+    return { error: `AP override saved, but the leader initials weren't: ${l.error.message}` };
+  }
+  events = [...events.filter((e) => e.type !== "leader_review_needed"), ...(((l.data as RpcResult)?.events ?? []) as RpcEvent[])];
+  await dispatchEvents(events);
+  return { ok: "AP override and leader initials given." };
 }
 export async function setReadToGroup(spId: string, value: boolean): Promise<S> {
   return done(await callRpc("set_read_to_group", { p_sp: spId, p_value: value }));

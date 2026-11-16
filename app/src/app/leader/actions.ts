@@ -280,7 +280,7 @@ type Bulk = { ok?: string; error?: string; skipped?: { item: string; why: string
  * items. Each goes through the same function and rules as signing it alone;
  * anything refused is skipped with its reason. Emails are combined per person.
  */
-async function bulk(manId: string, spIds: string[], fn: "initial_leader" | "leader_override_ap", args: Record<string, unknown> = {}): Promise<Bulk> {
+async function bulk(manId: string, spIds: string[], fn: "initial_leader" | "leader_override_ap", args: Record<string, unknown> = {}, alsoLeader = false): Promise<Bulk> {
   const me = await getMe();
   if (!me || !["leader", "admin"].includes(me.role) || me.status !== "active") return { error: "Leaders only." };
   if (!spIds.length) return { error: "Select at least one item." };
@@ -293,27 +293,35 @@ async function bulk(manId: string, spIds: string[], fn: "initial_leader" | "lead
   };
   const events: RpcEvent[] = [];
   const skipped: { item: string; why: string }[] = [];
-  let done = 0;
+  let done = 0, both = 0;
   for (const id of spIds) {
     if ((items ?? []).find((x) => x.id === id)?.man_id !== manId) { skipped.push({ item: label(id), why: "Not his item." }); continue; }
     const { data, error } = await db.rpc(fn, { p_sp: id, ...args });
     if (error) { skipped.push({ item: label(id), why: error.message }); continue; }
     done++;
-    // actor: he isn't emailed about his own sign-offs (e.g. "ready for leader review" on items he can't initial).
-    events.push(...(((data as RpcResult)?.events ?? []) as RpcEvent[]).map((e) => ({ ...e, actor: me.id })));
+    let evs = ((data as RpcResult)?.events ?? []) as RpcEvent[];
+    // Override + leader initials in one go (0026): the other leaders aren't told it's waiting on them.
+    if (alsoLeader && evs.some((e) => e.type === "leader_review_needed")) {
+      const l = await db.rpc("initial_leader", { p_sp: id });
+      if (l.error) skipped.push({ item: label(id), why: `AP override saved; leader initials not given: ${l.error.message}` });
+      else { both++; evs = [...evs.filter((e) => e.type !== "leader_review_needed"), ...(((l.data as RpcResult)?.events ?? []) as RpcEvent[])]; }
+    }
+    // actor: he isn't emailed about his own sign-offs.
+    events.push(...evs.map((e) => ({ ...e, actor: me.id })));
   }
   await dispatchEvents(mergeBulkEvents(events));
   revalidatePath("/leader", "layout");
   revalidatePath("/app", "layout");
   const what = fn === "initial_leader" ? "Leader initials given on" : "AP sign-off given (override) on";
-  return { ok: done ? `${what} ${done} item${done === 1 ? "" : "s"}.` : undefined, error: done ? undefined : "Nothing was signed.", skipped };
+  const plus = both ? ` Leader initials also given on ${both}.` : "";
+  return { ok: done ? `${what} ${done} item${done === 1 ? "" : "s"}.${plus}` : undefined, error: done ? undefined : "Nothing was signed.", skipped };
 }
 export async function bulkLeaderInitial(manId: string, spIds: string[]): Promise<Bulk> {
   return bulk(manId, spIds, "initial_leader");
 }
-export async function bulkOverrideAp(manId: string, spIds: string[], reason: string): Promise<Bulk> {
+export async function bulkOverrideAp(manId: string, spIds: string[], reason: string, alsoLeader = false): Promise<Bulk> {
   if (!reason.trim()) return { error: "Give a reason for overriding the AP sign-off." };
-  return bulk(manId, spIds, "leader_override_ap", { p_reason: reason.trim().slice(0, 500) });
+  return bulk(manId, spIds, "leader_override_ap", { p_reason: reason.trim().slice(0, 500) }, alsoLeader);
 }
 
 // ───────────────────────── What's Happening videos ─────────────────────────

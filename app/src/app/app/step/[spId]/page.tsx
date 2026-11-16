@@ -80,7 +80,8 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
   const st = sp.status;
   const editable = self && (st === "open" || st === "returned") && !videosPending;
   const canAp = !self && (mentorOfHim || key1Fallback) && st === "self_initialed" && ["self_ap", "triple"].includes(step.gate_type);
-  const canLeader = !self && leader && sp.ap_initial_by !== me.id && (
+  // He can't give both sets of initials, unless he signed the AP column as a leader override (0026).
+  const canLeader = !self && leader && (sp.ap_initial_by !== me.id || sp.ap_override) && (
     (step.gate_type === "triple" && st === "ap_initialed") || (step.gate_type === "leader" && st === "self_initialed"));
   const canReturn = !self && ((st === "self_initialed" && (leader || mentorOfHim)) || (st === "ap_initialed" && leader));
   // Any leader may sign the AP column for him when his AP/sponsor can't (0010). Not on his own item.
@@ -212,7 +213,7 @@ export default async function StepPage({ params }: { params: Promise<{ spId: str
         {!editable && !canAp && !canLeader && !canOverrideAp && !(self && st === "self_initialed") && (
           <span className="text-sm text-muted">
             {leader && !self && st === "ap_initialed" && sp.ap_initial_by === me.id
-              ? "You gave the AP sign-off, so a different leader gives the leader initials."
+              ? "You gave his AP initials as his AP, so a different leader gives the leader initials."
               : "Nothing for you to do on this item right now."}
           </span>
         )}

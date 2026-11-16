@@ -597,7 +597,7 @@ describe("independent security test fixes (Oct 2026)", () => {
     await rpc(LEADER2, "leader_create_relationship", LEADER, man, "ap");
     const item = await key2Item(man, 4, "self_initialed");
     await rpc(LEADER, "initial_ap", item);
-    await expect(rpc(LEADER, "initial_leader", item)).rejects.toThrow(/A different leader must give leader initials/);
+    await expect(rpc(LEADER, "initial_leader", item)).rejects.toThrow(/a different leader gives the leader initials/);
     await rpc(LEADER2, "initial_leader", item);
     expect((await admin(`select status from step_progress where id = $1`, [item]))[0].status).toBe("leader_initialed");
   });
@@ -1061,10 +1061,10 @@ describe("leader override of AP authorization (0010)", () => {
     await expect(rows(man, `update step_progress set ap_override = true where id = $1`, [item])).rejects.toThrow(/permission denied/);
   });
 
-  it("two-person rule: the overriding leader can't also give leader initials; another leader can", async () => {
-    await expect(rpc(LEADER, "initial_leader", item)).rejects.toThrow(/different leader/);
-    await rpc(LEADER2, "initial_leader", item);
-    expect((await admin(`select status from step_progress where id = $1`, [item]))[0].status).toBe("leader_initialed");
+  it("0026: the leader who overrode the AP column can also give the leader initials", async () => {
+    await rpc(LEADER, "initial_leader", item);
+    expect((await admin(`select status, ap_initial_by, leader_initial_by from step_progress where id = $1`, [item]))[0])
+      .toEqual({ status: "leader_initialed", ap_initial_by: LEADER, leader_initial_by: LEADER });
   });
 
   it("the override flag clears when the AP column is cleared (returned and re-initialed)", async () => {

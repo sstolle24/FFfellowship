@@ -56,12 +56,15 @@ export function OverrideApForm({ spId, man }: { spId: string; man: string }) {
       <form action={run} className="space-y-2">
         <h2 className="text-lg text-gold">Override AP sign-off</h2>
         <p className="text-sm text-muted">
-          Use when {man}&apos;s AP or sponsor can&apos;t sign. Your name and reason are recorded, his AP is told, and a
-          different leader gives the leader initials.
+          Use when {man}&apos;s AP or sponsor can&apos;t sign. Your name and reason are recorded and his AP is told. You can give
+          the leader initials as well, or leave them for another leader.
         </p>
         <label className="lbl" htmlFor="override-reason">Reason (required)</label>
         <textarea id="override-reason" name="reason" required className="field min-h-20" maxLength={500}
           placeholder="e.g. AP traveling for two weeks; reviewed the work with him myself" />
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="also_leader" defaultChecked className="accent-gold" /> Also give my leader initials (where the item needs them)
+        </label>
         <Submit variant="ghost" confirm={`Sign ${man}'s AP column as a leader override?`}>Sign as leader (override AP)</Submit>
         <FormMessage state={state} />
       </form>

@@ -53,10 +53,10 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
   const k1 = program.byKey.key_1;
   // Same rule as app.has_any_mentor.
   const hasMentor = (rels ?? []).some((r) => r.status === "active" && (r.mentee_id === man.id || (r.type === "ap" && r.mutual && r.mentor_id === man.id)));
-  // Bulk sign-off: what a leader could sign now (his own items never; the two-person rule is checked again per item).
+  // Bulk sign-off: what a leader could sign now (his own items never; who may sign is checked again per item).
   const signable = man.id === me.id ? [] : program.modules.flatMap((m) => m.steps.map((s) => ({ s, key: m.key, title: m.title })));
   const label = (x: (typeof signable)[number]) => `${x.key === "key_2" ? "Key 2 " : `${x.title.split(" — ")[0]} · `}${x.s.item_number ? `#${x.s.item_number} ` : ""}${x.s.title}`;
-  const bulkReady = signable.filter((x) => x.s.gate_type === "triple" && x.s.progress?.status === "ap_initialed" && x.s.progress.ap_initial_by !== me.id)
+  const bulkReady = signable.filter((x) => x.s.gate_type === "triple" && x.s.progress?.status === "ap_initialed" && (x.s.progress.ap_initial_by !== me.id || x.s.progress.ap_override))
     .map((x) => ({ id: x.s.progress!.id, label: label(x) }));
   const bulkAp = signable.filter((x) => ["self_ap", "triple"].includes(x.s.gate_type) && x.s.progress?.status === "self_initialed")
     .map((x) => ({ id: x.s.progress!.id, label: label(x) }));
