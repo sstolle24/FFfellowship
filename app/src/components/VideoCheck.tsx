@@ -12,15 +12,28 @@ import { TURN_IN_MAX_BYTES, turnInType } from "@/lib/mime";
  * one-page reflection (typed, or uploaded) before they count as done; it is
  * shared with his AP and goes to his leader.
  */
-export function VideoCheck({ videoId, manId, watched, notes, reflection, reflectionFile, reflectionUrl, needsReflection }: {
-  videoId: string; manId: string; watched: boolean; notes: string; reflection: string;
+export function VideoCheck({ videoId, manId, watched, notes, notesPart2, twoParts = false, reflection, reflectionFile, reflectionUrl, needsReflection }: {
+  videoId: string; manId: string; watched: boolean; notes: string; notesPart2?: string; twoParts?: boolean; reflection: string;
   reflectionFile: string | null; reflectionUrl: string | null; needsReflection: boolean;
 }) {
   const [state, run] = useActionState(saveVideo.bind(null, videoId), undefined);
   return (
     <div className="mt-3 space-y-3">
       <form action={run} className="space-y-2">
-        <textarea name="notes" defaultValue={notes} placeholder="Your notes" aria-label="Your notes" className="field min-h-20 text-sm" maxLength={10000} />
+        {twoParts ? (
+          <>
+            <div>
+              <label className="lbl" htmlFor={`notes1-${videoId}`}>Notes — Part 1 (minutes 1–59)</label>
+              <textarea id={`notes1-${videoId}`} name="notes" defaultValue={notes} placeholder="Your Part 1 notes" className="field min-h-20 text-sm" maxLength={10000} />
+            </div>
+            <div>
+              <label className="lbl" htmlFor={`notes2-${videoId}`}>Notes — Part 2 (minute 59 to the end)</label>
+              <textarea id={`notes2-${videoId}`} name="notes_part2" defaultValue={notesPart2} placeholder="Your Part 2 notes" className="field min-h-20 text-sm" maxLength={10000} />
+            </div>
+          </>
+        ) : (
+          <textarea name="notes" defaultValue={notes} placeholder="Your notes" aria-label="Your notes" className="field min-h-20 text-sm" maxLength={10000} />
+        )}
         {needsReflection && (
           <div>
             <label className="lbl" htmlFor={`refl-${videoId}`}>One-page reflection (shared with your AP and your leader)</label>

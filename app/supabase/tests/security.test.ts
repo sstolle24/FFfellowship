@@ -425,6 +425,18 @@ describe("Key 3 → certification", () => {
     expect((await sp(N1, "key_3_part_2", null)).status).toBe("locked");
   });
 
+  it("0027: the movie has separate Part 1 and Part 2 notes", async () => {
+    const [movie] = await rows(N1, `select v.id from videos v join program_modules m on m.id = v.module_id where m.key = 'key_3_part_1'`);
+    await rpc(N1, "save_video", movie.id, "part one notes", null, null, true);
+    await rpc(N1, "save_video_notes_part2", movie.id, "part two notes");
+    expect((await rows(N1, `select notes, notes_part2 from video_progress where video_id = $1`, [movie.id]))[0])
+      .toEqual({ notes: "part one notes", notes_part2: "part two notes" });
+    // Only for the Key 3 movie, and only for himself.
+    const [k1] = await rows(N1, `select v.id from videos v join program_modules m on m.id = v.module_id where m.key = 'key_1' limit 1`);
+    await expect(rpc(N1, "save_video_notes_part2", k1.id, "x")).rejects.toThrow(/Key 3 movie/);
+    await expect(rpc(null, "save_video_notes_part2", movie.id, "x")).rejects.toThrow();
+  });
+
   it("Part 2 opens once Part 1 is self-initialed", async () => {
     await answerAll(N1, "key_3_part_1");
     const p1 = await sp(N1, "key_3_part_1", null);

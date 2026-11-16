@@ -53,7 +53,7 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
                 )}
 
                 {m.videos.length > 0 && (
-                  <div className="grid gap-3 md:grid-cols-3">
+                  <div className={`grid gap-3 ${m.videos.length === 1 ? "max-w-2xl" : "md:grid-cols-3"}`}>
                     {m.videos.map((v) => v.lockNote ? (
                       <Card key={v.id} className="p-4 opacity-60">
                         <div className="flex items-center justify-between gap-2">
@@ -80,11 +80,17 @@ export function ProgramView({ man, program, names, self, key2Closing }: {
                         {self && v.passcode && <p className="mt-1 text-xs text-muted">Passcode: <span className="select-all font-mono text-ink">{v.passcode}</span></p>}
                         {self ? (
                           <VideoCheck videoId={v.id} manId={man.id} watched={!!v.watched_at} notes={v.notes ?? ""}
+                            notesPart2={v.notes_part2 ?? ""} twoParts={m.key === "key_3_part_1"}
                             reflection={v.reflection ?? ""} reflectionFile={v.reflection_file_path} reflectionUrl={v.reflection_url}
                             needsReflection={m.key === "key_1"} />
                         ) : (
                           <>
-                            {v.notes && <p className="mt-2 whitespace-pre-line text-sm text-muted">{v.notes}</p>}
+                            {m.key === "key_3_part_1" ? (
+                              <>
+                                {v.notes && <p className="mt-2 whitespace-pre-line text-sm text-muted"><span className="block text-xs uppercase tracking-widest">Part 1 notes</span>{v.notes}</p>}
+                                {v.notes_part2 && <p className="mt-2 whitespace-pre-line text-sm text-muted"><span className="block text-xs uppercase tracking-widest">Part 2 notes</span>{v.notes_part2}</p>}
+                              </>
+                            ) : v.notes && <p className="mt-2 whitespace-pre-line text-sm text-muted">{v.notes}</p>}
                             {m.key === "key_1" && (v.reflection || v.reflection_file_path ? (
                               <div className="mt-3 rounded-lg border border-line p-3 text-sm">
                                 <div className="text-xs uppercase tracking-widest text-muted">Reflection</div>

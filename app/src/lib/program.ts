@@ -12,7 +12,7 @@ export type StepView = ProgramStep & {
   reviewAtEnd?: boolean;
 };
 export type VideoView = {
-  id: string; order_no: number; title: string; watched_at: string | null; notes: string | null;
+  id: string; order_no: number; title: string; watched_at: string | null; notes: string | null; notes_part2: string | null;
   /** Link + passcode: only on his own My Program, only once the video is unlocked (public.video_links). */
   video_url: string | null; passcode: string | null;
   /** Key 1 one-page reflection (text and/or file), visible like other turn-ins. */
@@ -103,7 +103,7 @@ export async function loadProgram(db: SupabaseClient, manId: string, opts: { lin
       videos.push({
         id: v.id, order_no: v.order_no, title: v.title,
         video_url: links.get(v.id)?.video_url ?? null, passcode: links.get(v.id)?.passcode ?? null,
-        watched_at: vp?.watched_at ?? null, notes: vp?.notes ?? null,
+        watched_at: vp?.watched_at ?? null, notes: vp?.notes ?? null, notes_part2: vp?.notes_part2 ?? null,
         reflection: vp?.reflection ?? null, reflection_file_path: vp?.reflection_file_path ?? null,
         reflection_url: reflectionUrls.get(v.id) ?? null, reflection_at: vp?.reflection_at ?? null,
         lockNote: prev && !prev.watched_at ? (prev.lockNote ?? `Watch ${prev.title} first.`) : null,

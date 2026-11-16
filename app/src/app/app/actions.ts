@@ -150,6 +150,12 @@ export async function saveVideo(videoId: string, _: S, form: FormData): Promise<
     p_file_path: null,
     p_watched: watched,
   });
+  // Key 3 movie: Part 2 notes (0027).
+  const part2 = form.get("notes_part2");
+  if (r.ok && part2 !== null) {
+    const r2 = await callRpc("save_video_notes_part2", { p_video: videoId, p_notes: String(part2).slice(0, 10000) });
+    if (!r2.ok) { revalidatePath("/app/program"); return { error: r2.error }; }
+  }
   revalidatePath("/app/program");
   return r.ok ? { ok: watched ? "Saved and checked off." : "Saved." } : { error: r.error };
 }
