@@ -18,13 +18,14 @@ async function base() {
   const db = supabaseService();
   const [{ data: people }, { data: rels }] = await Promise.all([
     db.from("profiles").select("id, first_name, timezone, role, status, primary_leader_id, sobriety_start_date, program_start_date, ninety_start_date, last_active_at, stage")
-      .eq("status", "active").is("deleted_at", null),
+      // Locked men (0028) get no nudges, summaries or reminders; a leader is already on it.
+      .eq("status", "active").is("deleted_at", null).is("locked_at", null),
     db.from("relationships").select("mentor_id, mentee_id, type, mutual").eq("status", "active"),
   ]);
   const { data: outside } = await db.from("outside_sponsors").select("man_id").eq("status", "approved");
   const men = (people as P[]) ?? [];
   const leaders = men.filter((p) => ["leader", "admin"].includes(p.role)).map((p) => p.id);
-  const leadersFor = (p: P) => (p.primary_leader_id ? [p.primary_leader_id] : leaders);
+  const leadersFor = (p: Pick<P, "primary_leader_id">) => (p.primary_leader_id ? [p.primary_leader_id] : leaders);
   const mentorsOf = (id: string) => [...new Set((rels ?? [])
     .filter((r) => r.mentee_id === id || (r.mutual && r.mentor_id === id))
     .map((r) => (r.mentee_id === id ? r.mentor_id : r.mentee_id)))];
@@ -32,6 +33,33 @@ async function base() {
   const hasSponsor = (id: string) => (rels ?? []).some((r) => r.mentee_id === id && r.type !== "ap")
     || (outside ?? []).some((o) => o.man_id === id);
   return { db, men, leaders, leadersFor, mentorsOf, hasSponsor };
+}
+
+/**
+ * Inactivity lock (0028): warns men working their keys at day 10, locks them at
+ * day 14 (the database decides who the rule applies to) and tells his leaders.
+ */
+export async function runInactivityLock(db: ReturnType<typeof supabaseService>, leadersFor: (p: Pick<P, "primary_leader_id">) => string[]) {
+  const sent: Record<string, number> = {};
+  const tick = (k: string, ok: boolean) => { if (ok) sent[k] = (sent[k] ?? 0) + 1; };
+  const { data: setting } = await db.from("app_settings").select("value").eq("key", "inactivity_lock_days").single();
+  const lockDays = Number(setting?.value ?? 14);
+
+  const { data: locked, error } = await db.rpc("lock_inactive_members");
+  if (error) { console.error("lock_inactive_members", error.message); return { sent, locked: 0 }; }
+  for (const m of (locked ?? []) as { id: string; first_name: string; primary_leader_id: string | null }[]) {
+    tick("account_locked", await sendTemplate(m.id, "account_locked"));
+    for (const l of leadersFor(m)) if (l !== m.id) tick("account_locked_leader", await sendTemplate(l, "account_locked_leader", { man: m.first_name, man_id: m.id }));
+  }
+
+  const { data: subjects } = await db.rpc("inactivity_subjects");
+  for (const s of (subjects ?? []) as { id: string; quiet_since: string }[]) {
+    const days = Math.floor((Date.now() - new Date(s.quiet_since).getTime()) / DAY);
+    if (days >= lockDays - 4 && days < lockDays) {
+      tick("inactivity_lock_warning", await sendTemplate(s.id, "inactivity_lock_warning", { days, left: lockDays - days }, { dedupeKey: `lock:${s.quiet_since.slice(0, 10)}` }));
+    }
+  }
+  return { sent, locked: (locked ?? []).length };
 }
 
 /** Daily: inactivity, day-75 no sponsor, stale requests, sobriety milestones, 90-in-90, purge. */
@@ -95,7 +123,8 @@ export async function runDaily() {
       console.error((err as Error).message); // retried on the next daily run
     }
   }
-  return { sent, purged_files: purged };
+  const lock = await runInactivityLock(db, leadersFor);
+  return { sent: { ...sent, ...lock.sent }, locked: lock.locked, purged_files: purged };
 }
 
 /** Sunday: weekly summary to each active man. */

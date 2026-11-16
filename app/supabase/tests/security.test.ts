@@ -1416,3 +1416,75 @@ describe("What's Happening videos (0025)", () => {
     await admin(`delete from community_events where id in ($1, $2)`, [pub.id, priv.id]);
   });
 });
+
+describe("Inactivity lock (0028)", () => {
+  let quiet: string, waiting: string;
+  const backdate = (id: string, days: number) => admin(`update profiles set last_active_at = now() - make_interval(days => $2) where id = $1`, [id, days]);
+  beforeAll(async () => {
+    quiet = await newUser("Quinn");
+    waiting = await newUser("Wade");
+    await rpc(LEADER, "approve_member", quiet, LEADER);
+    await rpc(LEADER, "approve_member", waiting, LEADER);
+    await admin(`update app_settings set value = to_jsonb(now() - interval '60 days') where key = 'inactivity_lock_since'`);
+  });
+
+  it("locks a man with work waiting after 14 quiet days; not one only waiting on sign-offs, nor leaders", async () => {
+    // Wade's own work is all done; he's only waiting on sign-offs.
+    await admin(`alter table step_progress disable trigger user`);
+    await admin(`update step_progress set status = 'self_initialed' where man_id = $1 and status in ('open','returned')`, [waiting]);
+    await admin(`alter table step_progress enable trigger user`);
+    await admin(`alter table video_progress disable trigger user`);
+    await admin(`insert into video_progress (man_id, video_id, watched_at) select $1, id, now() from videos on conflict (man_id, video_id) do update set watched_at = now()`, [waiting]);
+    await admin(`alter table video_progress enable trigger user`);
+    await backdate(quiet, 13);
+    await backdate(waiting, 30);
+    await backdate(LEADER2, 30);
+    expect(await admin(`select * from public.lock_inactive_members()`)).toEqual([]);
+    await backdate(quiet, 15);
+    expect((await admin(`select id from public.lock_inactive_members()`)).map((r) => r.id)).toEqual([quiet]);
+    const [p] = await admin(`select locked_at is not null as locked, lock_reason, status from profiles where id = $1`, [quiet]);
+    expect(p).toEqual({ locked: true, lock_reason: "inactivity", status: "active" });
+    await admin(`update profiles set last_active_at = now() where id in ($1, $2)`, [waiting, LEADER2]);
+  });
+
+  it("the rule only counts quiet time after it went in", async () => {
+    const fresh = await newUser("Finn");
+    await rpc(LEADER, "approve_member", fresh, LEADER);
+    await backdate(fresh, 40);
+    await admin(`update app_settings set value = to_jsonb(now() - interval '3 days') where key = 'inactivity_lock_since'`);
+    expect(await admin(`select * from public.lock_inactive_members()`)).toEqual([]);
+    await admin(`update profiles set last_active_at = now() where id = $1`, [fresh]);
+  });
+
+  it("members can't run the lock job", async () => {
+    await expect(rows(N1, `select * from public.lock_inactive_members()`)).rejects.toThrow(/permission denied/);
+    await expect(rows(N1, `select * from public.inactivity_subjects()`)).rejects.toThrow(/permission denied/);
+  });
+
+  it("a locked man can't do program work, but can ask a leader to unlock him (once a day)", async () => {
+    expect((await rows(quiet, `select app.is_active() as a`))[0].a).toBe(false);
+    const [v1] = await rows(LEADER, `select id from videos where title = 'Video 1'`);
+    await expect(rpc(quiet, "save_video", v1.id, "notes", "reflection", null, false)).rejects.toThrow(/approved/);
+    const r = await rpc(quiet, "request_unlock", "I was in the hospital");
+    expect(r.events[0]).toMatchObject({ type: "unlock_requested", man_id: quiet, note: "I was in the hospital" });
+    await expect(rpc(quiet, "request_unlock", null)).rejects.toThrow(/ask again tomorrow/);
+    await expect(rpc(N1, "request_unlock", null)).rejects.toThrow(/isn't locked/);
+  });
+
+  it("leaders suspend (reason required, 6 months) or unlock; members can't", async () => {
+    await expect(rpc(N1, "leader_unlock_member", quiet)).rejects.toThrow(/Leaders only/);
+    await expect(rpc(LEADER, "leader_suspend_member", quiet, " ")).rejects.toThrow(/reason/);
+    await expect(rpc(LEADER, "leader_suspend_member", N1, "x")).rejects.toThrow(/Only a locked/);
+    const s = await rpc(LEADER, "leader_suspend_member", quiet, "Relapsed and stopped calling");
+    const [p] = await admin(`select lock_reason, suspended_until = (current_date + interval '6 months')::date as six from profiles where id = $1`, [quiet]);
+    expect(p).toEqual({ lock_reason: "suspended", six: true });
+    expect(s.events[0].type).toBe("account_suspended");
+    expect((await rows(N1, `select * from audit_log where target_id = $1`, [quiet]))).toHaveLength(0); // reason: leaders only
+
+    await rpc(LEADER, "leader_unlock_member", quiet);
+    const [u] = await admin(`select locked_at, lock_reason, suspended_until, last_active_at > now() - interval '1 minute' as fresh from profiles where id = $1`, [quiet]);
+    expect(u).toEqual({ locked_at: null, lock_reason: null, suspended_until: null, fresh: true });
+    expect((await rows(quiet, `select app.is_active() as a`))[0].a).toBe(true);
+    await expect(rpc(LEADER, "leader_unlock_member", quiet)).rejects.toThrow(/isn't locked/);
+  });
+});

@@ -21,7 +21,7 @@ export async function requireUser() {
 /** Approved, active member (newcomer and up). Pending men get the shell instead. */
 export async function requireActive() {
   const me = await requireUser();
-  if (me.status !== "active") redirect("/app");
+  if (me.status !== "active" || me.locked_at) redirect("/app");
   return me;
 }
 export async function requireSponsorRole() {

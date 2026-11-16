@@ -45,7 +45,8 @@ export default async function Pipeline() {
                       <div className="mt-2 flex flex-wrap gap-1">
                         {!hasAp(m.id) && <Badge tone="orange">No AP</Badge>}
                         {!hasSponsor(m.id) && m.program_start_date && daysBetween(m.program_start_date, todayIn(m.timezone)) >= 75 && <Badge tone="danger">No sponsor (day 75+)</Badge>}
-                        {quiet >= 7 ? <Badge tone="danger">Quiet {quiet}d</Badge> : quiet >= 3 ? <Badge tone="orange">Quiet {quiet}d</Badge> : null}
+                        {m.locked_at ? <Badge tone="danger">{m.lock_reason === "suspended" ? "Suspended" : "Locked"}{m.unlock_requested_at ? " · asked to unlock" : ""}</Badge>
+                          : quiet >= 7 ? <Badge tone="danger">Quiet {quiet}d</Badge> : quiet >= 3 ? <Badge tone="orange">Quiet {quiet}d</Badge> : null}
                       </div>
                     </Link>
                   );

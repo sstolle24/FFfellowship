@@ -12,6 +12,7 @@ import { AdminAccountCard } from "@/components/AdminAccountCard";
 import { Key1Panel } from "@/components/Key1Panel";
 import { BulkSignOff } from "@/components/BulkSignOff";
 import { BadgeShelf } from "@/components/BadgeShelf";
+import { LockPanel } from "@/components/LockPanel";
 import { ActionButton, ActionForm, Submit } from "@/components/forms";
 import { Badge, Card, SectionTitle } from "@/components/ui";
 import { addNote, certifyKey2, deleteNote, endRel, setPrimaryLeader, setStatus, unlockKey2 } from "../../actions";
@@ -66,7 +67,7 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
   return (
     <div className="space-y-6">
       <Link href="/leader" className="text-sm text-muted hover:text-gold">← Pipeline</Link>
-      <SectionTitle sub={<span className="flex flex-wrap items-center gap-2"><StageTag stage={man.stage} />{`${STAGE_LABEL[man.stage]} · ${man.role.replace("_", "/")} · ${man.status}`}</span>}>{man.display_name || man.first_name}</SectionTitle>
+      <SectionTitle sub={<span className="flex flex-wrap items-center gap-2"><StageTag stage={man.stage} />{`${STAGE_LABEL[man.stage]} · ${man.role.replace("_", "/")} · ${man.status}`}{man.locked_at && <Badge tone="danger">{man.lock_reason === "suspended" ? "Suspended" : "Locked"}</Badge>}</span>}>{man.display_name || man.first_name}</SectionTitle>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="space-y-1 text-sm">
@@ -112,6 +113,11 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
             : man.status === "inactive" && <ActionButton variant="ghost" run={setStatus.bind(null, man.id, "active")}>Reactivate</ActionButton>)}
         </Card>
       </div>
+
+      {man.status === "active" && man.locked_at && (
+        <LockPanel manId={man.id} first={man.first_name} reason={man.lock_reason} lockedAt={man.locked_at}
+          suspendedUntil={man.suspended_until} requestedAt={man.unlock_requested_at} />
+      )}
 
       <BadgeShelf program={program} stage={man.stage} sobrietyStart={man.sobriety_start_date} timezone={man.timezone} self={false} />
 
@@ -185,7 +191,7 @@ export default async function ManDetail({ params }: { params: Promise<{ manId: s
             {timeline.map((a) => (
               <li key={a.id} className="flex gap-2">
                 <span className="w-28 shrink-0 text-xs text-muted">{fmtDateTime(a.at, me.timezone)}</span>
-                <span>{actorNames[a.actor_id] ?? "System"} · {a.action.replace(/_/g, " ")}{stepTitle.get(a.target_id) ? ` — ${stepTitle.get(a.target_id)}` : ""}{a.detail?.note ? `: “${a.detail.note}”` : ""}</span>
+                <span>{actorNames[a.actor_id] ?? "System"} · {a.action.replace(/_/g, " ")}{stepTitle.get(a.target_id) ? ` — ${stepTitle.get(a.target_id)}` : ""}{a.detail?.note ? `: “${a.detail.note}”` : ""}{a.detail?.reason ? `: “${a.detail.reason}”` : ""}</span>
               </li>
             ))}
             {!timeline.length && <li className="text-muted">No activity yet.</li>}

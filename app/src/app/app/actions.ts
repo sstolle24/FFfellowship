@@ -432,3 +432,9 @@ export async function deleteAccount(_: S, form: FormData): Promise<S> {
   await supabase.auth.signOut();
   redirect("/");
 }
+
+// ───────────────────────── inactivity lock (0028) ─────────────────────────
+export async function requestUnlock(_: S, form: FormData): Promise<S> {
+  return done(await callRpc("request_unlock", { p_message: String(form.get("message") ?? "").slice(0, 1000) || null }),
+    "Sent. A leader will reach out to you.");
+}

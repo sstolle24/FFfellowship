@@ -30,6 +30,9 @@ export interface Profile {
   heard_about: string | null;
   email_prefs: Record<string, boolean>;
   last_active_at: string;
+  /** Inactivity lock (0028): locked out until a leader unlocks him; "suspended" = 6-month suspension. */
+  locked_at?: string | null; lock_reason?: "inactivity" | "suspended" | null;
+  suspended_until?: string | null; unlock_requested_at?: string | null;
   deleted_at: string | null;
   created_at: string;
 }

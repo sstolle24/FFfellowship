@@ -31,6 +31,8 @@ async function nameOf(id?: unknown): Promise<string> {
   return data?.first_name ?? "";
 }
 
+const fmtUntil = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+
 /**
  * Turns the events returned by a gate RPC into emails. Failures are logged,
  * never thrown — an email outage must not undo an approval.
@@ -97,6 +99,15 @@ async function handle(e: RpcEvent) {
       return send(await leadersFor(man), "outside_sponsor_submitted", { man: manName, man_id: man });
     case "outside_sponsor_reviewed":
       return send([man!], "outside_sponsor_reviewed", { approved: e.approved ? "yes" : "no" });
+    case "unlock_requested":
+      return send(await leadersFor(man), "unlock_requested", {
+        man: manName, man_id: man, note: (e.note as string | null) ?? undefined,
+        until: e.suspended_until ? fmtUntil(e.suspended_until as string) : undefined,
+      });
+    case "account_unlocked":
+      return send([man!], "account_unlocked");
+    case "account_suspended":
+      return send([man!], "account_suspended", { until: fmtUntil(e.until as string) });
     case "panic": {
       const { data } = await supabaseService().from("profiles").select("phone, contact_sharing(share_phone)").eq("id", man!).single();
       const cs = data?.contact_sharing as unknown as { share_phone: boolean } | null;

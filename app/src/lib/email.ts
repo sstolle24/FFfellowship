@@ -119,6 +119,30 @@ export const TEMPLATES = {
     subject: (v) => `${v.man} has been inactive 7 days`,
     body: (v) => `${app(`/leader/men/${v.man_id}`)}`,
   },
+  inactivity_lock_warning: {
+    subject: (v) => `${v.first}, your account locks in ${v.left} day${v.left === 1 ? "" : "s"}`,
+    body: (v) => `${v.first}, it's been ${v.days} days since you were on the site. Men working their keys who go 14 days without activity are locked out and have to talk to a leader to get back in.\n\nSign in to keep your account open: ${app("/app")}`,
+  },
+  account_locked: {
+    subject: () => "Your account is locked",
+    body: (v) => `${v.first}, your Finally Free account was locked after 14 days without activity.\n\nContact a leader to unlock it. You can also sign in and tap "Ask a leader to unlock": ${app("/app")}\n\nKeep going to meetings in the meantime. If you're struggling right now: ${app("/get-help")}`,
+  },
+  account_locked_leader: {
+    subject: (v) => `${v.man}'s account locked (14 days inactive)`,
+    body: (v) => `${v.man} was locked out after 14 days without activity. Reach out, then unlock him or suspend him for 6 months: ${app(`/leader/men/${v.man_id}`)}`,
+  },
+  unlock_requested: {
+    subject: (v) => `${v.man} is asking to be unlocked`,
+    body: (v) => `${v.man} asked a leader to unlock his account.${v.until ? ` He is suspended until ${v.until}.` : ""}${v.note ? `\n\nHis message: ${v.note}` : ""}\n\n${app(`/leader/men/${v.man_id}`)}`,
+  },
+  account_unlocked: {
+    subject: () => "Your account is unlocked",
+    body: (v) => `${v.first}, a leader unlocked your account. Welcome back — pick up where you left off: ${app("/app/program")}`,
+  },
+  account_suspended: {
+    subject: () => "Your program is suspended for 6 months",
+    body: (v) => `${v.first}, after talking it over, the leaders have suspended your place in the program until ${v.until}. After that date, contact a leader to come back.\n\nYou're still welcome at meetings: ${app("/meetings")}\nIf you're struggling right now: ${app("/get-help")}`,
+  },
   day75_no_sponsor: {
     subject: (v) => `${v.man} is at day 75 with no sponsor`,
     body: (v) => `Key 2 #18 is due at 90 days. ${app(`/leader/men/${v.man_id}`)}`,

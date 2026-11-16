@@ -4,6 +4,7 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { Logo } from "@/components/ui";
 import { NavLinks } from "@/components/NavLinks";
 import { PathGate } from "@/components/PathGate";
+import { LockedScreen } from "@/components/LockedScreen";
 import { env } from "@/lib/env";
 import { logOut } from "../(public)/auth-actions";
 
@@ -11,6 +12,20 @@ export default async function MemberLayout({ children }: { children: React.React
   const me = await requireUser();
   const supabase = await supabaseServer();
   await supabase.rpc("touch_activity");
+
+  // Inactivity lock (0028): only the locked screen until a leader unlocks him.
+  if (me.status === "active" && me.locked_at) {
+    return (
+      <main className="min-h-screen px-4 py-10">
+        <div className="mx-auto mb-6 flex max-w-xl items-center justify-between">
+          <Link href="/"><Logo size={36} priority /></Link>
+          <form action={logOut}><button className="text-sm text-muted hover:text-gold">Log out</button></form>
+        </div>
+        <LockedScreen first={me.first_name} suspendedUntil={me.lock_reason === "suspended" ? me.suspended_until ?? null : null}
+          requested={!!me.unlock_requested_at} />
+      </main>
+    );
+  }
 
   // "The Path": after Key 1, his 3 men for the week must be named and committed first.
   const { data: gate } = me.status === "active" ? await supabase.rpc("path_gate") : { data: null };

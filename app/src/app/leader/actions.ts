@@ -351,3 +351,12 @@ export async function setEventVideo(eventId: string, path: string | null): Promi
   revalidatePath("/whats-happening");
   return { ok: path ? "Video saved." : "Video removed." };
 }
+
+// ───────────────────────── inactivity lock (0028) ─────────────────────────
+export async function unlockMember(id: string): Promise<S> {
+  return done(await callRpc("leader_unlock_member", { p_man: id }), "Unlocked — he was emailed.");
+}
+export async function suspendMember(id: string, _: S, form: FormData): Promise<S> {
+  return done(await callRpc("leader_suspend_member", { p_man: id, p_reason: String(form.get("reason") ?? "") }),
+    "Suspended for 6 months — he was emailed.");
+}
