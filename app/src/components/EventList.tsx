@@ -4,7 +4,7 @@ import { videoEmbedUrl } from "@/lib/video";
 
 /** Upcoming events and service (soonest first), then prayer (newest first). */
 /** videoUrls: short-lived links to uploaded videos, made with the viewer's session (only items he can see). */
-export function EventList({ events, videoUrls = {} }: { events: CommunityEvent[]; videoUrls?: Record<string, string> }) {
+export function EventList({ events, videoUrls = {}, imageUrls = {} }: { events: CommunityEvent[]; videoUrls?: Record<string, string>; imageUrls?: Record<string, string> }) {
   const now = Date.now() - 3 * 3_600_000; // still listed for a few hours after it starts
   const hasVideo = (e: CommunityEvent) => !!(e.video_path || e.video_url);
   const videos = events.filter(hasVideo).sort((a, b) => (b.starts_at ?? b.created_at).localeCompare(a.starts_at ?? a.created_at));
@@ -15,26 +15,26 @@ export function EventList({ events, videoUrls = {} }: { events: CommunityEvent[]
     <div className="space-y-8">
       <section>
         <h2 className="mb-3 text-lg text-gold">Coming up</h2>
-        {upcoming.length ? <div className="space-y-3">{upcoming.map((e) => <EventCard key={e.id} e={e} video={videoUrls[e.id]} />)}</div>
+        {upcoming.length ? <div className="space-y-3">{upcoming.map((e) => <EventCard key={e.id} e={e} video={videoUrls[e.id]} image={imageUrls[e.id]} />)}</div>
           : <Empty>Nothing on the calendar right now. Check back soon.</Empty>}
       </section>
       {videos.length > 0 && (
         <section>
           <h2 className="mb-3 text-lg text-gold">Videos</h2>
-          <div className="space-y-3">{videos.map((e) => <EventCard key={e.id} e={e} video={videoUrls[e.id]} />)}</div>
+          <div className="space-y-3">{videos.map((e) => <EventCard key={e.id} e={e} video={videoUrls[e.id]} image={imageUrls[e.id]} />)}</div>
         </section>
       )}
       {prayer.length > 0 && (
         <section>
           <h2 className="mb-3 text-lg text-gold">Prayer</h2>
-          <div className="space-y-3">{prayer.map((e) => <EventCard key={e.id} e={e} video={videoUrls[e.id]} />)}</div>
+          <div className="space-y-3">{prayer.map((e) => <EventCard key={e.id} e={e} video={videoUrls[e.id]} image={imageUrls[e.id]} />)}</div>
         </section>
       )}
     </div>
   );
 }
 
-function EventCard({ e, video }: { e: CommunityEvent; video?: string }) {
+function EventCard({ e, video, image }: { e: CommunityEvent; video?: string; image?: string }) {
   const when = eventWhen(e);
   const embed = videoEmbedUrl(e.video_url);
   return (
@@ -45,6 +45,11 @@ function EventCard({ e, video }: { e: CommunityEvent; video?: string }) {
         <h3 className="display min-w-0 basis-full break-words text-lg text-ink sm:basis-auto">{e.title}</h3>
       </div>
       {(when || e.location) && <p className="text-sm font-semibold text-ink">{[when, e.location].filter(Boolean).join(" · ")}</p>}
+      {image && (
+        // Short-lived signed link (private bucket), so a plain <img>.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={image} alt={e.title} loading="lazy" className="max-h-[32rem] w-full rounded-lg border border-line object-contain" />
+      )}
       {e.body && <p className="whitespace-pre-line text-sm text-muted">{e.body}</p>}
       {video && (
         <video controls playsInline preload="metadata" src={video} className="aspect-video w-full rounded-lg border border-line bg-black">

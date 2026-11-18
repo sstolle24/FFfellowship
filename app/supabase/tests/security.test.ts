@@ -1417,6 +1417,27 @@ describe("What's Happening videos (0025)", () => {
   });
 });
 
+describe("What's Happening pictures (0029)", () => {
+  it("leaders upload into the item's folder; viewers see only pictures on items they can see", async () => {
+    const [pub] = await rows(LEADER, `insert into community_events (title, created_by) values ('Picnic', $1) returning id`, [LEADER]);
+    const [priv] = await rows(LEADER, `insert into community_events (title, members_only, created_by) values ('Members picnic', true, $1) returning id`, [LEADER]);
+    const put = (who: string, name: string) => as(who, (c) => c.query(`insert into storage.objects (bucket_id, name) values ('community-image', $1)`, [name]));
+    await put(LEADER, `${pub.id}/1-flyer.jpg`);
+    await put(LEADER, `${priv.id}/1-flyer.jpg`);
+    await expect(put(N1, `${pub.id}/2-flyer.jpg`)).rejects.toThrow(/row-level security/);
+    await rows(LEADER, `update community_events set image_path = $2 where id = $1`, [pub.id, `${pub.id}/1-flyer.jpg`]);
+    await rows(LEADER, `update community_events set image_path = $2 where id = $1`, [priv.id, `${priv.id}/1-flyer.jpg`]);
+    await expect(rows(LEADER, `update community_events set image_path = '../x.jpg' where id = $1`, [pub.id])).rejects.toThrow(/check/);
+    const seen = async (who: string | null) => (await rows(who, `select name from storage.objects where bucket_id = 'community-image' order by name`)).map((r) => r.name.split("/")[0]);
+    expect(await seen(null)).toEqual([pub.id]);
+    expect((await seen(N1)).sort()).toEqual([pub.id, priv.id].sort());
+    expect(await seen(PENDING)).toEqual([pub.id]);
+    const [b] = await admin(`select public from storage.buckets where id = 'community-image'`);
+    expect(b.public).toBe(false);
+    await admin(`delete from community_events where id in ($1, $2)`, [pub.id, priv.id]);
+  });
+});
+
 describe("Inactivity lock (0028)", () => {
   let quiet: string, waiting: string;
   const backdate = (id: string, days: number) => admin(`update profiles set last_active_at = now() - make_interval(days => $2) where id = $1`, [id, days]);

@@ -14,3 +14,13 @@ export async function eventVideoLinks(db: SupabaseClient, events: CommunityEvent
   }));
   return out;
 }
+
+/** Same for uploaded pictures (0029). */
+export async function eventImageLinks(db: SupabaseClient, events: CommunityEvent[]): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  await Promise.all(events.filter((e) => e.image_path).map(async (e) => {
+    const { data } = await db.storage.from("community-image").createSignedUrl(e.image_path!, 3 * 3600);
+    if (data?.signedUrl) out[e.id] = data.signedUrl;
+  }));
+  return out;
+}

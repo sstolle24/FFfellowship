@@ -5,7 +5,7 @@ export type CommunityEvent = {
   id: string; kind: "event" | "prayer" | "service"; title: string; body: string | null;
   starts_at: string | null; ends_at: string | null; timezone: string; location: string | null; link: string | null;
   members_only: boolean; created_at: string;
-  video_path?: string | null; video_url?: string | null;
+  video_path?: string | null; video_url?: string | null; image_path?: string | null;
 };
 
 export const KIND_LABEL: Record<CommunityEvent["kind"], string> = { event: "Event", prayer: "Prayer", service: "Service" };

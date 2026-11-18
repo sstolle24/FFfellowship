@@ -5,6 +5,7 @@ import { ActionButton } from "@/components/forms";
 import { Badge, Card, Empty, SectionTitle } from "@/components/ui";
 import { EventForm } from "@/components/EventForm";
 import { EventVideoForm } from "@/components/EventVideoForm";
+import { EventImageForm } from "@/components/EventImageForm";
 import { deleteEvent } from "../actions";
 
 export const metadata = { title: "What's Happening" };
@@ -38,6 +39,12 @@ export default async function CommunityAdmin() {
               {e.video_path || e.video_url ? "Video ✓ — change" : "Add video"}
             </summary>
             <div className="mt-3"><EventVideoForm eventId={e.id} title={e.title} videoPath={e.video_path ?? null} membersOnly={e.members_only} /></div>
+          </details>
+          <details className="mt-3" open={!!e.image_path}>
+            <summary className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-gold hover:border-gold">
+              {e.image_path ? "Picture ✓ — change" : "Add picture"}
+            </summary>
+            <div className="mt-3"><EventImageForm eventId={e.id} title={e.title} imagePath={e.image_path ?? null} membersOnly={e.members_only} /></div>
           </details>
         </Card>
       )) : <Empty>Nothing posted yet.</Empty>}

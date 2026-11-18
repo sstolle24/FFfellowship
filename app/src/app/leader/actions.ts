@@ -265,7 +265,12 @@ export async function saveEvent(id: string | null, _: EventSaved, form: FormData
   return id ? { ok: "Saved." } : { ok: "Posted.", newId: made?.id as string, title: row.title, membersOnly: row.members_only };
 }
 export async function deleteEvent(id: string): Promise<S> {
-  const { error } = await (await supabaseServer()).from("community_events").delete().eq("id", id);
+  const db = await supabaseServer();
+  const { data: cur } = await db.from("community_events").select("video_path, image_path").eq("id", id).maybeSingle();
+  const { error } = await db.from("community_events").delete().eq("id", id);
+  // Its uploaded files go too.
+  if (!error && cur?.video_path) await db.storage.from("community-video").remove([cur.video_path]);
+  if (!error && cur?.image_path) await db.storage.from("community-image").remove([cur.image_path]);
   revalidatePath("/leader/community");
   revalidatePath("/app/community");
   revalidatePath("/whats-happening");
@@ -350,6 +355,34 @@ export async function setEventVideo(eventId: string, path: string | null): Promi
   revalidatePath("/app/community");
   revalidatePath("/whats-happening");
   return { ok: path ? "Video saved." : "Video removed." };
+}
+
+// ───────────────────────── What's Happening pictures (0029) ─────────────────────────
+const IMAGE_TYPES: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif" };
+
+/** One-time upload pass for an item's picture ({item}/{file}); storage checks he's a leader. */
+export async function eventImageTicket(eventId: string, fileName: string): Promise<{ path?: string; token?: string; type?: string; error?: string }> {
+  const me = await getMe();
+  if (!me || !["leader", "admin"].includes(me.role)) return { error: "Leaders only." };
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  if (!IMAGE_TYPES[ext]) return { error: "Use a JPG, PNG, WebP or GIF picture." };
+  const safe = fileName.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9_-]+/g, "-").slice(0, 60) || "image";
+  const path = `${eventId}/${Date.now()}-${safe}.${ext}`;
+  const { data, error } = await (await supabaseServer()).storage.from("community-image").createSignedUploadUrl(path);
+  return error ? { error: error.message } : { path, token: data.token, type: IMAGE_TYPES[ext] };
+}
+
+/** Sets (or, with null, removes) an item's picture, and deletes the old file. */
+export async function setEventImage(eventId: string, path: string | null): Promise<S> {
+  const db = await supabaseServer();
+  const { data: cur } = await db.from("community_events").select("image_path").eq("id", eventId).maybeSingle();
+  const { error } = await db.from("community_events").update({ image_path: path }).eq("id", eventId);
+  if (error) return { error: error.message };
+  if (cur?.image_path && cur.image_path !== path) await db.storage.from("community-image").remove([cur.image_path]);
+  revalidatePath("/leader/community");
+  revalidatePath("/app/community");
+  revalidatePath("/whats-happening");
+  return { ok: path ? "Picture saved." : "Picture removed." };
 }
 
 // ───────────────────────── inactivity lock (0028) ─────────────────────────

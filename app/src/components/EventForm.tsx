@@ -4,6 +4,7 @@ import { saveEvent } from "@/app/leader/actions";
 import { FormMessage, Submit } from "@/components/forms";
 import type { CommunityEvent } from "@/lib/community";
 import { EventVideoForm } from "@/components/EventVideoForm";
+import { EventImageForm } from "@/components/EventImageForm";
 
 const TZS = Intl.supportedValuesOf("timeZone");
 const local = (iso: string | null, tz: string, part: "date" | "time") => {
@@ -39,7 +40,7 @@ export function EventForm({ tz, event }: { tz: string; event?: CommunityEvent })
       <div className="sm:col-span-2">
         <label className="lbl">Video link (optional — YouTube or Vimeo)</label>
         <input name="video_url" type="url" maxLength={300} defaultValue={event?.video_url ?? ""} className="field" placeholder="https://youtu.be/… or https://vimeo.com/…" />
-        <p className="mt-1 text-xs text-muted">To upload a video file from your phone or computer instead, tap {event ? "Save changes" : "Post it"} — the upload box appears {event ? "under this item" : "right below"}.</p>
+        <p className="mt-1 text-xs text-muted">To upload a picture or a video file from your phone or computer, tap {event ? "Save changes" : "Post it"} — the upload box appears {event ? "under this item" : "right below"}.</p>
       </div>
       <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="members_only" defaultChecked={event?.members_only} className="accent-gold" /> Members only (not on the public site)</label>
       <p className="rounded-lg border border-amber-500/60 bg-amber-50 p-2 text-xs text-amber-950 sm:col-span-2">
@@ -49,7 +50,8 @@ export function EventForm({ tz, event }: { tz: string; event?: CommunityEvent })
       <div className="sm:col-span-2"><FormMessage state={state} /></div>
       {!event && state?.newId && (
         <div className="space-y-2 sm:col-span-2">
-          <p className="text-sm font-semibold text-ink">Posted. Add a video now (optional):</p>
+          <p className="text-sm font-semibold text-ink">Posted. Add a picture or video now (optional):</p>
+          <EventImageForm eventId={state.newId} title={state.title ?? "this item"} imagePath={null} membersOnly={!!state.membersOnly} />
           <EventVideoForm eventId={state.newId} title={state.title ?? "this item"} videoPath={null} membersOnly={!!state.membersOnly} />
         </div>
       )}
