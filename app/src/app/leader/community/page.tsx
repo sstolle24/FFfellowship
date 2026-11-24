@@ -27,7 +27,7 @@ export default async function CommunityAdmin() {
       {me.role === "admin" && (
         <Card>
           <details open={holidayOn(holiday)}>
-            <summary className="cursor-pointer text-lg text-gold">🎄 Holiday banner (home page)</summary>
+            <summary className="cursor-pointer text-lg text-gold">🎄 Holiday theme</summary>
             <div className="mt-3">
               <HolidayForm h={holiday} showing={holidayOn(holiday)}
                 items={events.filter((e) => !e.members_only).map((e) => ({ id: e.id, title: e.title }))} />

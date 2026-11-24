@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { supabaseServer, supabaseService } from "@/lib/supabase/server";
 import { sendTemplate } from "@/lib/email";
@@ -402,6 +402,7 @@ export async function setHoliday(_: S, form: FormData): Promise<S> {
     p_message: String(form.get("message") ?? ""),
     p_featured: (form.get("featured") as string) || null,
   });
-  revalidatePath("/");
-  return done(r, "Holiday banner saved.");
+  revalidateTag("holiday");
+  revalidatePath("/", "layout");
+  return done(r, "Holiday theme saved.");
 }

@@ -9,6 +9,7 @@ import "@fontsource/alegreya-sans/700.css";
 import "@fontsource/alegreya-sans/400-italic.css";
 import "./globals.css";
 import { env } from "@/lib/env";
+import { getHoliday } from "@/lib/holiday-server";
 
 export const metadata: Metadata = {
   // Absolute base for the Open Graph image and icons (opengraph-image.png, icon.png, apple-icon.png).
@@ -19,9 +20,11 @@ export const metadata: Metadata = {
   openGraph: { siteName: "Finally Free Fellowship", type: "website" },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Holiday theme (0030): red and green accents, garland and snow, site-wide while it's on.
+  const { on } = await getHoliday();
   return (
-    <html lang="en">
+    <html lang="en" data-holiday={on ? "" : undefined}>
       <body className="min-h-screen">{children}</body>
     </html>
   );

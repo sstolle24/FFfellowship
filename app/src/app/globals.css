@@ -124,3 +124,32 @@ select.field-control {
 }
 @keyframes snowfall { from { background-position: 0 0; } to { background-position: 60px 200px; } }
 @media (prefers-reduced-motion: reduce) { .snow { animation: none; } }
+
+/* ───────── Holiday theme (0030): on while html[data-holiday] is set ───────── */
+html[data-holiday] {
+  /* Primary accent: evergreen (red stays for the garland, holiday headline and Get Help). */
+  --color-gold: #1d6b3c;
+  --color-gold-hi: #15532e;
+  --color-orange: #8a5a12;    /* secondary: gilded brown */
+  --color-navy: #faf7f2;      /* warm snow white */
+  --color-navy-2: #f2ece2;
+  --color-line: #dccfbd;
+}
+html[data-holiday] body::before {
+  content: ""; display: block; height: 6px;
+  background: repeating-linear-gradient(90deg, #a8232c 0 14px, #e8b931 14px 20px, #1f6b3a 20px 34px, #e8b931 34px 40px);
+}
+html[data-holiday] .hero-photo::after {
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    radial-gradient(3px 3px at 20px 30px, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 80px 120px, #fff 50%, transparent 51%),
+    radial-gradient(4px 4px at 150px 60px, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 210px 170px, #fff 50%, transparent 51%),
+    radial-gradient(3px 3px at 260px 90px, #fff 50%, transparent 51%);
+  background-size: 300px 200px;
+  filter: drop-shadow(0 0 1px rgba(80, 110, 150, 0.7));
+  animation: snowfall 18s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) { html[data-holiday] .hero-photo::after { animation: none; } }
+@media print { html[data-holiday] body::before { display: none; } }

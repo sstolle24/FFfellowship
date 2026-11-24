@@ -10,11 +10,11 @@ export function HolidayForm({ h, items, showing }: { h: Holiday | null; items: {
   return (
     <form action={run} className="grid gap-3 sm:grid-cols-2">
       <p className="text-sm text-muted sm:col-span-2">
-        Shown on the home page: {showing ? <strong className="text-ink">yes, right now</strong> : "not right now"}.
-        Automatic runs Nov 20 – Jan 6.
+        Holiday theme (red and green colors, garland and snow across the site, and this banner on the home page):{" "}
+        {showing ? <strong className="text-ink">on right now</strong> : "off right now"}. Automatic runs Nov 20 – Jan 6. Changes show within a few minutes.
       </p>
       <div>
-        <label className="lbl" htmlFor="hol-mode">Holiday banner</label>
+        <label className="lbl" htmlFor="hol-mode">Holiday theme</label>
         <select id="hol-mode" name="mode" defaultValue={h?.mode ?? "auto"} className="field">
           <option value="auto">Automatic (Nov 20 – Jan 6)</option>
           <option value="on">On now</option>
@@ -37,7 +37,7 @@ export function HolidayForm({ h, items, showing }: { h: Holiday | null; items: {
         <textarea id="hol-msg" name="message" maxLength={600} defaultValue={h?.message ?? ""} className="field min-h-20" />
       </div>
       <p className="text-xs text-muted sm:col-span-2">To feature Santa&apos;s video: post a public item below (e.g. &quot;A message from Santa&quot;), add the video to it, then pick it here.</p>
-      <div className="sm:col-span-2"><Submit>Save holiday banner</Submit></div>
+      <div className="sm:col-span-2"><Submit>Save holiday theme</Submit></div>
       <div className="sm:col-span-2"><FormMessage state={state} /></div>
     </form>
   );

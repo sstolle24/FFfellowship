@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card, LinkButton, Logo } from "@/components/ui";
 import { KEY_INFO } from "@/lib/keys";
 import { supabaseServer } from "@/lib/supabase/server";
-import { holidayOn, type Holiday } from "@/lib/holiday";
+import { getHoliday } from "@/lib/holiday-server";
 import { eventImageLinks, eventVideoLinks } from "@/lib/event-video";
 import type { CommunityEvent } from "@/lib/community";
 import { HolidayBanner } from "@/components/HolidayBanner";
@@ -10,9 +10,7 @@ import { HolidayBanner } from "@/components/HolidayBanner";
 export default async function Home() {
   // Holiday season banner (0030); the featured item is always a public one.
   const db = await supabaseServer();
-  const { data: hs } = await db.rpc("holiday_settings");
-  const holiday = hs as Holiday | null;
-  const on = holidayOn(holiday);
+  const { holiday, on } = await getHoliday();
   let featured: CommunityEvent | null = null;
   let video: string | undefined, image: string | undefined;
   if (on && holiday?.featured_event) {
