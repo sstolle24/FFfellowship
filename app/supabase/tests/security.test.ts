@@ -1438,6 +1438,24 @@ describe("What's Happening pictures (0029)", () => {
   });
 });
 
+describe("Holiday banner (0030)", () => {
+  it("anyone reads it; only admins change it; the featured item must be public", async () => {
+    expect((await rpc(null, "holiday_settings")).mode).toBe("auto");
+    const [pub] = await rows(LEADER, `insert into community_events (title, created_by) values ('A message from Santa', $1) returning id`, [LEADER]);
+    const [priv] = await rows(LEADER, `insert into community_events (title, members_only, created_by) values ('Members only', true, $1) returning id`, [LEADER]);
+    await expect(rpc(LEADER, "admin_set_holiday", "on", "Merry Christmas", "Hi", pub.id)).rejects.toThrow(/Only an admin/);
+    await expect(rpc(ADMIN, "admin_set_holiday", "sometimes", null, null, null)).rejects.toThrow(/auto, on or off/);
+    await expect(rpc(ADMIN, "admin_set_holiday", "on", null, null, priv.id)).rejects.toThrow(/public/);
+    await rpc(ADMIN, "admin_set_holiday", "on", "Merry Christmas", "Hi", pub.id);
+    expect(await rpc(null, "holiday_settings")).toEqual({ mode: "on", headline: "Merry Christmas", message: "Hi", featured_event: pub.id });
+    // Made members-only later: no longer featured to anyone.
+    await rows(LEADER, `update community_events set members_only = true where id = $1`, [pub.id]);
+    expect((await rpc(null, "holiday_settings")).featured_event).toBeNull();
+    await rpc(ADMIN, "admin_set_holiday", "auto", null, null, null);
+    await admin(`delete from community_events where id in ($1, $2)`, [pub.id, priv.id]);
+  });
+});
+
 describe("Inactivity lock (0028)", () => {
   let quiet: string, waiting: string;
   const backdate = (id: string, days: number) => admin(`update profiles set last_active_at = now() - make_interval(days => $2) where id = $1`, [id, days]);

@@ -393,3 +393,15 @@ export async function suspendMember(id: string, _: S, form: FormData): Promise<S
   return done(await callRpc("leader_suspend_member", { p_man: id, p_reason: String(form.get("reason") ?? "") }),
     "Suspended for 6 months — he was emailed.");
 }
+
+// ───────────────────────── holiday banner (0030) ─────────────────────────
+export async function setHoliday(_: S, form: FormData): Promise<S> {
+  const r = await callRpc("admin_set_holiday", {
+    p_mode: String(form.get("mode") ?? "auto"),
+    p_headline: String(form.get("headline") ?? ""),
+    p_message: String(form.get("message") ?? ""),
+    p_featured: (form.get("featured") as string) || null,
+  });
+  revalidatePath("/");
+  return done(r, "Holiday banner saved.");
+}

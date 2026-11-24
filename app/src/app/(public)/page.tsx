@@ -1,8 +1,29 @@
 import Link from "next/link";
 import { Card, LinkButton, Logo } from "@/components/ui";
 import { KEY_INFO } from "@/lib/keys";
+import { supabaseServer } from "@/lib/supabase/server";
+import { holidayOn, type Holiday } from "@/lib/holiday";
+import { eventImageLinks, eventVideoLinks } from "@/lib/event-video";
+import type { CommunityEvent } from "@/lib/community";
+import { HolidayBanner } from "@/components/HolidayBanner";
 
-export default function Home() {
+export default async function Home() {
+  // Holiday season banner (0030); the featured item is always a public one.
+  const db = await supabaseServer();
+  const { data: hs } = await db.rpc("holiday_settings");
+  const holiday = hs as Holiday | null;
+  const on = holidayOn(holiday);
+  let featured: CommunityEvent | null = null;
+  let video: string | undefined, image: string | undefined;
+  if (on && holiday?.featured_event) {
+    const { data } = await db.from("community_events").select("*").eq("id", holiday.featured_event).maybeSingle();
+    featured = (data as CommunityEvent | null) ?? null;
+    if (featured) {
+      [video, image] = await Promise.all([
+        eventVideoLinks(db, [featured]).then((r) => r[featured!.id]), eventImageLinks(db, [featured]).then((r) => r[featured!.id]),
+      ]);
+    }
+  }
   return (
     <>
       <section className="relative overflow-hidden border-b border-line/60">
@@ -22,6 +43,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {on && holiday && <HolidayBanner h={holiday} featured={featured} video={video} image={image} />}
 
       <section className="mx-auto grid max-w-6xl gap-5 px-4 py-16 md:grid-cols-3">
         {Object.values(KEY_INFO).map((k) => (

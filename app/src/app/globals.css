@@ -98,3 +98,29 @@ select.field-control {
   background-size: cover;
   background-position: center 35%;
 }
+
+/* ───────── Holiday banner (0030) ───────── */
+.holiday {
+  --holiday-red: #b3202a;
+  --holiday-green: #1f6b3a;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--holiday-green) 10%, var(--color-navy)) 0%, var(--color-navy) 100%);
+}
+.garland {
+  position: absolute; inset: 0 0 auto 0; height: 10px;
+  background: repeating-linear-gradient(90deg, var(--holiday-red) 0 14px, #e8b931 14px 20px, var(--holiday-green) 20px 34px, #e8b931 34px 40px);
+  opacity: 0.85;
+}
+.snow {
+  background-image:
+    radial-gradient(3px 3px at 20px 30px, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 80px 120px, #fff 50%, transparent 51%),
+    radial-gradient(4px 4px at 150px 60px, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 210px 170px, #fff 50%, transparent 51%),
+    radial-gradient(3px 3px at 260px 90px, #fff 50%, transparent 51%);
+  background-size: 300px 200px;
+  filter: drop-shadow(0 0 1px rgba(80, 110, 150, 0.6));
+  opacity: 0.9;
+  animation: snowfall 18s linear infinite;
+}
+@keyframes snowfall { from { background-position: 0 0; } to { background-position: 60px 200px; } }
+@media (prefers-reduced-motion: reduce) { .snow { animation: none; } }

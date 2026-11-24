@@ -34,7 +34,7 @@ export function EventList({ events, videoUrls = {}, imageUrls = {} }: { events: 
   );
 }
 
-function EventCard({ e, video, image }: { e: CommunityEvent; video?: string; image?: string }) {
+export function EventCard({ e, video, image }: { e: CommunityEvent; video?: string; image?: string }) {
   const when = eventWhen(e);
   const embed = videoEmbedUrl(e.video_url);
   return (

@@ -7,16 +7,34 @@ import { EventForm } from "@/components/EventForm";
 import { EventVideoForm } from "@/components/EventVideoForm";
 import { EventImageForm } from "@/components/EventImageForm";
 import { deleteEvent } from "../actions";
+import { HolidayForm } from "@/components/HolidayForm";
+import { holidayOn, type Holiday } from "@/lib/holiday";
 
 export const metadata = { title: "What's Happening" };
 
 export default async function CommunityAdmin() {
   const me = await requireLeader();
-  const { data } = await (await supabaseServer()).from("community_events").select("*").order("starts_at", { ascending: false, nullsFirst: true });
+  const db = await supabaseServer();
+  const [{ data }, { data: hs }] = await Promise.all([
+    db.from("community_events").select("*").order("starts_at", { ascending: false, nullsFirst: true }),
+    db.rpc("holiday_settings"),
+  ]);
   const events = (data as CommunityEvent[]) ?? [];
+  const holiday = hs as Holiday | null;
   return (
     <div className="space-y-6">
       <SectionTitle sub="Events, prayer and service. Members see everything; the public site shows items not marked members-only.">What&apos;s Happening</SectionTitle>
+      {me.role === "admin" && (
+        <Card>
+          <details open={holidayOn(holiday)}>
+            <summary className="cursor-pointer text-lg text-gold">🎄 Holiday banner (home page)</summary>
+            <div className="mt-3">
+              <HolidayForm h={holiday} showing={holidayOn(holiday)}
+                items={events.filter((e) => !e.members_only).map((e) => ({ id: e.id, title: e.title }))} />
+            </div>
+          </details>
+        </Card>
+      )}
       <Card>
         <h2 className="mb-3 text-lg text-gold">Post something</h2>
         <EventForm tz={me.timezone} />
